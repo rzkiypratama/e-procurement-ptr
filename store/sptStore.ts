@@ -2,9 +2,9 @@ import { create } from 'zustand';
 
 interface SPTTahunan {
   id: number;
-  tahun: number;
-  nomorSPT: number;
-  tanggal: string;
+    tahunSpt: number;
+    nomorSPT: number;
+    tanggalSpt: string;
 }
 
 interface SptTahunanState {

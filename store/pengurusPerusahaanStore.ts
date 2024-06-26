@@ -2,12 +2,11 @@ import { create } from 'zustand';
 
 interface PengurusPerusahaan {
   id: number;
-  nama: string;
-  jabatan: string;
-  noKTP: number;
-  npwp: number;
+  namaPengurus: string;
+  jabatanPengurus: string;
+  noKTPPengurus: number;
+  npwpPengurus: number;
 }
-
 interface PengurusPerusahaanState {
   pengurusPerusahaan: PengurusPerusahaan[];
   addPengurusPerusahaan: (pengurusPerusahaan: PengurusPerusahaan) => void;

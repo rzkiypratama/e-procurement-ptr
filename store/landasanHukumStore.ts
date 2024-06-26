@@ -2,9 +2,9 @@ import { create } from 'zustand';
 
 interface LandasanHukum {
   id: number;
-  nomor: string;
-  tanggal: string;
-  tentang: string;
+  nomorDokumen: number;
+  namaNotaris: string;
+  tahunDokumen: string;
 }
 
 interface LandasanHukumState {
