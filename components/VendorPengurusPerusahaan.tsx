@@ -9,7 +9,7 @@ import {
   Popconfirm,
   Modal,
 } from "antd";
-import usePengurusPerusahaanStore from "../store/pengurusPerusahaanStore";
+import usePengurusPerusahaanStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
 
@@ -225,9 +225,6 @@ const PengurusPerusahaan: React.FC = () => {
             onChange: cancel,
           }}
         />
-        <Button type="primary" onClick={handleSubmit}>
-          Submit
-        </Button>
       </Form>
     </div>
   );

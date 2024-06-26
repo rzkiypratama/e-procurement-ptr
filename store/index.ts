@@ -35,6 +35,8 @@ interface FormState {
   setAuthorization: (info: AuthorizationFormValues) => void;
   isFormValid: boolean;
   setFormValid: (isValid: boolean) => void;
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
 }
 
 export const useFormStore = create<FormState>((set) => ({
@@ -66,4 +68,6 @@ export const useFormStore = create<FormState>((set) => ({
   setAuthorization: (info) => set({ authorization: info }),
   isFormValid: false,
   setFormValid: (isValid) => set({ isFormValid: isValid }),
+  loading: false,
+  setLoading: (loading) => set({ loading }),
 }));

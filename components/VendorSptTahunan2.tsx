@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Table, Button, Form, Input, InputNumber, DatePicker, Typography, Popconfirm, Modal } from "antd";
 import dayjs from "dayjs";
-import useSPTStore from "../store/sptStore";
+import useSPTStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
 
@@ -14,7 +14,7 @@ interface SPTTahunan {
     tanggalSpt: string;
   }
 
-const LandasanHukum: React.FC = () => {
+const SPTTahunan: React.FC = () => {
   const {
     sptTahunan,
     addSPTTahunan,
@@ -206,12 +206,9 @@ const LandasanHukum: React.FC = () => {
           onChange: cancel,
         }}
       />
-      <Button type="primary" onClick={handleSubmit}>
-        Submit
-      </Button>
     </Form>
   </div>
   );
 };
 
-export default LandasanHukum;
+export default SPTTahunan;

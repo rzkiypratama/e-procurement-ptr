@@ -14,11 +14,11 @@ const { TabPane } = Tabs;
 
 const RegisterPage = () => {
   return (
-    <div className="container mx-auto flex flex-col content-center">
+    <div className="container mx-auto flex flex-col content-center p-24">
       <h1 className="font-bold text-center text-5xl mb-5">Registrasi Penyedia</h1>
       {/* <VendorRegister /> */}
       <Tabs>
-        <TabPane tab="Informasi Umum" key="1">
+        <TabPane tab="Izin Usaha" key="1">
       <VendorIzinUsaha/>
         </TabPane>
         <TabPane tab="Landasan Hukum" key="2">
