@@ -11,7 +11,7 @@ import {
   Modal,
 } from "antd";
 import dayjs from "dayjs";
-import useIzinUsahaStore from "../store/izinUsahaStore";
+import useIzinUsahaStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
 

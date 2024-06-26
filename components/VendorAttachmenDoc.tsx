@@ -8,12 +8,13 @@ import {
   Popconfirm,
   Modal,
   Upload,
-  message,
+  Spin,
 } from "antd";
-import useAttachmentStore from "../store/attachmenDocStore";
+import useAttachmentStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
 import { UploadOutlined } from "@ant-design/icons";
+import LandasanHukum from "./VendorLandasanHukum2";
 
 const { TextArea } = Input;
 
@@ -21,12 +22,18 @@ interface AttachmentDoc {
   id: number;
   namaAttachment: string;
   kategoriAttachment: string;
-  fileAttachment: any; // Ubah menjadi any karena akan menampung informasi file
+  fileAttachment: any;
 }
 
 const AttachmentDocument: React.FC = () => {
   const {
     attachmentDoc,
+    pengurusPerusahaan,
+    landasanHukum,
+    izinUsaha,
+    pengalaman,
+    sptTahunan,
+    tenagaAhli,
     addAttachment,
     editAttachment,
     removeAttachment,
@@ -35,6 +42,7 @@ const AttachmentDocument: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState<string>("");
+  const [loadingSubmit, setLoadingSubmit] = useState(false); // State untuk loading saat submit
 
   const formik = useFormik({
     initialValues: {
@@ -43,7 +51,6 @@ const AttachmentDocument: React.FC = () => {
       fileAttachment: "", // Inisialisasi dengan string kosong, bisa diubah sesuai kebutuhan
     },
     onSubmit: (values) => {
-      console.log("Pengurus Value:", values);
       addAttachment({ ...values, id: attachmentDoc.length + 1 });
       setIsModalVisible(false);
       formik.resetForm();
@@ -194,9 +201,41 @@ const AttachmentDocument: React.FC = () => {
     setIsModalVisible(false);
   };
 
-  const handleSubmit = () => {
-    console.log("Submitting data:", attachmentDoc);
-    // Additional submission logic if needed
+  const handleSubmitAll = () => {
+    setLoadingSubmit(true); // Mengaktifkan loading saat submit
+  
+    // Simulasi pengiriman data ke backend
+    const formData = {
+      attachmentData: attachmentDoc,
+      pengurusPerusahaan: pengurusPerusahaan,
+      landasanHukum: landasanHukum,
+      izinUsaha: izinUsaha,
+      pengalaman: pengalaman,
+      sptTahunan: sptTahunan,
+      tenagaAhli: tenagaAhli
+      // tambahkan data dari komponen LandasanHukum atau komponen lainnya jika diperlukan
+    };
+  
+    // Kirim formData ke backend (contoh menggunakan fetch)
+    fetch('https://contohApiProcurement.com/api/v1/form', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // tambahkan header lainnya jika diperlukan
+      },
+      body: JSON.stringify(formData),
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Response from backend:', data); // Menampilkan data respons dari backend
+      // tambahkan logika penanganan respons di sini
+      setLoadingSubmit(false); // Mematikan loading setelah selesai
+    })
+    .catch(error => {
+      console.error('Error sending data to backend:', error);
+      // tambahkan penanganan kesalahan jika terjadi
+      setLoadingSubmit(false); // Mematikan loading pada error
+    });
   };
 
   return (
@@ -257,8 +296,8 @@ const AttachmentDocument: React.FC = () => {
             onChange: cancel,
           }}
         />
-        <Button type="primary" onClick={handleSubmit}>
-          Submit
+        <Button type="primary" onClick={handleSubmitAll} loading={loadingSubmit}>
+          Submit All
         </Button>
       </Form>
     </div>

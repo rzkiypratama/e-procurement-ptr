@@ -11,7 +11,7 @@ import {
   Modal,
 } from "antd";
 import dayjs from "dayjs";
-import useTenagaAhliStore from "../store/tenagaAhliStore";
+import useTenagaAhliStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
 
@@ -332,9 +332,6 @@ const TenagaAhli: React.FC = () => {
             onChange: cancel,
           }}
         />
-        <Button type="primary" onClick={handleSubmit}>
-          Submit
-        </Button>
       </Form>
     </div>
   );

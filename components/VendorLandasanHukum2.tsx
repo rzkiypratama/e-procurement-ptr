@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Table, Button, Form, Input, InputNumber, DatePicker, Typography, Popconfirm, Modal } from "antd";
 import dayjs from "dayjs";
-import useLandasanHukumStore from "../store/landasanHukumStore";
+import useLandasanHukumStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
 
@@ -196,9 +196,6 @@ const LandasanHukum: React.FC = () => {
             onChange: cancel,
           }}
         />
-        <Button type="primary" onClick={handleSubmit}>
-          Submit
-        </Button>
       </Form>
     </div>
   );
