@@ -1,39 +1,38 @@
 import { create } from 'zustand';
 
 interface GeneralInfoFormValues {
-  company_name: string;
-  company_npwp: number;
-  vendor_type: string;
-  company_address: string;
-  city_id: string;
+  companyName: string;
+  companyNPWP: string;
+  status: string;
+  companyAddress: string;
+  city: string;
   province: string;
-  postal_code: number;
-  company_phone_number: string;
-  company_fax: string;
-  company_email: string;
+  postalCode: string;
+  companyPhone: string;
+  companyFax: string;
+  companyEmail: string;
 }
 
 interface ContactInfoFormValues {
-  contact_name: string;
-  contact_phone: string;
-  contact_email: string;
-  position_id: string;
-  contact_identity_no: string;
-  contact_npwp: string;
+  contactName: string;
+  contactPhone: string;
+  contactEmail: string;
+  contactPosition: string;
+  contactNPWP: string;
 }
 
 interface AuthorizationFormValues {
   username: string;
   password: string;
-  // confirmpassord: string;
+  confirmpassord: string;
 }
 
 interface FormState {
   generalInfo: GeneralInfoFormValues;
-  contactInfo: ContactInfoFormValues;
+  contactInfo: ContactInfoFormValues[];
   authorization: AuthorizationFormValues;
   setGeneralInfo: (info: GeneralInfoFormValues) => void;
-  setContactInfo: (info: ContactInfoFormValues) => void;
+  setContactInfo: (info: ContactInfoFormValues[]) => void;
   setAuthorization: (info: AuthorizationFormValues) => void;
   isFormValid: boolean;
   setFormValid: (isValid: boolean) => void;
@@ -43,28 +42,22 @@ interface FormState {
 
 export const useFormStore = create<FormState>((set) => ({
   generalInfo: {
-    company_name: "",
-    company_npwp: 0,
-    vendor_type: "",
-    company_address: "",
-    city_id: "",
-    province: "",
-    postal_code: 0,
-    company_phone_number: "",
-    company_fax: "",
-    company_email: "",
+    companyName: '',
+    companyNPWP: '',
+    status: '',
+    companyAddress: '',
+    city: '',
+    province: '',
+    postalCode: '',
+    companyPhone: '',
+    companyFax: '',
+    companyEmail: '',
   },
-  contactInfo: {
-  contact_name: "",
-  contact_phone: "",
-  contact_email: "",
-  position_id: "",
-  contact_identity_no: "",
-  contact_npwp: "",
-  },
+  contactInfo: [],
   authorization: {
     username: '',
     password: '',
+    confirmpassord: ''
   },
   setGeneralInfo: (info) => set({ generalInfo: info }),
   setContactInfo: (info) => set({ contactInfo: info }),

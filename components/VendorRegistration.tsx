@@ -1,19 +1,31 @@
 import { useState } from "react";
-import { Tabs, Button, Form, Input, Select, Table, Space, Modal } from "antd";
+import {
+  Tabs,
+  Button,
+  Form,
+  Input,
+  Select,
+  Table,
+  Space,
+  Modal,
+  Spin,
+  message
+} from "antd";
 import { useFormStore } from "../store";
-import * as Yup from "yup";
 import { useFormik } from "formik";
+import axios from "axios";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
 
 interface ContactPerson {
   id: number;
-  name: string;
-  phone: string;
-  email: string;
-  position: string;
-  npwp: string;
+  contact_name: string;
+  contact_phone: string;
+  contact_email: string;
+  position_id: string;
+  contact_npwp: string;
+  contact_identity_no: string;
 }
 
 const RegistrationForm = () => {
@@ -25,10 +37,12 @@ const RegistrationForm = () => {
     contactInfo,
     authorization,
   } = useFormStore();
+  const { loading, setLoading } = useFormStore();
   const [activeTab, setActiveTab] = useState("1");
   const [contactPersons, setContactPersons] = useState<ContactPerson[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [nextId, setNextId] = useState<number>(1);
+  const [formSubmitted, setFormSubmitted] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -36,53 +50,54 @@ const RegistrationForm = () => {
       ...contactInfo,
       ...authorization,
     },
-    validationSchema: Yup.object({
-      companyName: Yup.string().required("Required"),
-      companyNPWP: Yup.string().required("Required"),
-      status: Yup.string().required("Required"),
-      companyAddress: Yup.string().required("Required"),
-      city: Yup.string().required("Required"),
-      province: Yup.string().required("Required"),
-      postalCode: Yup.string().required("Required"),
-      companyPhone: Yup.string().required("Required"),
-      companyFax: Yup.string().required("Required"),
-      companyEmail: Yup.string().required("Required"),
-      username: Yup.string().required("Required"),
-      password: Yup.string().required("Required"),
-    }),
-    onSubmit: (values) => {
-      console.log("Form Values:", values);
+    onSubmit: async (values) => {
+      setLoading(true);
+      try {
+        const response = await axios.post("https://vendor.eproc.latansa.sch.id/api/auth/register", values);
+        console.log("Response from API:", response.data);
+        setFormSubmitted(true);
+        message.success(`register successfully`);
+      } catch (error) {
+        message.error(`register failed, use different email/username`);
+        console.error("Error submitting form:", error);
+      } finally {
+        setLoading(false);
+      }
+
       setGeneralInfo({
-        companyName: values.companyName,
-        companyNPWP: values.companyNPWP,
-        status: values.status,
-        companyAddress: values.companyAddress,
-        city: values.city,
+        company_name: values.company_name,
+        company_npwp: values.company_npwp,
+        vendor_type: values.vendor_type,
+        company_address: values.company_address,
+        city_id: values.city_id,
         province: values.province,
-        postalCode: values.postalCode,
-        companyPhone: values.companyPhone,
-        companyFax: values.companyFax,
-        companyEmail: values.companyEmail,
+        postal_code: values.postal_code,
+        company_phone_number: values.company_phone_number,
+        company_fax: values.company_fax,
+        company_email: values.company_email,
       });
-    
+
       setContactInfo({
-        contactName: Array.isArray(values.contactName)
-          ? values.contactName.map((name) => name.trim()).join(", ")
-          : values.contactName,
-        contactPhone: Array.isArray(values.contactPhone)
-          ? values.contactPhone.map((phone) => phone.trim()).join(", ")
-          : values.contactPhone,
-        contactEmail: Array.isArray(values.contactEmail)
-          ? values.contactEmail.map((email) => email.trim()).join(", ")
-          : values.contactEmail,
-        contactPosition: Array.isArray(values.contactPosition)
-          ? values.contactPosition.map((position) => position.trim()).join(", ")
-          : values.contactPosition,
-        contactNPWP: Array.isArray(values.contactNPWP)
-          ? values.contactNPWP.map((npwp) => npwp.trim()).join(", ")
-          : values.contactNPWP,
+        contact_name: Array.isArray(values.contact_name)
+          ? values.contact_name.map((name) => name.trim()).join("| ")
+          : values.contact_name,
+        contact_phone: Array.isArray(values.contact_phone)
+          ? values.contact_phone.map((phone) => phone.trim()).join("| ")
+          : values.contact_phone,
+        contact_email: Array.isArray(values.contact_email)
+          ? values.contact_email.map((email) => email.trim()).join("| ")
+          : values.contact_email,
+        position_id: Array.isArray(values.position_id)
+          ? values.position_id.map((position) => position.trim()).join(", ")
+          : values.position_id,
+        contact_npwp: Array.isArray(values.contact_npwp)
+          ? values.contact_npwp.map((npwp) => npwp.trim()).join("| ")
+          : values.contact_npwp,
+        contact_identity_no: Array.isArray(values.contact_identity_no)
+          ? values.contact_identity_no.map((ktp) => ktp.trim()).join("| ")
+          : values.contact_identity_no,
       });
-    
+
       setAuthorization({
         username: values.username,
         password: values.password,
@@ -93,25 +108,29 @@ const RegistrationForm = () => {
   const handleAddContact = () => {
     const newContact: ContactPerson = {
       id: nextId,
-      name: formik.values.contactName,
-      phone: formik.values.contactPhone,
-      email: formik.values.contactEmail,
-      position: formik.values.contactPosition,
-      npwp: formik.values.contactNPWP,
+      contact_name: formik.values.contact_name,
+      contact_phone: formik.values.contact_phone,
+      contact_email: formik.values.contact_email,
+      position_id: formik.values.position_id,
+      contact_npwp: formik.values.contact_npwp,
+      contact_identity_no: formik.values.contact_identity_no
     };
-  
+
     const updatedContacts = [...contactPersons, newContact];
     setContactPersons(updatedContacts);
-  
+
     formik.setValues({
       ...formik.values,
-      contactName: updatedContacts.map((contact) => contact.name).join(", "),
-      contactPhone: updatedContacts.map((contact) => contact.phone).join(", "),
-      contactEmail: updatedContacts.map((contact) => contact.email).join(", "),
-      contactPosition: updatedContacts.map((contact) => contact.position).join(", "),
-      contactNPWP: updatedContacts.map((contact) => contact.npwp).join(", "),
+      contact_name: updatedContacts.map((contact) => contact.contact_name).join(" | "),
+      contact_phone: updatedContacts.map((contact) => contact.contact_phone).join(" | "),
+      contact_email: updatedContacts.map((contact) => contact.contact_email).join(" | "),
+      contact_identity_no: updatedContacts.map((contact) => contact.contact_identity_no).join(" | "),
+      position_id: updatedContacts
+        .map((contact) => contact.position_id)
+        .join(" | "),
+        contact_npwp: updatedContacts.map((contact) => contact.contact_npwp).join(" | "),
     });
-  
+
     setNextId(nextId + 1);
     setIsModalVisible(false);
   };
@@ -133,7 +152,7 @@ const RegistrationForm = () => {
 
   const columns = [
     {
-      title: "ID",
+      title: "No",
       dataIndex: "id",
       key: "id",
       width: "5%",
@@ -141,39 +160,43 @@ const RegistrationForm = () => {
     },
     {
       title: "Nama",
-      dataIndex: "name",
-      key: "name",
+      dataIndex: "contact_name",
+      key: "contact_name",
       editable: true,
     },
     {
       title: "Nomor Handphone",
-      dataIndex: "phone",
-      key: "phone",
+      dataIndex: "contact_phone",
+      key: "contact_phone",
       editable: true,
     },
     {
       title: "Email",
-      dataIndex: "email",
-      key: "email",
+      dataIndex: "contact_email",
+      key: "contact_email",
       editable: true,
     },
     {
       title: "Jabatan",
-      dataIndex: "position",
-      key: "position",
+      dataIndex: "position_id",
+      key: "position_id",
       editable: true,
     },
     {
       title: "NPWP",
-      dataIndex: "npwp",
-      key: "npwp",
+      dataIndex: "contact_npwp",
+      key: "contact_npwp",
+    },
+    {
+      title: "NO KTP",
+      dataIndex: "contact_identity_no",
+      key: "contact_identity_no",
     },
     {
       title: "Aksi",
       key: "action",
       render: (_text: any, record: ContactPerson) => (
         <Space size="middle">
-          <Button onClick={() => handleEditContact(record.id)}>Edit</Button>
           <Button onClick={() => handleDeleteContact(record.id)}>Delete</Button>
         </Space>
       ),
@@ -184,12 +207,6 @@ const RegistrationForm = () => {
     setActiveTab(key);
   };
 
-  const handleNext = () => {
-    const currentTab = parseInt(activeTab);
-    const nextTab = (currentTab + 1).toString();
-    setActiveTab(nextTab);
-  };
-
   const handleSubmit = () => {
     formik.handleSubmit();
     // Additional submission logic if needed
@@ -197,357 +214,461 @@ const RegistrationForm = () => {
 
   return (
     <div className="rounded-md border p-5 shadow-md">
-      <Tabs activeKey={activeTab} onChange={handleTabChange}>
-        <TabPane tab="Informasi Umum" key="1">
-          <div>
-            <Form onFinish={handleNext} layout="vertical">
-              {/* General Info Fields */}
-              <Form.Item
-                label="Nama Perusahaan"
-                validateStatus={
-                  formik.errors.companyName && formik.touched.companyName
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.companyName && formik.touched.companyName
-                    ? formik.errors.companyName
-                    : ""
-                }
-              >
-                <Input
-                  id="companyName"
-                  name="companyName"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.companyName}
-                />
-              </Form.Item>
-              <Form.Item
-                label="NPWP Perusahaan"
-                validateStatus={
-                  formik.errors.companyNPWP && formik.touched.companyNPWP
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.companyNPWP && formik.touched.companyNPWP
-                    ? formik.errors.companyNPWP
-                    : ""
-                }
-              >
-                <Input
-                  id="companyNPWP"
-                  name="companyNPWP"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.companyNPWP}
-                />
-              </Form.Item>
-              <Form.Item
-                label="Status"
-                validateStatus={
-                  formik.errors.status && formik.touched.status ? "error" : ""
-                }
-                help={
-                  formik.errors.status && formik.touched.status
-                    ? formik.errors.status
-                    : ""
-                }
-              >
-                <Select
-                  id="status"
-                  onChange={(value) => formik.setFieldValue("status", value)}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.status}
+      {loading ? (
+        <div className="text-center">
+          <Spin size="large" />
+          <p>Mengirimkan formulir...</p>
+        </div>
+      ) : !formSubmitted ? (
+        <div>
+          <Tabs activeKey={activeTab} onChange={handleTabChange}>
+            <TabPane tab="Profile Perusahaan" key="1">
+              <div>
+                <Form layout="vertical">
+                  {/* General Info Fields */}
+                  <Form.Item
+                    label="Nama Perusahaan"
+                    validateStatus={
+                      formik.errors.company_name && formik.touched.company_name
+                        ? "error"
+                        : ""
+                    }
+                    help={
+                      formik.errors.company_name && formik.touched.company_name
+                        ? formik.errors.company_name
+                        : ""
+                    }
+                  >
+                    <Input
+                      id="company_name"
+                      name="company_name"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.company_name}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label="NPWP Perusahaan"
+                    validateStatus={
+                      formik.errors.company_npwp && formik.touched.company_npwp
+                        ? "error"
+                        : ""
+                    }
+                    help={
+                      formik.errors.company_npwp && formik.touched.company_npwp
+                        ? formik.errors.company_npwp
+                        : ""
+                    }
+                  >
+                    <Input
+                      id="company_npwp"
+                      name="company_npwp"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.company_npwp}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label="Status"
+                    validateStatus={
+                      formik.errors.vendor_type && formik.touched.vendor_type
+                        ? "error"
+                        : ""
+                    }
+                    help={
+                      formik.errors.vendor_type && formik.touched.vendor_type
+                        ? formik.errors.vendor_type
+                        : ""
+                    }
+                  >
+                    <Select
+                      id="vendor_type"
+                      onChange={(value) =>
+                        formik.setFieldValue("vendor_type", value)
+                      }
+                      onBlur={formik.handleBlur}
+                      value={formik.values.vendor_type}
+                    >
+                      <Option value="1">Pusat</Option>
+                      <Option value="2">Cabang</Option>
+                    </Select>
+                  </Form.Item>
+                  <Form.Item
+                    label="Alamat Perusahaan"
+                    validateStatus={
+                      formik.errors.company_address &&
+                      formik.touched.company_address
+                        ? "error"
+                        : ""
+                    }
+                    help={
+                      formik.errors.company_address &&
+                      formik.touched.company_address
+                        ? formik.errors.company_address
+                        : ""
+                    }
+                  >
+                    <Input
+                      id="company_address"
+                      name="company_address"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.company_address}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label="Kota"
+                    validateStatus={
+                      formik.errors.city_id && formik.touched.city_id ? "error" : ""
+                    }
+                    help={
+                      formik.errors.city_id && formik.touched.city_id
+                        ? formik.errors.city_id
+                        : ""
+                    }
+                  >
+                     <Select
+                      id="city_id"
+                      onChange={(value) =>
+                        formik.setFieldValue("city_id", value)
+                      }
+                      onBlur={formik.handleBlur}
+                      value={formik.values.city_id}
+                    >
+                      <Option value={1}>Medan</Option>
+                      <Option value={2}>Banjarnegara</Option>
+                    </Select>
+                  </Form.Item>
+                  {/* <Form.Item
+                    label="Provinsi"
+                    validateStatus={
+                      formik.errors.province && formik.touched.province
+                        ? "error"
+                        : ""
+                    }
+                    help={
+                      formik.errors.province && formik.touched.province
+                        ? formik.errors.province
+                        : ""
+                    }
+                  >
+                    <Input
+                      id="province"
+                      name="province"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.province}
+                    />
+                  </Form.Item> */}
+                  <Form.Item
+                    label="Kode Pos"
+                    validateStatus={
+                      formik.errors.postal_code && formik.touched.postal_code
+                        ? "error"
+                        : ""
+                    }
+                    help={
+                      formik.errors.postal_code && formik.touched.postal_code
+                        ? formik.errors.postal_code
+                        : ""
+                    }
+                  >
+                    <Input
+                      id="postal_code"
+                      name="postal_code"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.postal_code}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label="Nomor Telepon Perusahaan"
+                    validateStatus={
+                      formik.errors.company_phone_number && formik.touched.company_phone_number
+                        ? "error"
+                        : ""
+                    }
+                    help={
+                      formik.errors.company_phone_number && formik.touched.company_phone_number
+                        ? formik.errors.company_phone_number
+                        : ""
+                    }
+                  >
+                    <Input
+                      id="company_phone_number"
+                      name="company_phone_number"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.company_phone_number}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label="Nomor Fax Perusahaan"
+                    validateStatus={
+                      formik.errors.company_fax && formik.touched.company_fax
+                        ? "error"
+                        : ""
+                    }
+                    help={
+                      formik.errors.company_fax && formik.touched.company_fax
+                        ? formik.errors.company_fax
+                        : ""
+                    }
+                  >
+                    <Input
+                      id="company_fax"
+                      name="company_fax"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.company_fax}
+                    />
+                  </Form.Item>
+                  <Form.Item
+                    label="Email Perusahaan"
+                    validateStatus={
+                      formik.errors.company_email && formik.touched.company_email
+                        ? "error"
+                        : ""
+                    }
+                    help={
+                      formik.errors.company_email && formik.touched.company_email
+                        ? formik.errors.company_email
+                        : ""
+                    }
+                    rules={[
+                      {
+                        type: 'email',
+                        message: 'The input is not valid E-mail!',
+                      },
+                      {
+                        required: true,
+                        message: 'Please input your E-mail!',
+                      },
+                    ]}
+                  >
+                    <Input
+                      id="company_email"
+                      name="company_email"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.company_email}
+                    />
+                  </Form.Item>
+                  {/* <Button type="primary" htmlType="submit">
+            Next
+          </Button> */}
+                </Form>
+              </div>
+            </TabPane>
+            <TabPane tab="Contact Person" key="2">
+              <Form onFinish={handleAddContact}>
+                <Button type="primary" onClick={showModal}>
+                  Tambah Contact
+                </Button>
+              </Form>
+              <Table dataSource={contactPersons} columns={columns} rowKey={(record) => record.id.toString()} />
+            </TabPane>
+            <TabPane tab="Authorization" key="3">
+              <Form onFinish={handleSubmit} layout="vertical">
+                {/* Authorization Fields */}
+                <Form.Item
+                  label="Username"
+                  validateStatus={
+                    formik.errors.username && formik.touched.username
+                      ? "error"
+                      : ""
+                  }
+                  help={
+                    formik.errors.username && formik.touched.username
+                      ? formik.errors.username
+                      : ""
+                  }
+                  hasFeedback
                 >
-                  <Option value="pusat">Pusat</Option>
-                  <Option value="cabang">Cabang</Option>
-                </Select>
-              </Form.Item>
+                  <Input
+                    id="username"
+                    name="username"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.username}
+                  />
+                </Form.Item>
+                <Form.Item
+                  label="Password"
+                  validateStatus={
+                    formik.errors.password && formik.touched.password
+                      ? "error"
+                      : ""
+                  }
+                  help={
+                    formik.errors.password && formik.touched.password
+                      ? formik.errors.password
+                      : ""
+                  }
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input your password!",
+                    },
+                  ]}
+                  hasFeedback
+                >
+                  <Input.Password
+                    id="confirm"
+                    name="password"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.password}
+                  />
+                </Form.Item>
+                <Form.Item
+                  id="password"
+                  name="password"
+                  label="Confirm Password"
+                  dependencies={["password"]}
+                  hasFeedback
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please confirm your password!",
+                    },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (
+                          !value ||
+                          getFieldValue("password") === formik.values.password
+                        ) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error(
+                            "The new password that you entered do not match!",
+                          ),
+                        );
+                      },
+                    }),
+                  ]}
+                >
+                  <Input.Password />
+                </Form.Item>
+                <Button type="primary" htmlType="submit">
+                  Submit
+                </Button>
+                {Object.keys(formik.errors).length > 0 && (
+                  <span style={{ color: "red" }}>
+                    Please fill in all required fields.
+                  </span>
+                )}
+              </Form>
+            </TabPane>
+          </Tabs>
+          <Modal
+            title="Tambah Contact"
+            open={isModalVisible}
+            onOk={handleAddContact}
+            onCancel={handleCancel}
+          >
+            <Form layout="vertical">
               <Form.Item
-                label="Alamat Perusahaan"
-                validateStatus={
-                  formik.errors.companyAddress && formik.touched.companyAddress
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.companyAddress && formik.touched.companyAddress
-                    ? formik.errors.companyAddress
-                    : ""
-                }
+                label="Nama"
+                name="contact_name"
+                rules={[{ required: true, message: "Please input your name!" }]}
               >
                 <Input
-                  id="companyAddress"
-                  name="companyAddress"
+                  name="contact_name"
                   onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.companyAddress}
+                  value={formik.values.contact_name}
                 />
               </Form.Item>
+
               <Form.Item
-                label="Kota"
-                validateStatus={
-                  formik.errors.city && formik.touched.city ? "error" : ""
-                }
-                help={
-                  formik.errors.city && formik.touched.city
-                    ? formik.errors.city
-                    : ""
-                }
+                label="Nomor Handphone"
+                name="contact_phone"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please input your phone number!",
+                  },
+                ]}
               >
                 <Input
-                  id="city"
-                  name="city"
+                  name="contact_phone"
                   onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.city}
+                  value={formik.values.contact_phone}
                 />
               </Form.Item>
+
               <Form.Item
-                label="Provinsi"
-                validateStatus={
-                  formik.errors.province && formik.touched.province
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.province && formik.touched.province
-                    ? formik.errors.province
-                    : ""
-                }
+                label="Email"
+                name="contact_email"
+                rules={[
+                  { required: true, message: "Please input your email!" },
+                ]}
               >
                 <Input
-                  id="province"
-                  name="province"
+                  name="contact_email"
                   onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.province}
+                  value={formik.values.contact_email}
                 />
               </Form.Item>
+
               <Form.Item
-                label="Kode Pos"
-                validateStatus={
-                  formik.errors.postalCode && formik.touched.postalCode
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.postalCode && formik.touched.postalCode
-                    ? formik.errors.postalCode
-                    : ""
-                }
+                label="Jabatan"
+                name="position_id"
+                rules={[
+                  { required: true, message: "Please input your position!" },
+                ]}
+              >
+                 <Select
+                      id="position_id"
+                      onChange={(value) =>
+                        formik.setFieldValue("position_id", value)
+                      }
+                      onBlur={formik.handleBlur}
+                      value={formik.values.position_id}
+                    >
+                      <Option value="1">Direktur</Option>
+                      <Option value="2">Komisaris</Option>
+                    </Select>
+              </Form.Item>
+
+              <Form.Item
+                label="NPWP"
+                name="contact_npwp"
+                rules={[{ required: true, message: "Please input your NPWP!" }]}
               >
                 <Input
-                  id="postalCode"
-                  name="postalCode"
+                  name="contact_npwp"
                   onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.postalCode}
+                  value={formik.values.contact_npwp}
                 />
               </Form.Item>
+
               <Form.Item
-                label="Nomor Telepon Perusahaan"
-                validateStatus={
-                  formik.errors.companyPhone && formik.touched.companyPhone
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.companyPhone && formik.touched.companyPhone
-                    ? formik.errors.companyPhone
-                    : ""
-                }
+                label="NO KTP"
+                name="contact_identity_no"
+                rules={[{ required: true, message: "Please input your KTP!" }]}
               >
                 <Input
-                  id="companyPhone"
-                  name="companyPhone"
+                  name="contact_identity_no"
                   onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.companyPhone}
+                  value={formik.values.contact_identity_no}
                 />
               </Form.Item>
-              <Form.Item
-                label="Nomor Fax Perusahaan"
-                validateStatus={
-                  formik.errors.companyFax && formik.touched.companyFax
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.companyFax && formik.touched.companyFax
-                    ? formik.errors.companyFax
-                    : ""
-                }
-              >
-                <Input
-                  id="companyFax"
-                  name="companyFax"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.companyFax}
-                />
-              </Form.Item>
-              <Form.Item
-                label="Email Perusahaan"
-                validateStatus={
-                  formik.errors.companyEmail && formik.touched.companyEmail
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.companyEmail && formik.touched.companyEmail
-                    ? formik.errors.companyEmail
-                    : ""
-                }
-              >
-                <Input
-                  id="companyEmail"
-                  name="companyEmail"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.companyEmail}
-                />
-              </Form.Item>
-              {/* <Button type="primary" htmlType="submit">
-              Next
-            </Button> */}
             </Form>
+          </Modal>
+        </div>
+      ) : (
+        <div className="text-center">
+          <div className="p-10">
+            <p>
+              Selamat {formik.values.company_email}, pendaftaran anda telah
+              berhasil!
+            </p>
+            <p>Silahkan cek email untuk konfirmasi pendaftaran.</p>
           </div>
-        </TabPane>
-        <TabPane tab="Contact Person" key="2">
-          <Form onFinish={handleAddContact}>
-            <Button type="primary" onClick={showModal}>
-              Tambah Contact
-            </Button>
-          </Form>
-          <Table dataSource={contactPersons} columns={columns} />
-        </TabPane>
-        <TabPane tab="Authorization" key="3">
-          <Form onFinish={handleSubmit}  layout="vertical">
-            {/* Authorization Fields */}
-            <Form.Item
-              label="Username"
-              validateStatus={
-                formik.errors.username && formik.touched.username ? "error" : ""
-              }
-              help={
-                formik.errors.username && formik.touched.username
-                  ? formik.errors.username
-                  : ""
-              }
-            >
-              <Input
-                id="username"
-                name="username"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.username}
-              />
-            </Form.Item>
-            <Form.Item
-              label="Password"
-              validateStatus={
-                formik.errors.password && formik.touched.password ? "error" : ""
-              }
-              help={
-                formik.errors.password && formik.touched.password
-                  ? formik.errors.password
-                  : ""
-              }
-            >
-              <Input.Password
-                id="password"
-                name="password"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.password}
-              />
-            </Form.Item>
-            <Button type="primary" htmlType="submit">
-              Submit
-            </Button>
-            {Object.keys(formik.errors).length > 0 && (
-              <span style={{ color: "red" }}>
-                Please fill in all required fields.
-              </span>
-            )}
-          </Form>
-        </TabPane>
-      </Tabs>
-<Modal
-  title="Tambah Contact"
-  open={isModalVisible}
-  onOk={handleAddContact} // Ubah onFinish menjadi handleAddContact
-  onCancel={handleCancel}
->
-  <Form layout="vertical">
-    <Form.Item
-      label="Nama"
-      name="contactName"
-      rules={[{ required: true, message: "Please input your name!" }]}
-    >
-      <Input
-        name="contactName"
-        onChange={formik.handleChange}
-        value={formik.values.contactName}
-      />
-    </Form.Item>
-
-    <Form.Item
-      label="Nomor Handphone"
-      name="contactPhone"
-      rules={[
-        { required: true, message: "Please input your phone number!" },
-      ]}
-    >
-      <Input
-        name="contactPhone"
-        onChange={formik.handleChange}
-        value={formik.values.contactPhone}
-      />
-    </Form.Item>
-
-    <Form.Item
-      label="Email"
-      name="contactEmail"
-      rules={[{ required: true, message: "Please input your email!" }]}
-    >
-      <Input
-        name="contactEmail"
-        onChange={formik.handleChange}
-        value={formik.values.contactEmail}
-      />
-    </Form.Item>
-
-    <Form.Item
-      label="Jabatan"
-      name="contactPosition"
-      rules={[
-        { required: true, message: "Please input your position!" },
-      ]}
-    >
-      <Input
-        name="contactPosition"
-        onChange={formik.handleChange}
-        value={formik.values.contactPosition}
-      />
-    </Form.Item>
-
-    <Form.Item
-      label="NPWP"
-      name="contactNPWP"
-      rules={[{ required: true, message: "Please input your NPWP!" }]}
-    >
-      <Input
-        name="contactNPWP"
-        onChange={formik.handleChange}
-        value={formik.values.contactNPWP}
-      />
-    </Form.Item>
-  </Form>
-</Modal>
+        </div>
+      )}
     </div>
   );
 };

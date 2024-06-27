@@ -10,16 +10,17 @@ import {
   Popconfirm,
   Modal,
 } from "antd";
-import { id } from "date-fns/locale";
-import useIzinUsahaStore from "../store/izinUsahaStore";
+import dayjs from "dayjs";
+import useIzinUsahaStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
+import { useFormik } from "formik";
 
 const { TextArea } = Input;
 
 interface IzinUsaha {
   id: number;
   jenisIzin: string;
-  nomorIzin: number;
+  nomorIzin: string;
   tanggalIzin: string;
   tanggalBerakhir: string;
   instansiPemberiIzin: string;
@@ -39,16 +40,41 @@ const IzinUsaha: React.FC = () => {
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState<string>("");
 
+  const formik = useFormik({
+    initialValues: {
+      jenisIzin: "",
+      nomorIzin: "",
+      tanggalIzin: "",
+      tanggalBerakhir: "",
+      instansiPemberiIzin: "",
+      instansiBerlakuIzinUsaha: "",
+      bidangUsaha: "",
+    },
+    onSubmit: (values) => {
+      console.log("Izin Usaha Value:", values);
+      addIzinUsaha({ ...values, id: izinUsaha.length + 1 });
+      setIsModalVisible(false);
+      formik.resetForm();
+    },
+  });
+
   useEffect(() => {
-    // Initialize data if needed
-    const initialData: IzinUsaha[] = []; // Load your initial data here
+    const initialData: IzinUsaha[] = [];
     initializeIzinUsaha(initialData);
   }, [initializeIzinUsaha]);
 
   const isEditing = (record: IzinUsaha) => record.id.toString() === editingKey;
 
   const edit = (record: Partial<IzinUsaha> & { id: React.Key }) => {
-    form.setFieldsValue({ ...record });
+    form.setFieldsValue({
+      ...record,
+      tanggalIzin: record.tanggalIzin
+        ? dayjs(record.tanggalIzin, "DD-MM-YYYY")
+        : null,
+      tanggalBerakhir: record.tanggalBerakhir
+        ? dayjs(record.tanggalBerakhir, "DD-MM-YYYY")
+        : null,
+    });
     setEditingKey(record.id.toString());
   };
 
@@ -59,11 +85,21 @@ const IzinUsaha: React.FC = () => {
   const save = async (id: React.Key) => {
     try {
       const row = (await form.validateFields()) as IzinUsaha;
-      editIzinUsaha({ ...row, id: Number(id) });
+      const updatedRow = {
+        ...row,
+        id: Number(id),
+        tanggalIzin: dayjs(row.tanggalIzin).format("DD-MM-YYYY"),
+        tanggalBerakhir: dayjs(row.tanggalBerakhir).format("DD-MM-YYYY"),
+      };
+      editIzinUsaha(updatedRow);
       setEditingKey("");
     } catch (errInfo) {
       console.log("Validate Failed:", errInfo);
     }
+  };
+
+  const handleDelete = (id: React.Key) => {
+    removeIzinUsaha(Number(id));
   };
 
   const columns = [
@@ -86,11 +122,7 @@ const IzinUsaha: React.FC = () => {
       key: "tanggalIzin",
       editable: true,
       render: (text: string) =>
-      new Date(text).toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }),
+        text ? dayjs(text, "DD-MM-YYYY").format("DD-MM-YYYY") : "",
     },
     {
       title: "Tanggal Berakhir",
@@ -98,11 +130,7 @@ const IzinUsaha: React.FC = () => {
       key: "tanggalBerakhir",
       editable: true,
       render: (text: string) =>
-      new Date(text).toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }),
+        text ? dayjs(text, "DD-MM-YYYY").format("DD-MM-YYYY") : "",
     },
     {
       title: "Instansi Pemberi Izin",
@@ -140,12 +168,21 @@ const IzinUsaha: React.FC = () => {
             </Popconfirm>
           </span>
         ) : (
-          <Typography.Link
-            disabled={editingKey !== ""}
-            onClick={() => edit(record)}
-          >
-            Edit
-          </Typography.Link>
+          <span>
+            <Typography.Link
+              disabled={editingKey !== ""}
+              onClick={() => edit(record)}
+              style={{ marginRight: 8 }}
+            >
+              Edit
+            </Typography.Link>
+            <Popconfirm
+              title="Sure to delete?"
+              onConfirm={() => handleDelete(record.id)}
+            >
+              <a>Delete</a>
+            </Popconfirm>
+          </span>
         );
       },
     },
@@ -160,11 +197,10 @@ const IzinUsaha: React.FC = () => {
       onCell: (record: IzinUsaha) => ({
         record,
         inputType:
-          col.dataIndex === "nomorIzin"
-            ? "number"
-            : col.dataIndex.includes("tanggal")
-              ? "date"
-              : "text",
+        col.dataIndex === "nomorIzin" || col.dataIndex.includes("nomorIzin") ? "number" :
+        col.dataIndex === "tanggalIzin" || col.dataIndex.includes("tanggalIzin") ? "date" :
+        col.dataIndex === "tanggalBerakhir" || col.dataIndex.includes("tanggalBerakhir") ? "date" :
+        "text",
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record),
@@ -177,15 +213,19 @@ const IzinUsaha: React.FC = () => {
   };
 
   const handleOk = () => {
-    form.validateFields().then((values) => {
-      addIzinUsaha({ ...values, id: izinUsaha.length + 1 });
-      setIsModalVisible(false);
-      form.resetFields();
-    });
+    addIzinUsaha({ ...formik.values, id: izinUsaha.length + 1 });
+    setIsModalVisible(false);
+    formik.resetForm();
   };
 
   const handleCancel = () => {
     setIsModalVisible(false);
+    formik.resetForm();
+  };
+
+  const handleSubmit = () => {
+    console.log("Submitting data:", izinUsaha);
+    // Additional submission logic if needed
   };
 
   return (
@@ -194,60 +234,93 @@ const IzinUsaha: React.FC = () => {
         Tambah Izin Usaha
       </Button>
       <Modal
-        title="Tambah Izin Usaha"
-        visible={isModalVisible}
+        title="Tambah Landasan Hukum"
+        open={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
       >
-        <Form form={form} layout="vertical">
-          <Form.Item
+        <Form>
+        <Form.Item
             name="jenisIzin"
             label="Jenis Izin"
             rules={[{ required: true }]}
           >
-            <Input />
+            <Input
+              name="jenisIzin"
+              value={formik.values.jenisIzin}
+              onChange={formik.handleChange}
+            />
           </Form.Item>
           <Form.Item
             name="nomorIzin"
             label="Nomor Izin"
             rules={[{ required: true }]}
           >
-            <InputNumber />
+            <InputNumber
+              name="nomorIzin"
+              value={formik.values.nomorIzin}
+              onChange={(value) => formik.setFieldValue("nomorIzin", value)}
+            />
           </Form.Item>
           <Form.Item
             name="tanggalIzin"
             label="Tanggal Izin"
             rules={[{ required: true }]}
           >
-            <DatePicker />
+            <DatePicker
+              format="DD-MM-YYYY"
+              name="tanggalIzin"
+              onChange={(date, dateString) =>
+                formik.setFieldValue("tanggalIzin", dateString)
+              }
+            />
           </Form.Item>
           <Form.Item
             name="tanggalBerakhir"
             label="Tanggal Berakhir"
             rules={[{ required: true }]}
           >
-            <DatePicker />
+            <DatePicker
+              name="tanggalBerakhir"
+              format="DD-MM-YYYY"
+              onChange={(date, dateString) =>
+                formik.setFieldValue("tanggalBerakhir", dateString)
+              }
+            />
           </Form.Item>
           <Form.Item
             name="instansiPemberiIzin"
             label="Instansi Pemberi Izin"
             rules={[{ required: true }]}
           >
-            <Input />
+            <Input
+              name="instansiPemberiIzin"
+              value={formik.values.instansiPemberiIzin}
+              onChange={formik.handleChange}
+            />
           </Form.Item>
           <Form.Item
             name="instansiBerlakuIzinUsaha"
             label="Masa Berlaku Izin Usaha"
             rules={[{ required: true }]}
           >
-            <Input />
+            <Input
+              name="instansiBerlakuIzinUsaha"
+              value={formik.values.instansiBerlakuIzinUsaha}
+              onChange={formik.handleChange}
+            />
           </Form.Item>
           <Form.Item
             name="bidangUsaha"
             label="Bidang Usaha"
             rules={[{ required: true }]}
           >
-            <TextArea rows={4} />
+            <TextArea
+              name="bidangUsaha"
+              value={formik.values.bidangUsaha}
+              onChange={formik.handleChange}
+              rows={4}
+            />
           </Form.Item>
         </Form>
       </Modal>
@@ -266,6 +339,9 @@ const IzinUsaha: React.FC = () => {
             onChange: cancel,
           }}
         />
+        <Button type="primary" onClick={handleSubmit}>
+          Submit
+        </Button>
       </Form>
     </div>
   );

@@ -9,41 +9,40 @@ import {
   Popconfirm,
   Modal,
 } from "antd";
-import usePengurusPerusahaanStore from "../store/CenterStore";
+import usePengalamanStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
 
 const { TextArea } = Input;
-interface PengurusPerusahaan {
-  id: number;
-  namaPengurus: string;
-  jabatanPengurus: string;
-  noKTPPengurus: string;
-  npwpPengurus: string;
-}
+
+interface Pengalaman {
+    id: number;
+    namaPekerjaan: string;
+    bidangPekerjaan: string;
+    lokasiPekerjaan: string;
+  }
 
 const PengurusPerusahaan: React.FC = () => {
   const {
-    pengurusPerusahaan,
-    addPengurusPerusahaan,
-    editPengurusPerusahaan,
-    removePengurusPerusahaan,
-    initializePengurusPerusahaan,
-  } = usePengurusPerusahaanStore();
+    pengalaman,
+    addPengalaman,
+    editPengalaman,
+    removePengalaman,
+    initializePengalaman,
+  } = usePengalamanStore();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState<string>("");
 
   const formik = useFormik({
     initialValues: {
-      namaPengurus: "",
-      jabatanPengurus: "",
-      noKTPPengurus: "",
-      npwpPengurus: "",
+        namaPekerjaan: "",
+        bidangPekerjaan: "",
+        lokasiPekerjaan: "",
     },
     onSubmit: (values) => {
       console.log("Pengurus Value:", values);
-      addPengurusPerusahaan({ ...values, id: pengurusPerusahaan.length + 1 });
+      addPengalaman({ ...values, id: pengalaman.length + 1 });
       setIsModalVisible(false);
       formik.resetForm();
     },
@@ -51,14 +50,14 @@ const PengurusPerusahaan: React.FC = () => {
 
   useEffect(() => {
     // Initialize data if needed
-    const initialData: PengurusPerusahaan[] = []; // Load your initial data here
-    initializePengurusPerusahaan(initialData);
-  }, [initializePengurusPerusahaan]);
+    const initialData: Pengalaman[] = []; // Load your initial data here
+    initializePengalaman(initialData);
+  }, [initializePengalaman]);
 
-  const isEditing = (record: PengurusPerusahaan) =>
+  const isEditing = (record: Pengalaman) =>
     record.id.toString() === editingKey;
 
-  const edit = (record: Partial<PengurusPerusahaan> & { id: React.Key }) => {
+  const edit = (record: Partial<Pengalaman> & { id: React.Key }) => {
     form.setFieldsValue({ ...record });
     setEditingKey(record.id.toString());
   };
@@ -69,8 +68,8 @@ const PengurusPerusahaan: React.FC = () => {
 
   const save = async (id: React.Key) => {
     try {
-      const row = (await form.validateFields()) as PengurusPerusahaan;
-      editPengurusPerusahaan({ ...row, id: Number(id) });
+      const row = (await form.validateFields()) as Pengalaman;
+      editPengalaman({ ...row, id: Number(id) });
       setEditingKey("");
     } catch (errInfo) {
       console.log("Validate Failed:", errInfo);
@@ -78,19 +77,18 @@ const PengurusPerusahaan: React.FC = () => {
   };
 
   const handleDelete = (id: React.Key) => {
-    removePengurusPerusahaan(Number(id));
+    removePengalaman(Number(id));
   };
 
   const columns = [
     { title: "No", dataIndex: "id", key: "id" },
-    { title: "Nama", dataIndex: "namaPengurus", key: "namaPengurus", editable: true },
-    { title: "Jabatan", dataIndex: "jabatanPengurus", key: "jabatanPengurus", editable: true },
-    { title: "No KTP", dataIndex: "noKTPPengurus", key: "noKTPPengurus", editable: true },
-    { title: "NPWP", dataIndex: "npwpPengurus", key: "npwpPengurus", editable: true },
+    { title: "Nama Pekerjaan", dataIndex: "namaPekerjaan", key: "namaPekerjaan", editable: true },
+    { title: "Bidang Pekerjaan", dataIndex: "bidangPekerjaan", key: "bidangPekerjaan", editable: true },
+    { title: "Lokasi Pekerjaan", dataIndex: "lokasiPekerjaan", key: "lokasiPekerjaan", editable: true },
     {
       title: "Operation",
       dataIndex: "operation",
-      render: (_: any, record: PengurusPerusahaan) => {
+      render: (_: any, record: Pengalaman) => {
         const editable = isEditing(record);
         return editable ? (
           <span>
@@ -121,10 +119,10 @@ const PengurusPerusahaan: React.FC = () => {
     }
     return {
       ...col,
-      onCell: (record: PengurusPerusahaan) => ({
+      onCell: (record: Pengalaman) => ({
         record,
         inputType:
-          col.dataIndex === "noKTPPengurus" || col.dataIndex === "npwpPengurus"
+          col.dataIndex === "noKTP" || col.dataIndex === "npwp"
             ? "number"
             : "text",
         dataIndex: col.dataIndex,
@@ -139,9 +137,9 @@ const PengurusPerusahaan: React.FC = () => {
   };
 
   const handleOk = () => {
-    addPengurusPerusahaan({
+    addPengalaman({
       ...formik.values,
-      id: pengurusPerusahaan.length + 1,
+      id: pengalaman.length + 1,
     });
     setIsModalVisible(false);
     form.resetFields();
@@ -152,60 +150,50 @@ const PengurusPerusahaan: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    console.log("Submitting data:", pengurusPerusahaan);
+    console.log("Submitting data:", pengalaman);
     // Additional submission logic if needed
   };
 
   return (
     <div>
       <Button type="primary" onClick={showModal}>
-        Tambah Pengurus Perusahaan
+        Tambah Pengalaman
       </Button>
       <Modal
-        title="Tambah Pengurus Perusahaan"
+        title="Tambah Pengalaman"
         open={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            name="namaPengurus"
-            label="Nama"
-            // rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
+            name="namaPekerjaan"
+            label="Nama Pekerjaan"
+            rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
           >
             <Input
-              value={formik.values.namaPengurus}
+              value={formik.values.namaPekerjaan}
               onChange={formik.handleChange}
             />
           </Form.Item>
           <Form.Item
-            name="jabatanPengurus"
-            label="Jabatan"
-            // rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
+            name="bidangPekerjaan"
+            label="Bidang Pekerjaan"
+            rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
           >
             <Input
-              value={formik.values.jabatanPengurus}
+              value={formik.values.bidangPekerjaan}
               onChange={formik.handleChange}
             />
           </Form.Item>
           <Form.Item
-            name="noKTPPengurus"
-            label="No KTP"
-            rules={[{ required: true, message: "KTP harus berupa angka" }]}
+            name="lokasiPekerjaan"
+            label="Lokasi Pekerjaan"
+            rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
           >
-            <InputNumber
-              value={formik.values.noKTPPengurus}
-              // onChange={(value) => formik.setFieldValue("noKTPPengurus", value)}
-            />
-          </Form.Item>
-          <Form.Item
-            name="npwpPengurus"
-            label="NPWP"
-            // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
-          >
-            <InputNumber
-              value={formik.values.npwpPengurus}
-              onChange={(value) => formik.setFieldValue("npwpPengurus", value)}
+            <Input
+              value={formik.values.lokasiPekerjaan}
+              onChange={formik.handleChange}
             />
           </Form.Item>
         </Form>
@@ -218,16 +206,13 @@ const PengurusPerusahaan: React.FC = () => {
             },
           }}
           bordered
-          dataSource={pengurusPerusahaan}
+          dataSource={pengalaman}
           columns={mergedColumns}
           rowClassName="editable-row"
           pagination={{
             onChange: cancel,
           }}
         />
-         <Button type="primary" onClick={handleSubmit}>
-          Submit
-        </Button>
       </Form>
     </div>
   );
