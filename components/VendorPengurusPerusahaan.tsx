@@ -18,8 +18,8 @@ interface PengurusPerusahaan {
   id: number;
   namaPengurus: string;
   jabatanPengurus: string;
-  noKTPPengurus: number;
-  npwpPengurus: number;
+  noKTPPengurus: string;
+  npwpPengurus: string;
 }
 
 const PengurusPerusahaan: React.FC = () => {
@@ -38,8 +38,8 @@ const PengurusPerusahaan: React.FC = () => {
     initialValues: {
       namaPengurus: "",
       jabatanPengurus: "",
-      noKTPPengurus: 0,
-      npwpPengurus: 0,
+      noKTPPengurus: "",
+      npwpPengurus: "",
     },
     onSubmit: (values) => {
       console.log("Pengurus Value:", values);
@@ -124,7 +124,7 @@ const PengurusPerusahaan: React.FC = () => {
       onCell: (record: PengurusPerusahaan) => ({
         record,
         inputType:
-          col.dataIndex === "noKTP" || col.dataIndex === "npwp"
+          col.dataIndex === "noKTPPengurus" || col.dataIndex === "npwpPengurus"
             ? "number"
             : "text",
         dataIndex: col.dataIndex,
@@ -171,7 +171,7 @@ const PengurusPerusahaan: React.FC = () => {
           <Form.Item
             name="namaPengurus"
             label="Nama"
-            rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
+            // rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
           >
             <Input
               value={formik.values.namaPengurus}
@@ -181,7 +181,7 @@ const PengurusPerusahaan: React.FC = () => {
           <Form.Item
             name="jabatanPengurus"
             label="Jabatan"
-            rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
+            // rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
           >
             <Input
               value={formik.values.jabatanPengurus}
@@ -195,13 +195,13 @@ const PengurusPerusahaan: React.FC = () => {
           >
             <InputNumber
               value={formik.values.noKTPPengurus}
-              onChange={(value) => formik.setFieldValue("noKTPPengurus", value)}
+              // onChange={(value) => formik.setFieldValue("noKTPPengurus", value)}
             />
           </Form.Item>
           <Form.Item
             name="npwpPengurus"
             label="NPWP"
-            rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+            // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
           >
             <InputNumber
               value={formik.values.npwpPengurus}
@@ -225,6 +225,9 @@ const PengurusPerusahaan: React.FC = () => {
             onChange: cancel,
           }}
         />
+         <Button type="primary" onClick={handleSubmit}>
+          Submit
+        </Button>
       </Form>
     </div>
   );

@@ -20,7 +20,7 @@ const { TextArea } = Input;
 interface IzinUsaha {
   id: number;
   jenisIzin: string;
-  nomorIzin: number;
+  nomorIzin: string;
   tanggalIzin: string;
   tanggalBerakhir: string;
   instansiPemberiIzin: string;
@@ -43,7 +43,7 @@ const IzinUsaha: React.FC = () => {
   const formik = useFormik({
     initialValues: {
       jenisIzin: "",
-      nomorIzin: 0,
+      nomorIzin: "",
       tanggalIzin: "",
       tanggalBerakhir: "",
       instansiPemberiIzin: "",
@@ -197,7 +197,7 @@ const IzinUsaha: React.FC = () => {
       onCell: (record: IzinUsaha) => ({
         record,
         inputType:
-        col.dataIndex === "nomorIzin" ? "number" :
+        col.dataIndex === "nomorIzin" || col.dataIndex.includes("nomorIzin") ? "number" :
         col.dataIndex === "tanggalIzin" || col.dataIndex.includes("tanggalIzin") ? "date" :
         col.dataIndex === "tanggalBerakhir" || col.dataIndex.includes("tanggalBerakhir") ? "date" :
         "text",

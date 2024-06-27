@@ -5,13 +5,13 @@ interface PengurusPerusahaan {
   id: number;
   namaPengurus: string;
   jabatanPengurus: string;
-  noKTPPengurus: number;
-  npwpPengurus: number;
+  noKTPPengurus: string;
+  npwpPengurus: string;
 }
 
 interface LandasanHukum {
   id: number;
-  nomorDokumen: number;
+  nomorDokumen: string;
   namaNotaris: string;
   tahunDokumen: string;
 }
@@ -19,7 +19,7 @@ interface LandasanHukum {
 interface IzinUsaha {
   id: number;
   jenisIzin: string;
-  nomorIzin: number;
+  nomorIzin: string;
   tanggalIzin: string;
   tanggalBerakhir: string;
   instansiPemberiIzin: string;
@@ -36,8 +36,8 @@ interface Pengalaman {
 
 interface SPTTahunan {
   id: number;
-  tahunSpt: number;
-  nomorSPT: number;
+  tahunSpt: string;
+  nomorSPT: string;
   tanggalSpt: string;
 }
 
@@ -45,8 +45,8 @@ interface TenagaAhli {
   id: number;
   namaTenagaAhli: string;
   tanggalLahirTenagaAhli: string;
-  nomorKtpTenagaAhli: number;
-  npwpTenagaAhli: number;
+  nomorKtpTenagaAhli: string;
+  npwpTenagaAhli: string;
   pendidikanTenagaAhli: string;
   pengalamanTenagaAhli: string;
 }

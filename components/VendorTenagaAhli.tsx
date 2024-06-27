@@ -21,8 +21,8 @@ interface TenagaAhli {
   id: number;
   namaTenagaAhli: string;
   tanggalLahirTenagaAhli: string;
-  nomorKtpTenagaAhli: number;
-  npwpTenagaAhli: number;
+  nomorKtpTenagaAhli: string;
+  npwpTenagaAhli: string;
   pendidikanTenagaAhli: string;
   pengalamanTenagaAhli: string;
 }
@@ -43,8 +43,8 @@ const TenagaAhli: React.FC = () => {
     initialValues: {
       namaTenagaAhli: "",
       tanggalLahirTenagaAhli: "",
-      nomorKtpTenagaAhli: 0,
-      npwpTenagaAhli: 0,
+      nomorKtpTenagaAhli: "",
+      npwpTenagaAhli: "",
       pendidikanTenagaAhli: "",
       pengalamanTenagaAhli: "",
     },

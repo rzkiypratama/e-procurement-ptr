@@ -48,7 +48,7 @@ const AttachmentDocument: React.FC = () => {
     initialValues: {
       namaAttachment: "",
       kategoriAttachment: "",
-      fileAttachment: "", // Inisialisasi dengan string kosong, bisa diubah sesuai kebutuhan
+      fileAttachment: "",
     },
     onSubmit: (values) => {
       addAttachment({ ...values, id: attachmentDoc.length + 1 });
