@@ -9,41 +9,47 @@ import VendorSptTahunan from "@/components/VendorSptTahunan2";
 import VendorTenagaAhli from "@/components/VendorTenagaAhli";
 import VendorPengalaman from "@/components/VendorPengalaman";
 import VendorAttachmenDoc from "@/components/VendorAttachmenDoc";
-import Layout from "@/components/Layout";
 
 
 const { TabPane } = Tabs;
 
 const RegisterPage = () => {
   return (
-    <Layout>
     <div className="container mx-auto flex flex-col content-center p-24">
       <h1 className="font-bold text-center text-5xl mb-5">layout 2</h1>
       <Tabs>
-        <TabPane tab="Izin Usaha" key="1">
+      <TabPane tab="Profile Perusahaan" key="1">
       <VendorIzinUsaha/>
         </TabPane>
-        <TabPane tab="Landasan Hukum" key="2">
+        <TabPane tab="Contact Info" key="2">
+      <VendorIzinUsaha/>
+        </TabPane>
+        <TabPane tab="Bank Account" key="3">
+      <VendorIzinUsaha/>
+        </TabPane>
+        <TabPane tab="Izin Usaha" key="4">
+      <VendorIzinUsaha/>
+        </TabPane>
+        <TabPane tab="Landasan Hukum" key="5">
       <VendorLandasanHukum/>
         </TabPane>
-        <TabPane tab="Pengurus Perusahaan" key="3">
+        <TabPane tab="Pengurus Perusahaan" key="6">
       <VendorPengurusPerusahaan/>
         </TabPane>
-        <TabPane tab="SPT Tahunan" key="4">
+        <TabPane tab="SPT Tahunan" key="7">
       <VendorSptTahunan/>
         </TabPane>
-        <TabPane tab="Tenaga Ahli" key="5">
+        <TabPane tab="Tenaga Ahli" key="8">
       <VendorTenagaAhli/>
         </TabPane>
-        <TabPane tab="Pengalaman" key="6">
+        <TabPane tab="Pengalaman" key="9">
       <VendorPengalaman/>
         </TabPane>
-        <TabPane tab="Attachment Document" key="7">
+        <TabPane tab="Attachment Document" key="10">
       <VendorAttachmenDoc/>
         </TabPane>
       </Tabs>
     </div>
-    </Layout>
   );
 };
 

@@ -128,6 +128,12 @@ const AttachmentDocument: React.FC = () => {
       ),
     },
     {
+      title: "Masa Berlaku Dokumen",
+      dataIndex: "expAttachment",
+      key: "expAttachment",
+      editable: true,
+    },
+    {
       title: "Operation",
       dataIndex: "operation",
       render: (_: any, record: AttachmentDoc) => {

@@ -18,12 +18,13 @@ export const DropdownProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('openKeys', JSON.stringify(openKeys));
-  }, [openKeys]);
+  const updateOpenKeys = (keys: string[]) => {
+    setOpenKeys(keys);
+    localStorage.setItem('openKeys', JSON.stringify(keys));
+  };
 
   return (
-    <DropdownContext.Provider value={{ openKeys, setOpenKeys }}>
+    <DropdownContext.Provider value={{ openKeys, setOpenKeys: updateOpenKeys }}>
       {children}
     </DropdownContext.Provider>
   );

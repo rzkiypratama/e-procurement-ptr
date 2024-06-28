@@ -1,30 +1,29 @@
 import { create } from 'zustand';
 
 interface RegisterProfilePerusahaan {
-  id: number;
-  companyName: string;
-  companyNPWP: string;
-  companyStatus: string;
-  companyAddress: string;
-  companyCity: string;
-  companyProvince: string;
-  companyPostalCode: string;
-  companyPhone: string;
-  companyFax: string;
-  companyEmail: string;
+  company_name: string;
+  company_npwp: number;
+  vendor_type: string;
+  company_address: string;
+  city_id: string;
+  province_id: string;
+  postal_code: number;
+  company_phone_number: string;
+  company_fax: string;
+  company_email: string;
 }
 
 interface RegisterContactInfo {
   id: number;
-  contactName: string;
-  contactPhone: string;
-  contactEmail: string;
-  contactPosition: string;
-  contactNPWP: string;
+  contact_name: string;
+  contact_phone: string;
+  contact_email: string;
+  position_id: string;
+  contact_identity_no: string;
+  contact_npwp: string;
 }
 
 interface RegisterAuthorization {
-  id: number;
   username: string;
   password: string;
 }
@@ -51,21 +50,19 @@ interface RegisterState {
 
 const useFormStore = create<RegisterState>((set) => ({
   registerProfilePerusahaan: {
-    id: 0,
-    companyName: '',
-    companyNPWP: '',
-    companyStatus: '',
-    companyAddress: '',
-    companyCity: '',
-    companyProvince: '',
-    companyPostalCode: '',
-    companyPhone: '',
-    companyFax: '',
-    companyEmail: '',
+    company_name: '',
+    company_npwp: 0,
+    vendor_type: '',
+    company_address: '',
+    city_id: '',
+    province_id: '',
+    company_phone_number: '',
+    company_fax: '',
+    company_email: '',
+    postal_code: 0,
   },
   registerContactInfo: [],
   registerAuthorization: {
-    id: 0,
     username: '',
     password: '',
   },

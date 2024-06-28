@@ -17,7 +17,7 @@ const { TabPane } = Tabs;
 const RegisterPage = () => {
   return (
     <Layout>
-    <div className="container mx-auto flex flex-col content-center p-24">
+    <div className="container mx-auto flex flex-col content-center">
       <h1 className="font-bold text-center text-5xl mb-5">Registrasi Baru</h1>
       <VendorRegisterNew />
     </div>
