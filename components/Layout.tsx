@@ -6,6 +6,7 @@ import {
   FileOutlined,
   TeamOutlined,
   UserOutlined,
+  DatabaseOutlined
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { useDropdown, DropdownProvider } from '@/context/DropdownContextType';
@@ -39,7 +40,11 @@ const items = [
     getItem(<Link href="/vendor/register">Registration</Link>, '3'),
     getItem(<Link href="/vendor/verification">Verification</Link>, '4'),
     getItem(<Link href="/vendor/register">Evaluation</Link>, '5'),
-    getItem(<Link href="/vendor/verification">Master Data</Link>, '6'),
+    getItem('Master Data', 'sub4', <DatabaseOutlined />, [
+      getItem(<Link href="/vendor/masterdata?type=position">Vendor Position</Link>, '6'),
+      getItem(<Link href="/vendor/masterdata?type=business-field">Vendor Business Field</Link>, '9'),
+      getItem(<Link href="/vendor/masterdata?type=currency">Currency</Link>, '10')
+    ]),
   ]),
   getItem('User Requisition', 'sub3', <UserOutlined />, [
     getItem('Menu 1', '7'),

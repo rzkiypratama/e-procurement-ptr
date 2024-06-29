@@ -1,33 +1,50 @@
 import { create } from 'zustand';
 
 interface MasterData {
+    name: string;
+    status: boolean;
+}
+
+interface MasterDataList {
     id: number;
     name: string;
-    status: string;
+    statusName: string;
+    status: boolean;
 }
 
 interface MasterDataState {
-    masterDatas: MasterData[];
-    addMasterData: (masterDatas: MasterData) => void;
-    editMasterData: (masterDatas: MasterData) => void;
-    removeMasterData: (id: number) => void;
-    initializeMasterData: (masterDatas: MasterData[]) => void;
+    masterData: MasterData;
+    masterDataList: MasterDataList[];
+    setMasterData: (masterData: MasterData) => void;
+    isFormValid: boolean;
+    setFormValid: (isValid: boolean) => void;
+    loading: boolean;
+    setLoading: (loading: boolean) => void;
+    initializeMasterDataList: (masterDataList: MasterDataList[]) => void;
+    addMasterDataList: (masterDataList: MasterDataList) => void;
+    removeItem: (index: number) => void;
 }
 
 const useMasterDataStore = create<MasterDataState>((set) => ({
-    masterDatas: [],
-    addMasterData: (masterDatas) => set((state) => ({
-        masterDatas: [...state.masterDatas, masterDatas],
+    masterData: {
+        name: "",
+        status: false,
+    },
+    masterDataList: [],
+    setMasterData: (masterData) => set({ masterData: masterData }),
+    isFormValid: false,
+    setFormValid: (isValid) => set({ isFormValid: isValid }),
+    loading: false,
+    setLoading: (loading) => set({ loading }),
+    initializeMasterDataList: (masterDataList) => set((state) => ({
+        masterDataList,
     })),
-    editMasterData: (masterDatas) => set((state) => ({
-        masterDatas: state.masterDatas.map((item) => item.id === masterDatas.id ? masterDatas : item),
+    addMasterDataList: (masterDataList) => set((state) => ({
+        masterDataList: [...state.masterDataList, masterDataList],
     })),
-    removeMasterData: (id) => set((state) => ({
-        masterDatas: state.masterDatas.filter((item) => item.id !== id),
-    })),
-    initializeMasterData: (masterDatas) => set(() => ({
-        masterDatas,
-    })),
+    removeItem: (selectedIndex) => set((state) => ({
+        masterDataList: state.masterDataList.filter((ele, index) => index !== selectedIndex)
+    }))
 }));
 
 export default useMasterDataStore;
