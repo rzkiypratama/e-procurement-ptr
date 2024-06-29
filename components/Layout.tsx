@@ -78,7 +78,7 @@ const MyLayout: React.FC<Props> = ({ children }) => {
   };
 
   return (
-    <Layout className="h h-screen">
+    <Layout className="h-max">
       <Header className="bg-blue-500 text-white flex items-center justify-between">
         <div className="text-xl">Delpis</div>
       </Header>

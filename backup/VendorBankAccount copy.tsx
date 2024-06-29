@@ -13,9 +13,8 @@ import {
 } from "antd";
 import axios from "axios";
 import useBankAccountStore from "../store/CenterStore";
-import EditableCell from "./EditableCell";
+import EditableCell from "../components/EditableCell";
 import { useFormik } from "formik";
-import { getCookie } from "cookies-next";
 
 interface BankAccount {
   id: number;
@@ -43,29 +42,14 @@ const PengurusPerusahaan: React.FC = () => {
       account_number: "",
     },
     onSubmit: async (values) => {
-      const token = getCookie("token");
-      const userId = getCookie("user_id");
-      const vendorId = getCookie("vendor_id");
-
-      if (!token || !userId || !vendorId) {
-        message.error("Token, User ID, or Vendor ID is missing.");
-        return;
-      }
       try {
         const response = await axios.post(
           "https://vendor.eproc.latansa.sch.id/api/vendor/bank",
-          values,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "User-ID": userId,
-              "Vendor-ID": vendorId,
-            },
-          }
+          values
         );
-        console.log("Response from API:", response.data);
+        console.log("Bank Value:", values);
+        // addBankAccount({ ...response.data, id: bankAccount.length + 1 });
         setIsModalVisible(false);
-        message.success("Bank Account added successful");
         formik.resetForm();
       } catch (error) {
         console.error("Failed to submit data", error);
@@ -74,21 +58,21 @@ const PengurusPerusahaan: React.FC = () => {
     },
   });
 
-  // useEffect(() => {
-  //   const fetchBankAccounts = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         "https://vendor.eproc.latansa.sch.id/api/vendor/bank"
-  //       );
-  //       initializeBankAccount(response.data);
-  //     } catch (error) {
-  //       console.error("Failed to fetch data", error);
-  //       message.error("Failed to fetch data");
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchBankAccounts = async () => {
+      try {
+        const response = await axios.get(
+          "https://vendor.eproc.latansa.sch.id/api/vendor/bank"
+        );
+        initializeBankAccount(response.data);
+      } catch (error) {
+        console.error("Failed to fetch data", error);
+        message.error("Failed to fetch data");
+      }
+    };
 
-  //   fetchBankAccounts();
-  // }, [initializeBankAccount]);
+    fetchBankAccounts();
+  }, [initializeBankAccount]);
 
   const isEditing = (record: BankAccount) =>
     record.id.toString() === editingKey;

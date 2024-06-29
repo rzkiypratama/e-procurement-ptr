@@ -1,6 +1,36 @@
 import { create } from 'zustand';
 
 // Interfaces
+
+interface ProfilePerusahaan {
+  id: number;
+  company_name: string;
+  company_npwp: string;
+  vendor_type: string;
+  company_address: string;
+  city_id: string;
+  postal_code: string;
+  company_phone_number: string;
+  company_email: string;
+  company_fax: string;
+}
+
+interface ContactPerson {
+  id: number;
+  contact_name: string;
+  contact_email: string;
+  contact_identity_no: string;
+  contact_phone: string;
+  contact_npwp: string;
+  position_id: string;
+}
+
+interface BankAccount {
+  id: number;
+  bank_id: string;
+  currency_id: string;
+  account_number: string;
+}
 interface PengurusPerusahaan {
   id: number;
   namaPengurus: string;
@@ -18,13 +48,12 @@ interface LandasanHukum {
 
 interface IzinUsaha {
   id: number;
-  jenisIzin: string;
-  nomorIzin: string;
-  tanggalIzin: string;
-  tanggalBerakhir: string;
-  instansiPemberiIzin: string;
-  instansiBerlakuIzinUsaha: string;
-  bidangUsaha: string;
+  type: string;
+  permit_number: string;
+  start_date: string;
+  end_date: string;
+  licensing_agency: string;
+  vendor_business_field_id: number;
 }
 
 interface Pengalaman {
@@ -60,6 +89,9 @@ interface AttachmentDoc {
 
 // State Interfaces
 interface CenterStoreState {
+  profilePerusahaan: ProfilePerusahaan[];
+  contactInfo: ContactPerson[];
+  bankAccount: BankAccount[];
   pengurusPerusahaan: PengurusPerusahaan[];
   landasanHukum: LandasanHukum[];
   izinUsaha: IzinUsaha[];
@@ -69,6 +101,18 @@ interface CenterStoreState {
   attachmentDoc: AttachmentDoc[];
   isLoading: boolean;
   setLoading: (loading: boolean) => void;
+  addProfilePerusahaan: (profilePerusahaan: ProfilePerusahaan) => void;
+  editProfilePerusahaan: (profilePerusahaan: ProfilePerusahaan) => void;
+  removeProfilePerusahaan: (id: number) => void;
+  initializeProfilePerusahaan: (profilePerusahaan: ProfilePerusahaan[]) => void;
+  addContactInfo: (contactInfo: ContactPerson) => void;
+  editContactInfo: (contactInfo: ContactPerson) => void;
+  removeContactInfo: (id: number) => void;
+  initializeContactInfo: (contactInfo: ContactPerson[]) => void;
+  addBankAccount: (bankAccount: BankAccount) => void;
+  editBankAccount: (bankAccount: BankAccount) => void;
+  removeBankAccount: (id: number) => void;
+  initializeBankAccount: (bankAccount: BankAccount[]) => void;
   addPengurusPerusahaan: (pengurusPerusahaan: PengurusPerusahaan) => void;
   editPengurusPerusahaan: (pengurusPerusahaan: PengurusPerusahaan) => void;
   removePengurusPerusahaan: (id: number) => void;
@@ -101,6 +145,9 @@ interface CenterStoreState {
 
 // Create Zustand Store
 const useCenterStore = create<CenterStoreState>((set) => ({
+  profilePerusahaan: [],
+  contactInfo: [],
+  bankAccount: [],
   pengurusPerusahaan: [],
   landasanHukum: [],
   izinUsaha: [],
@@ -110,6 +157,45 @@ const useCenterStore = create<CenterStoreState>((set) => ({
   attachmentDoc: [],
   isLoading: false,
   setLoading: (loading) => set({ isLoading: loading }),
+
+  addProfilePerusahaan: (profilePerusahaan) => set((state) => ({
+    profilePerusahaan: [...state.profilePerusahaan, profilePerusahaan],
+  })),
+  editProfilePerusahaan: (profilePerusahaan) => set((state) => ({
+    profilePerusahaan: state.profilePerusahaan.map((item) => item.id === profilePerusahaan.id ? profilePerusahaan : item),
+  })),
+  removeProfilePerusahaan: (id) => set((state) => ({
+    profilePerusahaan: state.profilePerusahaan.filter((item) => item.id !== id),
+  })),
+  initializeProfilePerusahaan: (profilePerusahaan) => set(() => ({
+    profilePerusahaan: profilePerusahaan
+  })),
+
+  addContactInfo: (contactInfo) => set((state) => ({
+    contactInfo: [...state.contactInfo, contactInfo],
+  })),
+  editContactInfo: (contactInfo) => set((state) => ({
+    contactInfo: state.contactInfo.map((item) => item.id === contactInfo.id ? contactInfo : item),
+  })),
+  removeContactInfo: (id) => set((state) => ({
+    contactInfo: state.contactInfo.filter((item) => item.id !== id),
+  })),
+  initializeContactInfo: (contactInfo) => set(() => ({
+    contactInfo,
+  })),
+
+  addBankAccount: (bankAccount) => set((state) => ({
+    bankAccount: [...state.bankAccount, bankAccount],
+  })),
+  editBankAccount: (bankAccount) => set((state) => ({
+    bankAccount: state.bankAccount.map((item) => item.id === bankAccount.id ? bankAccount : item),
+  })),
+  removeBankAccount: (id) => set((state) => ({
+    bankAccount: state.bankAccount.filter((item) => item.id !== id),
+  })),
+  initializeBankAccount: (bankAccount) => set(() => ({
+    bankAccount,
+  })),
 
   addPengurusPerusahaan: (pengurusPerusahaan) => set((state) => ({
     pengurusPerusahaan: [...state.pengurusPerusahaan, pengurusPerusahaan],

@@ -9,23 +9,25 @@ import {
   Typography,
   Popconfirm,
   Modal,
+  message,
 } from "antd";
 import dayjs from "dayjs";
 import useIzinUsahaStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
+import axios from "axios";
+import { getCookie } from "cookies-next";
 
 const { TextArea } = Input;
 
 interface IzinUsaha {
   id: number;
-  jenisIzin: string;
-  nomorIzin: string;
-  tanggalIzin: string;
-  tanggalBerakhir: string;
-  instansiPemberiIzin: string;
-  instansiBerlakuIzinUsaha: string;
-  bidangUsaha: string;
+  type: string;
+  permit_number: string;
+  start_date: string;
+  end_date: string;
+  licensing_agency: string;
+  vendor_business_field_id: number;
 }
 
 const IzinUsaha: React.FC = () => {
@@ -42,19 +44,60 @@ const IzinUsaha: React.FC = () => {
 
   const formik = useFormik({
     initialValues: {
-      jenisIzin: "",
-      nomorIzin: "",
-      tanggalIzin: "",
-      tanggalBerakhir: "",
-      instansiPemberiIzin: "",
-      instansiBerlakuIzinUsaha: "",
-      bidangUsaha: "",
+      type: "",
+      permit_number: "",
+      start_date: "",
+      end_date: "",
+      licensing_agency: "",
+      vendor_business_field_id: 0,
     },
-    onSubmit: (values) => {
-      console.log("Izin Usaha Value:", values);
-      addIzinUsaha({ ...values, id: izinUsaha.length + 1 });
-      setIsModalVisible(false);
-      formik.resetForm();
+    onSubmit: async (values, { setErrors }) => {
+      // Dapatkan token, user_id, dan vendor_id dari cookies
+      const token = getCookie("token");
+      const userId = getCookie("user_id");
+      const vendorId = getCookie("vendor_id");
+
+      if (!token || !userId || !vendorId) {
+        message.error("Please login first.");
+        return;
+      }
+
+      try {
+        const response = await axios.post(
+          "https://vendor.eproc.latansa.sch.id/api/vendor/business-permit",
+          values,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          }
+        );
+        console.log("Response from API:", response.data);
+        setIsModalVisible(false);
+        message.success("Izin Usaha added successful");
+        formik.resetForm();
+      } catch (error) {
+        console.error("Error submitting data:", error);
+        if (axios.isAxiosError(error)) {
+          if (
+            error.response &&
+            error.response.data &&
+            error.response.data.errors
+          ) {
+            const backendErrors = error.response.data.errors;
+            setErrors(backendErrors);
+            Object.keys(backendErrors).forEach((key) => {
+              message.error(`${backendErrors[key]}`);
+            });
+          } else {
+            message.error("An error occurred. Please try again later.");
+          }
+        } else {
+          message.error("An unexpected error occurred. Please try again later.");
+        }
+      }
     },
   });
 
@@ -68,11 +111,11 @@ const IzinUsaha: React.FC = () => {
   const edit = (record: Partial<IzinUsaha> & { id: React.Key }) => {
     form.setFieldsValue({
       ...record,
-      tanggalIzin: record.tanggalIzin
-        ? dayjs(record.tanggalIzin, "DD-MM-YYYY")
+      tanggalIzin: record.start_date
+        ? dayjs(record.start_date, "DD-MM-YYYY")
         : null,
-      tanggalBerakhir: record.tanggalBerakhir
-        ? dayjs(record.tanggalBerakhir, "DD-MM-YYYY")
+      tanggalBerakhir: record.end_date
+        ? dayjs(record.end_date, "DD-MM-YYYY")
         : null,
     });
     setEditingKey(record.id.toString());
@@ -88,8 +131,8 @@ const IzinUsaha: React.FC = () => {
       const updatedRow = {
         ...row,
         id: Number(id),
-        tanggalIzin: dayjs(row.tanggalIzin).format("DD-MM-YYYY"),
-        tanggalBerakhir: dayjs(row.tanggalBerakhir).format("DD-MM-YYYY"),
+        tanggalIzin: dayjs(row.start_date).format("DD-MM-YYYY"),
+        tanggalBerakhir: dayjs(row.start_date).format("DD-MM-YYYY"),
       };
       editIzinUsaha(updatedRow);
       setEditingKey("");
@@ -106,48 +149,42 @@ const IzinUsaha: React.FC = () => {
     { title: "No", dataIndex: "id", key: "id" },
     {
       title: "Jenis Izin",
-      dataIndex: "jenisIzin",
-      key: "jenisIzin",
+      dataIndex: "type",
+      key: "type",
       editable: true,
     },
     {
       title: "Nomor Izin",
-      dataIndex: "nomorIzin",
-      key: "nomorIzin",
+      dataIndex: "permit_number",
+      key: "permit_number",
       editable: true,
     },
     {
       title: "Tanggal Izin",
-      dataIndex: "tanggalIzin",
-      key: "tanggalIzin",
+      dataIndex: "start_date",
+      key: "start_date",
       editable: true,
       render: (text: string) =>
         text ? dayjs(text, "DD-MM-YYYY").format("DD-MM-YYYY") : "",
     },
     {
       title: "Tanggal Berakhir",
-      dataIndex: "tanggalBerakhir",
-      key: "tanggalBerakhir",
+      dataIndex: "end_date",
+      key: "end_date",
       editable: true,
       render: (text: string) =>
         text ? dayjs(text, "DD-MM-YYYY").format("DD-MM-YYYY") : "",
     },
     {
       title: "Instansi Pemberi Izin",
-      dataIndex: "instansiPemberiIzin",
-      key: "instansiPemberiIzin",
-      editable: true,
-    },
-    {
-      title: "Masa Berlaku Izin Usaha",
-      dataIndex: "instansiBerlakuIzinUsaha",
-      key: "instansiBerlakuIzinUsaha",
+      dataIndex: "licensing_agency",
+      key: "licensing_agency",
       editable: true,
     },
     {
       title: "Bidang Usaha",
-      dataIndex: "bidangUsaha",
-      key: "bidangUsaha",
+      dataIndex: "vendor_business_field_id",
+      key: "vendor_business_field_id",
       editable: true,
     },
     {
@@ -197,9 +234,9 @@ const IzinUsaha: React.FC = () => {
       onCell: (record: IzinUsaha) => ({
         record,
         inputType:
-        col.dataIndex === "nomorIzin" || col.dataIndex.includes("nomorIzin") ? "number" :
-        col.dataIndex === "tanggalIzin" || col.dataIndex.includes("tanggalIzin") ? "date" :
-        col.dataIndex === "tanggalBerakhir" || col.dataIndex.includes("tanggalBerakhir") ? "date" :
+        col.dataIndex === "permit_number" || col.dataIndex.includes("permit_number") ? "text" :
+        col.dataIndex === "start_date" || col.dataIndex.includes("start_date") ? "date" :
+        col.dataIndex === "end_date" || col.dataIndex.includes("end_date") ? "date" :
         "text",
         dataIndex: col.dataIndex,
         title: col.title,
@@ -225,7 +262,7 @@ const IzinUsaha: React.FC = () => {
 
   const handleSubmit = () => {
     console.log("Submitting data:", izinUsaha);
-    // Additional submission logic if needed
+    formik.handleSubmit();
   };
 
   return (
@@ -234,98 +271,87 @@ const IzinUsaha: React.FC = () => {
         Tambah Izin Usaha
       </Button>
       <Modal
-        title="Tambah Landasan Hukum"
+        title="Tambah Izin Usaha"
         open={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
       >
         <Form>
         <Form.Item
-            name="jenisIzin"
+            name="type"
             label="Jenis Izin"
             rules={[{ required: true }]}
           >
             <Input
-              name="jenisIzin"
-              value={formik.values.jenisIzin}
+              name="type"
+              value={formik.values.type}
               onChange={formik.handleChange}
             />
           </Form.Item>
           <Form.Item
-            name="nomorIzin"
+            name="permit_number"
             label="Nomor Izin"
             rules={[{ required: true }]}
           >
-            <InputNumber
-              name="nomorIzin"
-              value={formik.values.nomorIzin}
-              onChange={(value) => formik.setFieldValue("nomorIzin", value)}
+            <Input
+              name="permit_number"
+              value={formik.values.permit_number}
+              onChange={formik.handleChange}
             />
           </Form.Item>
           <Form.Item
-            name="tanggalIzin"
+            name="start_date"
             label="Tanggal Izin"
             rules={[{ required: true }]}
           >
             <DatePicker
               format="DD-MM-YYYY"
-              name="tanggalIzin"
+              name="start_date"
               onChange={(date, dateString) =>
-                formik.setFieldValue("tanggalIzin", dateString)
+                formik.setFieldValue("start_date", dateString)
               }
             />
           </Form.Item>
           <Form.Item
-            name="tanggalBerakhir"
+            name="end_date"
             label="Tanggal Berakhir"
             rules={[{ required: true }]}
           >
             <DatePicker
-              name="tanggalBerakhir"
+              name="end_date"
               format="DD-MM-YYYY"
               onChange={(date, dateString) =>
-                formik.setFieldValue("tanggalBerakhir", dateString)
+                formik.setFieldValue("end_date", dateString)
               }
             />
           </Form.Item>
           <Form.Item
-            name="instansiPemberiIzin"
+            name="licensing_agency"
             label="Instansi Pemberi Izin"
             rules={[{ required: true }]}
           >
             <Input
-              name="instansiPemberiIzin"
-              value={formik.values.instansiPemberiIzin}
+              name="licensing_agency"
+              value={formik.values.licensing_agency}
               onChange={formik.handleChange}
             />
           </Form.Item>
           <Form.Item
-            name="instansiBerlakuIzinUsaha"
-            label="Masa Berlaku Izin Usaha"
-            rules={[{ required: true }]}
-          >
-            <Input
-              name="instansiBerlakuIzinUsaha"
-              value={formik.values.instansiBerlakuIzinUsaha}
-              onChange={formik.handleChange}
-            />
-          </Form.Item>
-          <Form.Item
-            name="bidangUsaha"
+            name="vendor_business_field_id"
             label="Bidang Usaha"
             rules={[{ required: true }]}
           >
-            <TextArea
-              name="bidangUsaha"
-              value={formik.values.bidangUsaha}
+            <Input
+              name="vendor_business_field_id"
+              value={formik.values.vendor_business_field_id}
               onChange={formik.handleChange}
-              rows={4}
             />
           </Form.Item>
         </Form>
       </Modal>
       <Form form={form} component={false}>
         <Table
+          rowKey={(record) => record.id.toString()}
           components={{
             body: {
               cell: EditableCell,
@@ -340,7 +366,7 @@ const IzinUsaha: React.FC = () => {
           }}
         />
         <Button type="primary" onClick={handleSubmit}>
-          Submit
+          Save
         </Button>
       </Form>
     </div>

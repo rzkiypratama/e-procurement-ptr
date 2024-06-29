@@ -90,14 +90,6 @@ const ProfilePerusahaan: React.FC = () => {
       if (!values.company_name) {
         errors.company_name = "Company name is required";
       }
-      if (!values.company_npwp) {
-        errors.company_npwp = "Company npwp is required";
-      } else {
-        const npwpString = values.company_npwp.toString();
-        if (npwpString.length < 16) {
-          errors.company_npwp = "The npwp must be at least 15 or 16 characters";
-        }
-      }
       if (!values.vendor_type) {
         errors.vendor_type = "Status vendor is required";
       }
@@ -107,27 +99,26 @@ const ProfilePerusahaan: React.FC = () => {
       if (!values.company_address) {
         errors.company_address = "Company address is required";
       }
-      if (!values.company_phone_number) {
-        errors.company_phone_number = "Company number is required";
-      } else if (!/^\d+$/.test(values.company_phone_number)) {
-        errors.company_phone_number = "Company number must be a number";
-      }
       if (!values.company_email) {
-        errors.company_email = 'Required';
-      } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.company_email)) {
-        errors.company_email = 'Invalid email address';
+        errors.company_email = "Required";
+      } else if (
+        !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.company_email)
+      ) {
+        errors.company_email = "Invalid email address";
       }
       if (!values.contact_name) {
         errors.contact_name = "Contact name is required";
       }
       if (!values.contact_email) {
-        errors.contact_email = 'Required';
-      } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.contact_email)) {
-        errors.contact_email = 'Invalid email address';
+        errors.contact_email = "Required";
+      } else if (
+        !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.contact_email)
+      ) {
+        errors.contact_email = "Invalid email address";
       }
       return errors;
     },
-    onSubmit: async (values) => {
+    onSubmit: async (values, { setErrors }) => {
       setLoading(true);
       try {
         const response = await axios.post(
@@ -140,7 +131,19 @@ const ProfilePerusahaan: React.FC = () => {
         setIsModalVisible(false);
       } catch (error) {
         console.error("Error submitting data:", error);
-        message.error("Registration failed");
+        if (axios.isAxiosError(error)) {
+          if (error.response && error.response.data && error.response.data.errors) {
+            const backendErrors = error.response.data.errors;
+            setErrors(backendErrors);
+            Object.keys(backendErrors).forEach((key) => {
+              message.error(`${backendErrors[key]}`);
+            });
+          } else {
+            message.error("An error occurred. Please try again later.");
+          }
+        } else {
+          message.error("An unexpected error occurred. Please try again later.");
+        }
       } finally {
         setLoading(false);
       }
@@ -260,6 +263,30 @@ const ProfilePerusahaan: React.FC = () => {
     },
   ];
 
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleOk = () => {
+    form.validateFields().then((values) => {
+      addContactInfo({
+        ...values,
+        id: getNextId(),
+      });
+      setIsModalVisible(false);
+      form.resetFields();
+    });
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleSubmit = () => {
+    console.log("Submitted data:", formik.values);
+    formik.handleSubmit(); // Trigger Formik's submit function
+  };
+
   const mergedColumns = columns.map((col) => {
     if (!col.editable) {
       return col;
@@ -286,29 +313,439 @@ const ProfilePerusahaan: React.FC = () => {
     };
   });
 
-  const showModal = () => {
-    setIsModalVisible(true);
-  };
-
-  const handleOk = () => {
-    form.validateFields().then((values) => {
-      addContactInfo({
-        ...values,
-        id: getNextId(),
-      });
-      setIsModalVisible(false);
-      form.resetFields();
-    });
-  };
-
-  const handleCancel = () => {
-    setIsModalVisible(false);
-  };
-
-  const handleSubmit = () => {
-    console.log("Submitted data:", formik.values);
-    formik.handleSubmit(); // Trigger Formik's submit function
-  };
+  const items = [
+    {
+      key: "1",
+      label: "Profile Perusahaan",
+      children: (
+        <Form layout="vertical" form={form}>
+          <Form.Item
+            name="company_name"
+            label="Nama Perusahaan"
+            validateStatus={
+              formik.errors.company_name && formik.touched.company_name
+                ? "error"
+                : ""
+            }
+            help={
+              formik.errors.company_name && formik.touched.company_name
+                ? formik.errors.company_name
+                : ""
+            }
+            required
+            hasFeedback
+          >
+            <Input
+              id="company_name"
+              name="company_name"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              value={formik.values.company_name}
+              placeholder="Input company name"
+            />
+          </Form.Item>
+          {/* <Form.Item
+            name="company_npwp"
+            label="NPWP Perusahaan"
+            validateStatus={
+              formik.errors.company_npwp && formik.touched.company_npwp
+                ? "error"
+                : ""
+            }
+            help={
+              formik.errors.company_npwp && formik.touched.company_npwp
+                ? formik.errors.company_npwp
+                : ""
+            }
+            required
+            hasFeedback
+          >
+            <NumericNumber
+              placeholder="Input a number"
+              value={formik.values.company_npwp}
+              onChange={(value) => formik.setFieldValue("company_npwp", value)}
+            />
+          </Form.Item> */}
+           <Form.Item
+                name="company_npwp"
+                label="NPWP Perusahaan"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter NPWP number",
+                  },
+                  () => ({
+                    validator(_, value) {
+                      if (!value) {
+                        return Promise.reject();
+                      }
+                      if (isNaN(value)) {
+                        return Promise.reject("NPWP code has to be a number.");
+                      }
+                      if (value.length < 16) {
+                        return Promise.reject(
+                          "NPWP can't be less than 16 digits",
+                        );
+                      }
+                      if (value.length > 16) {
+                        return Promise.reject(
+                          "NPWP code can't be more than 16 digits",
+                        );
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
+                hasFeedback
+              >
+                <Input
+                  value={formik.values.company_npwp}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                />
+              </Form.Item>
+          <Form.Item
+            label="Status"
+            validateStatus={
+              formik.errors.vendor_type && formik.touched.vendor_type
+                ? "error"
+                : ""
+            }
+            help={
+              formik.errors.vendor_type && formik.touched.vendor_type
+                ? formik.errors.vendor_type
+                : ""
+            }
+            required
+            hasFeedback
+          >
+            <Select
+              id="vendor_type"
+              onChange={(value) => formik.setFieldValue("vendor_type", value)}
+              onBlur={formik.handleBlur}
+              value={formik.values.vendor_type}
+            >
+              <Option value="pusat">Pusat</Option>
+              <Option value="cabang">Cabang</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
+            label="Alamat Perusahaan"
+            validateStatus={
+              formik.errors.company_address && formik.touched.company_address
+                ? "error"
+                : ""
+            }
+            help={
+              formik.errors.company_address && formik.touched.company_address
+                ? formik.errors.company_address
+                : ""
+            }
+            required
+            hasFeedback
+          >
+            <Input
+              id="company_address"
+              name="company_address"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              value={formik.values.company_address}
+              placeholder="Input company address"
+            />
+          </Form.Item>
+          <Form.Item
+            label="Kota"
+            validateStatus={
+              formik.errors.city_id && formik.touched.city_id ? "error" : ""
+            }
+            help={
+              formik.errors.city_id && formik.touched.city_id
+                ? formik.errors.city_id
+                : ""
+            }
+            required
+            hasFeedback
+          >
+            <Select
+              id="city_id"
+              onChange={(value) => formik.setFieldValue("city_id", value)}
+              onBlur={formik.handleBlur}
+              value={formik.values.city_id}
+            >
+              <Option value="268">Banjarbaru</Option>
+              <Option value="269">Bandung</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
+            id="province_id"
+            label="Provinsi"
+            name="province_id"
+            validateStatus={
+              formik.errors.province_id && formik.touched.province_id
+                ? "error"
+                : ""
+            }
+            help={
+              formik.errors.province_id && formik.touched.province_id
+                ? formik.errors.province_id
+                : ""
+            }
+            required
+            hasFeedback
+          >
+            <Select
+              id="province_id"
+              onChange={(value) => formik.setFieldValue("province_id", value)}
+              onBlur={formik.handleBlur}
+              value={formik.values.province_id}
+              placeholder="Select province"
+            >
+              <Option value={16}>Kalimantan Selatan</Option>
+              <Option value={10}>Jawa Barat</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
+            label="Kode POS"
+            validateStatus={
+              formik.errors.postal_code && formik.touched.postal_code
+                ? "error"
+                : ""
+            }
+            help={
+              formik.errors.postal_code && formik.touched.postal_code
+                ? formik.errors.postal_code
+                : ""
+            }
+            required
+            hasFeedback
+          >
+            <InputNumber
+              id="postal_code"
+              placeholder="Input postal code"
+              value={formik.values.postal_code}
+              onChange={(value) => formik.setFieldValue("postal_code", value)}
+            />
+          </Form.Item>
+          <Form.Item
+            name="company_phone_number"
+            label="Nomor Telepon Perusahaan"
+            rules={[
+              {
+                // required: true,
+              },
+              () => ({
+                validator(_, value) {
+                  if (!value) {
+                    return Promise.reject();
+                  }
+                  if (isNaN(value)) {
+                    return Promise.reject(
+                      "Phone company number has to be a number.",
+                    );
+                  }
+                  // if (value.length < 10) {
+                  //   return Promise.reject("Your KTP Number is too sort");
+                  // }
+                  // if (value.length > 16) {
+                  //   return Promise.reject("NPWP code can't be more than 16 digits");
+                  // }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
+            required
+            hasFeedback
+          >
+            {/* <NumericInput
+              value={formik.values.company_phone_number}
+              onChange={(value) =>
+                formik.setFieldValue("company_phone_number", value)
+              }
+              onBlur={formik.handleBlur}
+              placeholder="Input company phone number"
+            /> */}
+            <Input
+              id="company_phone_number"
+              name="company_phone_number"
+              onChange={formik.handleChange}
+              value={formik.values.company_phone_number}
+            />
+          </Form.Item>
+          <Form.Item
+            label="Nomor Fax Perusahaan"
+            validateStatus={
+              formik.errors.company_fax && formik.touched.company_fax
+                ? "error"
+                : ""
+            }
+            help={
+              formik.errors.company_fax && formik.touched.company_fax
+                ? formik.errors.company_fax
+                : ""
+            }
+            required
+            hasFeedback
+          >
+            <Input
+              id="company_fax"
+              name="company_fax"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              value={formik.values.company_fax}
+              placeholder="(123)-456-7890"
+            />
+          </Form.Item>
+          <Form.Item
+            label="Email Perusahaan"
+            validateStatus={
+              formik.errors.company_email && formik.touched.company_email
+                ? "error"
+                : ""
+            }
+            help={
+              formik.errors.company_email && formik.touched.company_email
+                ? formik.errors.company_email
+                : ""
+            }
+            required
+            hasFeedback
+          >
+            <Input
+              id="company_email"
+              name="company_email"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              value={formik.values.company_email}
+              placeholder="johndoe@mail.com"
+            />
+          </Form.Item>
+        </Form>
+      ),
+    },
+    {
+      key: "2",
+      label: "Contact Info",
+      children: (
+        <Form form={form} component={false}>
+          <Button type="primary" onClick={showModal}>
+            Tambah Kontak
+          </Button>
+          <Table
+            components={{
+              body: {
+                cell: EditableCell,
+              },
+            }}
+            bordered
+            rowKey={(record) => record.id.toString()}
+            // dataSource={registerContactInfo}
+            dataSource={registerContactInfo.map((contact, index) => ({
+              ...contact,
+              no: index + 1,
+              operation: contact,
+            }))}
+            columns={mergedColumns}
+            rowClassName="editable-row"
+            pagination={{
+              onChange: cancel,
+            }}
+          />
+          <p className="mt-5 italic opacity-60">
+            * Seluruh Notifikasi ke Vendor ini akan di kirim ke email yg
+            terdaftar di contact person
+          </p>
+        </Form>
+      ),
+    },
+    {
+      key: "3",
+      label: "Authorization",
+      children: (
+        <Form layout="vertical" onFinish={formik.handleSubmit}>
+          <Form.Item
+            label="Username"
+            validateStatus={
+              formik.errors.username && formik.touched.username ? "error" : ""
+            }
+            help={
+              formik.errors.username && formik.touched.username
+                ? formik.errors.username
+                : ""
+            }
+            hasFeedback
+            required
+          >
+            <Input
+              id="username"
+              name="username"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              value={formik.values.username}
+            />
+          </Form.Item>
+          <Form.Item
+            label="Password"
+            validateStatus={
+              formik.errors.password && formik.touched.password ? "error" : ""
+            }
+            help={
+              formik.errors.password && formik.touched.password
+                ? formik.errors.password
+                : ""
+            }
+            required
+            hasFeedback
+          >
+            <Input.Password
+              id="confirm"
+              name="password"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              value={formik.values.password}
+            />
+          </Form.Item>
+          <Form.Item
+            id="password"
+            name="password"
+            label="Confirm Password"
+            dependencies={["password"]}
+            hasFeedback
+            rules={[
+              {
+                required: true,
+                message: "Please confirm your password!",
+              },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (
+                    !value ||
+                    getFieldValue("password") === formik.values.password
+                  ) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(
+                    new Error(
+                      "The new password that you entered do not match!",
+                    ),
+                  );
+                },
+              }),
+            ]}
+          >
+            <Input.Password />
+          </Form.Item>
+          <Button type="primary" onClick={handleSubmit}>
+            Submit
+          </Button>
+          {Object.keys(formik.errors).length > 0 && (
+            <span className="ml-3 text-red-500">
+              Please fill in all required fields.
+            </span>
+          )}
+        </Form>
+      ),
+    },
+  ];
 
   const handleTabChange = (key: string) => {
     setActiveTab(key);
@@ -323,354 +760,11 @@ const ProfilePerusahaan: React.FC = () => {
         </div>
       ) : !formSubmitted ? (
         <>
-          <Tabs activeKey={activeTab} onChange={handleTabChange}>
-            <TabPane tab="Profile Perusahaan" key="1">
-              <Form layout="vertical" form={form}>
-                <Form.Item label="Nama Perusahaan" 
-                validateStatus={
-                  formik.errors.company_name && formik.touched.company_name
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.company_name && formik.touched.company_name
-                    ? formik.errors.company_name
-                    : ""
-                }
-                required hasFeedback>
-                  <Input
-                    id="company_name"
-                    name="company_name"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.company_name}
-                    placeholder="Input company name"
-                  />
-                </Form.Item>
-                <Form.Item label="NPWP Perusahaan" 
-                 validateStatus={
-                  formik.errors.company_npwp && formik.touched.company_npwp
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.company_npwp && formik.touched.company_npwp
-                    ? formik.errors.company_npwp
-                    : ""
-                }
-                required hasFeedback>
-                  <NumericNumber
-                    placeholder="Input a number"
-                    value={formik.values.company_npwp}
-                    onChange={(value) =>
-                      formik.setFieldValue("company_npwp", value)
-                    }
-                  />
-                </Form.Item>
-                <Form.Item label="Status" 
-                 validateStatus={
-                  formik.errors.vendor_type && formik.touched.vendor_type
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.vendor_type && formik.touched.vendor_type
-                    ? formik.errors.vendor_type
-                    : ""
-                }
-                required hasFeedback>
-                  <Select
-                    id="vendor_type"
-                    onChange={(value) =>
-                      formik.setFieldValue("vendor_type", value)
-                    }
-                    onBlur={formik.handleBlur}
-                    value={formik.values.vendor_type}
-                  >
-                    <Option value="pusat">Pusat</Option>
-                    <Option value="cabang">Cabang</Option>
-                  </Select>
-                </Form.Item>
-                <Form.Item label="Alamat Perusahaan" 
-                 validateStatus={
-                  formik.errors.company_address && formik.touched.company_address
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.company_address && formik.touched.company_address
-                    ? formik.errors.company_address
-                    : ""
-                }
-                required hasFeedback>
-                  <Input
-                    id="company_address"
-                    name="company_address"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.company_address}
-                    placeholder="Input company address"
-                  />
-                </Form.Item>
-                <Form.Item label="Kota" 
-                 validateStatus={
-                  formik.errors.city_id && formik.touched.city_id
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.city_id && formik.touched.city_id
-                    ? formik.errors.city_id
-                    : ""
-                }
-                required hasFeedback>
-                  <Select
-                    id="city_id"
-                    onChange={(value) => formik.setFieldValue("city_id", value)}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.city_id}
-                  >
-                    <Option value="1">Banjarbaru</Option>
-                    <Option value="2">Bandung</Option>
-                  </Select>
-                </Form.Item>
-                <Form.Item label="Provinsi" 
-                validateStatus={
-                  formik.errors.province_id && formik.touched.province_id
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.province_id && formik.touched.province_id
-                    ? formik.errors.province_id
-                    : ""
-                }
-                required hasFeedback>
-                  <Select
-                    id="province_id"
-                    onChange={(value) =>
-                      formik.setFieldValue("province_id", value)
-                    }
-                    onBlur={formik.handleBlur}
-                    value={formik.values.province_id}
-                    placeholder="Select province"
-                  >
-                    <Option value={1}>Kalimantan Selatan</Option>
-                    <Option value={2}>Jawa Barat</Option>
-                  </Select>
-                </Form.Item>
-                <Form.Item label="Kode POS" 
-                validateStatus={
-                  formik.errors.postal_code && formik.touched.postal_code
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.postal_code && formik.touched.postal_code
-                    ? formik.errors.postal_code
-                    : ""
-                }
-                required hasFeedback>
-                  <InputNumber
-                    id="postal_code"
-                    placeholder="Input postal code"
-                    value={formik.values.postal_code}
-                    onChange={(value) =>
-                      formik.setFieldValue("postal_code", value)
-                    }
-                  />
-                </Form.Item>
-                <Form.Item label="Nomor Telepon Perusahaan" 
-                validateStatus={
-                  formik.errors.company_phone_number && formik.touched.company_phone_number
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.company_phone_number && formik.touched.company_phone_number
-                    ? formik.errors.company_phone_number
-                    : ""
-                }
-                required hasFeedback>
-                  <NumericInput
-                    value={formik.values.company_phone_number}
-                    onChange={(value) =>
-                      formik.setFieldValue("company_phone_number", value)
-                    }
-                    onBlur={formik.handleBlur}
-                    placeholder="Input company phone number"
-                  />
-                  {/* <Input
-                    id="company_phone_number"
-                    name="company_phone_number"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.company_phone_number}
-                  /> */}
-                </Form.Item>
-                <Form.Item label="Nomor Fax Perusahaan" 
-                validateStatus={
-                  formik.errors.company_fax && formik.touched.company_fax
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.company_fax && formik.touched.company_fax
-                    ? formik.errors.company_fax
-                    : ""
-                }
-                required hasFeedback>
-                  <Input
-                    id="company_fax"
-                    name="company_fax"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.company_fax}
-                    placeholder="(123)-456-7890"
-                  />
-                </Form.Item>
-                <Form.Item label="Email Perusahaan"
-                validateStatus={
-                  formik.errors.company_email && formik.touched.company_email
-                    ? "error"
-                    : ""
-                }
-                help={
-                  formik.errors.company_email && formik.touched.company_email
-                    ? formik.errors.company_email
-                    : ""
-                }
-                required hasFeedback>
-                  <Input
-                    id="company_email"
-                    name="company_email"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.company_email}
-                    placeholder="johndoe@mail.com"
-                  />
-                </Form.Item>
-              </Form>
-            </TabPane>
-
-            <TabPane tab="Kontak Perusahaan" key="2">
-              <Form form={form} component={false}>
-                <Button type="primary" onClick={showModal}>
-                  Tambah Kontak
-                </Button>
-                <Table
-                  components={{
-                    body: {
-                      cell: EditableCell,
-                    },
-                  }}
-                  bordered
-                  rowKey={(record) => record.id.toString()}
-                  // dataSource={registerContactInfo}
-                  dataSource={registerContactInfo.map((contact, index) => ({
-                    ...contact,
-                    no: index + 1,
-                    operation: contact,
-                  }))}
-                  columns={mergedColumns}
-                  rowClassName="editable-row"
-                  pagination={{
-                    onChange: cancel,
-                  }}
-                />
-                <p className="opacity-60 mt-5 italic">* Seluruh Notifikasi ke Vendor ini akan di kirim ke email yg terdaftar di contact person</p>
-              </Form>
-            </TabPane>
-
-            <TabPane tab="Authorization" key="3">
-              <Form layout="vertical" onFinish={formik.handleSubmit}>
-                <Form.Item
-                  label="Username"
-                  validateStatus={
-                    formik.errors.username && formik.touched.username
-                      ? "error"
-                      : ""
-                  }
-                  help={
-                    formik.errors.username && formik.touched.username
-                      ? formik.errors.username
-                      : ""
-                  }
-                  hasFeedback
-                  required
-                >
-                  <Input
-                    id="username"
-                    name="username"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.username}
-                  />
-                </Form.Item>
-                <Form.Item
-                  label="Password"
-                  validateStatus={
-                    formik.errors.password && formik.touched.password
-                      ? "error"
-                      : ""
-                  }
-                  help={
-                    formik.errors.password && formik.touched.password
-                      ? formik.errors.password
-                      : ""
-                  }
-                  required
-                  hasFeedback
-                >
-                  <Input.Password
-                    id="confirm"
-                    name="password"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.password}
-                  />
-                </Form.Item>
-                <Form.Item
-                  id="password"
-                  name="password"
-                  label="Confirm Password"
-                  dependencies={["password"]}
-                  hasFeedback
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please confirm your password!",
-                    },
-                    ({ getFieldValue }) => ({
-                      validator(_, value) {
-                        if (
-                          !value ||
-                          getFieldValue("password") === formik.values.password
-                        ) {
-                          return Promise.resolve();
-                        }
-                        return Promise.reject(
-                          new Error(
-                            "The new password that you entered do not match!",
-                          ),
-                        );
-                      },
-                    }),
-                  ]}
-                >
-                  <Input.Password />
-                </Form.Item>
-                <Button type="primary" onClick={handleSubmit}>
-                  Submit
-                </Button>
-                {Object.keys(formik.errors).length > 0 && (
-                  <span className="ml-3 text-red-500">
-                    Please fill in all required fields.
-                  </span>
-                )}
-              </Form>
-            </TabPane>
-          </Tabs>
+          <Tabs
+            activeKey={activeTab}
+            onChange={handleTabChange}
+            items={items}
+          />
           <Modal
             title="Tambah Kontak"
             open={isModalVisible}
@@ -694,7 +788,11 @@ const ProfilePerusahaan: React.FC = () => {
                 name="contact_phone"
                 label="Phone"
                 rules={[
-                  { required: true, message: "Telepon tidak boleh kosong", min: 5 },
+                  {
+                    required: true,
+                    message: "Telepon tidak boleh kosong",
+                    min: 5,
+                  },
                 ]}
                 hasFeedback
               >
@@ -741,7 +839,33 @@ const ProfilePerusahaan: React.FC = () => {
               <Form.Item
                 name="contact_npwp"
                 label="NPWP"
-                rules={[{ required: true, message: "NPWP tidak boleh kosong" }]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter NPWP number",
+                  },
+                  () => ({
+                    validator(_, value) {
+                      if (!value) {
+                        return Promise.reject();
+                      }
+                      if (isNaN(value)) {
+                        return Promise.reject("NPWP code has to be a number.");
+                      }
+                      if (value.length < 16) {
+                        return Promise.reject(
+                          "NPWP can't be less than 16 digits",
+                        );
+                      }
+                      if (value.length > 16) {
+                        return Promise.reject(
+                          "NPWP code can't be more than 16 digits",
+                        );
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
                 hasFeedback
               >
                 <Input
@@ -750,11 +874,33 @@ const ProfilePerusahaan: React.FC = () => {
                   onBlur={formik.handleBlur}
                 />
               </Form.Item>
-              <Form.Item label="Nomor KTP" name="contact_identity_no" rules={[
-                  { required: true, message: "Nomor KTP tidak boleh kosong", min: 5 },
+              <Form.Item
+                label="Nomor KTP"
+                name="contact_identity_no"
+                rules={[
+                  {
+                    required: true,
+                  },
+                  () => ({
+                    validator(_, value) {
+                      if (!value) {
+                        return Promise.reject();
+                      }
+                      if (isNaN(value)) {
+                        return Promise.reject("KTP number has to be a number.");
+                      }
+                      if (value.length < 10) {
+                        return Promise.reject("Your KTP Number is too sort");
+                      }
+                      // if (value.length > 16) {
+                      //   return Promise.reject("NPWP code can't be more than 16 digits");
+                      // }
+                      return Promise.resolve();
+                    },
+                  }),
                 ]}
                 hasFeedback
-                >
+              >
                 <Input
                   placeholder="Input a number"
                   value={formik.values.contact_identity_no}
