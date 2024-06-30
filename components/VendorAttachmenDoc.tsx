@@ -480,21 +480,27 @@ const AttachmentDocument: React.FC = () => {
             onChange: cancel,
           }}
         />
-       <p>Apa kamu yakin?</p>
-      <Checkbox onChange={handleCheckboxChange}></Checkbox>
+        <Button type="primary" onClick={handleSubmit}>
+          Save
+        </Button>
+      </Form>
+      <div className="flex flex-col justify-center items-center mt-10">
+        <div className="flex gap-3 w-[40rem] items-center">
+        <Checkbox onChange={handleCheckboxChange}></Checkbox>
+      <p className="text-center">Anda setuju bahwa Data yang Anda Masukkan telah benar, jika terdapat 
+        kekeliruan maka proses akan berlangsung sesuai dengan hukum yang berlaku.
+       </p>
+        </div>
       <Button
         type="primary"
         onClick={handleSubmitAll}
         loading={loadingSubmit}
         disabled={!isChecked}
-        style={{ marginLeft: 8 }}
+        className="mt-5"
       >
         Submit All
       </Button>
-        <Button type="primary" onClick={handleSubmit}>
-          Save
-        </Button>
-      </Form>
+      </div>
     </div>
   );
 };
