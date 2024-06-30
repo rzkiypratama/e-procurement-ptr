@@ -71,13 +71,13 @@ const MyLayout: React.FC<Props> = ({ children }) => {
 
 	return (
 		<Layout className="h-max">
-			<Header className="site-layout-background text-white flex items-center justify-between">
+			<Header className="bg-blue-500 text-white flex items-center justify-between">
 				<div className="text-xl">Delpis</div>
 			</Header>
 			<Layout className='h-max'>
-				<Sider collapsible collapsed={collapsed} onCollapse={onCollapse}>
+				<Sider collapsible collapsed={collapsed} onCollapse={onCollapse} theme='light'>
 					<div className="demo-logo-vertical" />
-					<Menu theme="dark" defaultSelectedKeys={['1']} mode="inline">
+					<Menu theme="light" defaultSelectedKeys={['1']} mode="inline">
 						{items.map((item) =>
 							item.children ? (
 								<Menu.SubMenu key={item.key} icon={item.icon} title={item.label}>

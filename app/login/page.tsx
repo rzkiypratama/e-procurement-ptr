@@ -74,6 +74,7 @@ const LoginForm: React.FC = () => {
         </div>
         <div className="w-96 rounded-md bg-white p-5 shadow-md">
           <Form layout="vertical" onFinish={formik.handleSubmit}>
+            <p className="text-md ps-4 font-semibold">Delpis e-Proc</p>
             <p className="pb-5 text-3xl font-semibold">Sign In</p>
             <Form.Item
               label="Username"
