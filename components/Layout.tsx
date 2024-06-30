@@ -36,7 +36,7 @@ const items = [
   //   getItem('Team 2', '2'),
   // ]),
   getItem('Vendor Management', 'sub2', <TeamOutlined />, [
-    getItem(<Link href="/vendor/register">Registrationsss</Link>, '3'),
+    getItem(<Link href="/vendor/register">Registration</Link>, '3'),
     getItem(<Link href="/vendor/verification">Verification</Link>, '4'),
     getItem(<Link href="/vendor/register">Evaluation</Link>, '5'),
     getItem('Master Data', 'sub4', <DatabaseOutlined />, [
@@ -64,7 +64,7 @@ const MyLayout: React.FC<Props> = ({ children }) => {
   const { openKeys, setOpenKeys } = useDropdown();
   const pathname = usePathname();
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
-  
+
 
   useEffect(() => {
     // Set the selected keys based on the current path
@@ -74,7 +74,7 @@ const MyLayout: React.FC<Props> = ({ children }) => {
         return href === pathname;
       })?.key || []
     ).map(key => String(key)); // Ensure all keys are converted to string
-  
+
     setSelectedKeys(newSelectedKeys);
     setOpenKeys(newSelectedKeys);
   }, [pathname]);
@@ -140,7 +140,7 @@ const MyLayout: React.FC<Props> = ({ children }) => {
             </div>
           </Content>
           <Footer className="text-center">
-          Delapan Pilar Intisolusi ©{new Date().getFullYear()}
+            Delapan Pilar Intisolusi ©{new Date().getFullYear()}
           </Footer>
         </Layout>
       </Layout>

@@ -2,14 +2,26 @@ import { create } from 'zustand';
 
 interface VendorRegisteredList {
     id: number;
-    companyName: string;
-    vendorNumber: string;
-    pic: string;
-    email: string;
-    phoneNumber: string;
+    company_name: string;
+    vendor_number: string;
+    pic_name: string;
+    company_email: string;
+    company_phone_number: string;
     status: string;
-    type: string;
-    statusVendor: string;
+    vendor_type: string;
+    status_vendor: string;
+}
+
+interface VendorVerificationList {
+    id: number;
+    company_name: string;
+    vendor_number: string;
+    pic_name: string;
+    company_email: string;
+    company_phone_number: string;
+    status: string;
+    verificator: string;
+    progress_verification: string;
 }
 
 interface VendorRegisteredState {
@@ -24,4 +36,16 @@ const useVendorRegisteredStore = create<VendorRegisteredState>((set) => ({
     })),
 }));
 
-export default useVendorRegisteredStore;
+interface VendorVerificationState {
+    vendorVerificationList: VendorVerificationList[];
+    initializeVendorVerificationList: (vendorVerificationList: VendorVerificationList[]) => void;
+}
+
+const useVendorVerificationStore = create<VendorVerificationState>((set) => ({
+    vendorVerificationList: [],
+    initializeVendorVerificationList: (vendorVerificationList) => set(() => ({
+        vendorVerificationList,
+    })),
+}));
+
+export default { useVendorRegisteredStore, useVendorVerificationStore };

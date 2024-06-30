@@ -313,6 +313,7 @@ const CurrencyData: React.FC = () => {
             <Table
                 components={{}}
                 bordered
+                loading={loading}
                 rowKey={(record) => record.id.toString()}
                 dataSource={currencyDataList}
                 columns={mergedColumns}

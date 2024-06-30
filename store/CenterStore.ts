@@ -88,6 +88,16 @@ interface AttachmentDoc {
   expiration_date: string;
 }
 
+interface AttachmentDocVerify {
+  id: number;
+  name: string;
+  document: string;
+  category: string;
+  expiration_date: string;
+  is_verified: boolean;
+  document_path: string;
+}
+
 // State Interfaces
 interface CenterStoreState {
   profilePerusahaan: ProfilePerusahaan[];
@@ -100,6 +110,7 @@ interface CenterStoreState {
   sptTahunan: SPTTahunan[];
   tenagaAhli: TenagaAhli[];
   attachmentDoc: AttachmentDoc[];
+  attachmentDocVerify: AttachmentDocVerify[];
   isLoading: boolean;
   setLoading: (loading: boolean) => void;
   addProfilePerusahaan: (profilePerusahaan: ProfilePerusahaan) => void;
@@ -142,6 +153,7 @@ interface CenterStoreState {
   editAttachment: (attachmentDoc: AttachmentDoc) => void;
   removeAttachment: (id: number) => void;
   initializeAttachment: (attachmentDoc: AttachmentDoc[]) => void;
+  initializeAttachmentVerify: (attachmentDoc: AttachmentDocVerify[]) => void;
 }
 
 // Create Zustand Store
@@ -156,6 +168,7 @@ const useCenterStore = create<CenterStoreState>((set) => ({
   sptTahunan: [],
   tenagaAhli: [],
   attachmentDoc: [],
+  attachmentDocVerify: [],
   isLoading: false,
   setLoading: (loading) => set({ isLoading: loading }),
 
@@ -284,10 +297,13 @@ const useCenterStore = create<CenterStoreState>((set) => ({
   })),
   removeAttachment: (id) => set((state) => ({
     attachmentDoc: state.attachmentDoc.filter((item) => item.id !== id),
-})),
-initializeAttachment: (attachmentDoc) => set(() => ({
-attachmentDoc,
-})),
+  })),
+  initializeAttachment: (attachmentDoc) => set(() => ({
+    attachmentDoc,
+  })),
+  initializeAttachmentVerify: (attachmentDocVerify) => set(() => ({
+    attachmentDocVerify,
+  })),
 }));
 
 export default useCenterStore;

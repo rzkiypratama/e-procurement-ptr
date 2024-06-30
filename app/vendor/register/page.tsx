@@ -15,14 +15,12 @@ import Layout from "@/components/Layout";
 const { TabPane } = Tabs;
 
 const RegisterPage = () => {
-  return (
-    <Layout>
-    <div className="container mx-auto flex flex-col content-center">
-      <h1 className="font-bold text-center text-5xl mb-5">Registrasi Baru</h1>
-      <VendorRegisterNew />
-    </div>
-    </Layout>
-  );
+	return (
+		<div className="container mx-auto flex flex-col content-center px-64 py-16">
+			<h1 className="font-bold text-center text-5xl mb-10">Registrasi Vendor</h1>
+			<VendorRegisterNew />
+		</div>
+	);
 };
 
 export default RegisterPage;

@@ -170,6 +170,7 @@ const VendorBusinessField = () => {
     }
 
     const listVendorBusinessField = async () => {
+        setLoading(true)
         try {
             const response = await axios.get("https://vendor.eproc.latansa.sch.id/api/master/vendor-business-field", {
                 headers: {
@@ -190,7 +191,7 @@ const VendorBusinessField = () => {
             message.error(`Get Data Business Field failed! ${error}`);
             console.error("Error Get Data Business Field:", error);
         } finally {
-
+            setLoading(false)
         }
     }
 
@@ -295,6 +296,7 @@ const VendorBusinessField = () => {
             <Table
                 components={{}}
                 bordered
+                loading={loading}
                 rowKey={(record) => record.id.toString()}
                 dataSource={masterDataList}
                 columns={mergedColumns}

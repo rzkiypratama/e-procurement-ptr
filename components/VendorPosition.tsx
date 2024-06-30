@@ -176,6 +176,7 @@ const VendorPosition: React.FC = () => {
     };
 
     const listVendorPosition = async () => {
+        setLoading(true)
         try {
             const response = await axios.get("https://vendor.eproc.latansa.sch.id/api/master/vendor-position", {
                 headers: {
@@ -196,7 +197,7 @@ const VendorPosition: React.FC = () => {
             message.error(`Get Data Position failed! ${error}`);
             console.error("Error Get Data Position:", error);
         } finally {
-
+            setLoading(false)
         }
     }
 
@@ -297,6 +298,7 @@ const VendorPosition: React.FC = () => {
             <Table
                 components={{}}
                 bordered
+                loading={loading}
                 rowKey={(record) => record.id.toString()}
                 dataSource={masterDataList}
                 columns={mergedColumns}

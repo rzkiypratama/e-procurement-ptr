@@ -4,12 +4,14 @@ import {
     Button,
     Table,
     message,
+    Typography
 } from "antd";
 import axios from "axios";
 import vendorStore from "@/store/vendorStore";
+import { useRouter } from 'next/navigation'
 
 
-interface VendorRegisteredList {
+interface VendorVerificationList {
     id: number;
     company_name: string;
     vendor_number: string;
@@ -17,15 +19,16 @@ interface VendorRegisteredList {
     company_email: string;
     company_phone_number: string;
     status: string;
-    vendor_type: string;
-    status_vendor: string;
+    verificator: string;
+    progress_verification: string;
 }
 
-const VendorRegisteredList: React.FC = () => {
+const VendorVerificationList: React.FC = () => {
+    const router = useRouter()
     const {
-        vendorRegisteredList,
-        initializeVendorRegisteredList,
-    } = vendorStore.useVendorRegisteredStore();
+        vendorVerificationList,
+        initializeVendorVerificationList,
+    } = vendorStore.useVendorVerificationStore();
 
     const [isLoading, setIsLoading] = useState(false)
 
@@ -52,16 +55,6 @@ const VendorRegisteredList: React.FC = () => {
             key: "pic_name",
         },
         {
-            title: "Email",
-            dataIndex: "company_email",
-            key: "company_email",
-        },
-        {
-            title: "Phone Number",
-            dataIndex: "company_phone_umber",
-            key: "company_phone_number",
-        },
-        {
             title: "Status",
             dataIndex: "status",
             key: "status",
@@ -76,12 +69,36 @@ const VendorRegisteredList: React.FC = () => {
             dataIndex: "status_vendor",
             key: "status_vendor",
         },
+        {
+            title: "Verificator",
+            dataIndex: "verificator",
+            key: "verificator",
+        },
+        {
+            title: "Progress Verification",
+            dataIndex: "progress_verification",
+            key: "progress_verification",
+        },
+        {
+            title: "",
+            dataIndex: "action",
+            key: "action",
+            render: (_: any, record: VendorVerificationList) => {
+                return (
+                    <span>
+                        <Typography.Link onClick={() => router.push(`/vendor/verification/${record.id}`)} style={{ marginRight: 8 }}>
+                            Edit
+                        </Typography.Link>
+                    </span>
+                );
+            },
+        },
     ]
 
     const mergedColumns = columns.map((col) => {
         return {
             ...col,
-            onCell: (record: VendorRegisteredList) => ({
+            onCell: (record: VendorVerificationList) => ({
                 record,
                 dataindex: col.dataIndex,
                 title: col.title,
@@ -105,8 +122,8 @@ const VendorRegisteredList: React.FC = () => {
                 e.status_vendor = "Active"
                 e.no = index
             })
-            const vendorList: VendorRegisteredList[] = await response.data.data
-            initializeVendorRegisteredList(vendorList);
+            const vendorList: VendorVerificationList[] = await response.data.data
+            initializeVendorVerificationList(vendorList);
         } catch (error) {
             message.error(`Get Data Vendor Registered failed! ${error}`);
             console.error("Error Get Data Vendor Registered:", error);
@@ -117,7 +134,7 @@ const VendorRegisteredList: React.FC = () => {
 
     return (
         <div className='container h-screen max-w-full mx-auto'>
-            <h1 className="font-bold text-start text-xl mb-5">Registered Vendor</h1>
+            <h1 className="font-bold text-start text-xl mb-5">Verification</h1>
             <Button type="primary" onClick={() => console.log("Download Report")} className="mb-5 float-end">
                 Download Report
             </Button>
@@ -126,7 +143,7 @@ const VendorRegisteredList: React.FC = () => {
                 bordered
                 loading={isLoading}
                 rowKey={(record) => record.id.toString()}
-                dataSource={vendorRegisteredList}
+                dataSource={vendorVerificationList}
                 columns={mergedColumns}
                 rowClassName="editable-row"
             />
@@ -134,4 +151,4 @@ const VendorRegisteredList: React.FC = () => {
     )
 }
 
-export default VendorRegisteredList
+export default VendorVerificationList

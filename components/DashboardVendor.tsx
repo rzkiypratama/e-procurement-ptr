@@ -127,6 +127,7 @@ const DashboardVendor: React.FC = () => {
 
     return (
         <div className='container h-screen max-w-full mx-auto'>
+            <h1 className="font-bold text-start text-xl mb-5">Dashboard</h1>
             <div className='flex flex-row mb-5'>
                 <Card style={{ width: 250, marginTop: 16 }} className='me-5 border-2 border-black' loading={isLoading} title="" >
                     <Meta
