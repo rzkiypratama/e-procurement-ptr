@@ -101,45 +101,46 @@ const ContactInfo: React.FC = () => {
     },
   });
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const token = getCookie("token");
-  //       const userId = getCookie("user_id");
-  //       const vendorId = getCookie("vendor_id");
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        const token = getCookie("token");
+        const userId = getCookie("user_id");
+        const vendorId = getCookie("vendor_id");
   
-  //       if (!token || !userId || !vendorId) {
-  //         message.error("Token, User ID, or Vendor ID is missing.");
-  //         return;
-  //       }
+        if (!token || !userId || !vendorId) {
+          message.error("Token, User ID, or Vendor ID is missing.");
+          return;
+        }
   
-  //       const response = await axios.get(
-  //         "https://vendor.eproc.latansa.sch.id/api/vendor/contact-person",
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${token}`,
-  //             "User-ID": userId,
-  //             "Vendor-ID": vendorId,
-  //           },
-  //         }
-  //       );
-  //       console.log("Response from API:", response.data);
+        const response = await axios.get(
+          "https://vendor.eproc.latansa.sch.id/api/vendor/contact-person",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          }
+        );
   
-  //       // Pastikan response.data adalah array sebelum menggunakan .some()
-  //       if (Array.isArray(response.data)) {
-  //         initializeContactInfo(response.data);
-  //       } else {
-  //         console.error("Response data is not an array:", response.data);
-  //         message.error("Failed to fetch contact information.");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching data:", error);
-  //       message.error("Failed to fetch contact information.");
-  //     }
-  //   };
+        console.log("Response from API:", response.data);
   
-  //   fetchData();
-  // }, [initializeContactInfo]);
+        // Pastikan response.data adalah object dan memiliki properti yang berisi array
+        if (typeof response.data === "object" && Array.isArray(response.data.data)) {
+          initializeContactInfo(response.data.data);
+        } else {
+          console.error("Response data is not in expected format:", response.data);
+          message.error("Failed to fetch contact information.");
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        message.error("Failed to fetch contact information.");
+      }
+    };
+  
+    fetchContactInfo();
+  }, [initializeContactInfo]);
 
   useEffect(() => {
     // Initialize data if needed
@@ -277,7 +278,7 @@ const ContactInfo: React.FC = () => {
   const handleOk = () => {
     addContactInfo({
       ...formik.values,
-      id: contactInfo.length + 1,
+      id: contactInfo.length + 2,
     });
     setIsModalVisible(false);
     form.resetFields();
@@ -295,7 +296,7 @@ const ContactInfo: React.FC = () => {
 
   return (
     <div>
-      <Button type="primary" onClick={showModal}>
+      <Button type="primary" onClick={showModal} className="mb-4">
         Tambah Kontak Perusahaan
       </Button>
       <Modal

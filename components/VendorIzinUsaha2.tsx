@@ -102,8 +102,42 @@ const IzinUsaha: React.FC = () => {
   });
 
   useEffect(() => {
-    const initialData: IzinUsaha[] = [];
-    initializeIzinUsaha(initialData);
+    const fetchData = async () => {
+      try {
+        const token = getCookie("token");
+        const userId = getCookie("user_id");
+        const vendorId = getCookie("vendor_id");
+  
+        if (!token || !userId || !vendorId) {
+          message.error("Please login first.");
+          return;
+        }
+  
+        const response = await axios.get(
+          "https://vendor.eproc.latansa.sch.id/api/vendor/business-permit",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          }
+        );
+  
+        // Check if response.data is an object containing an array
+        if (response.data && Array.isArray(response.data.data)) {
+          initializeIzinUsaha(response.data.data); // Initialize izinUsaha state with the array of IzinUsaha objects
+        } else {
+          console.error("Data fetched is not in expected format:", response.data);
+          message.error("Data fetched is not in expected format.");
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        message.error("Failed to fetch data. Please try again later.");
+      }
+    };
+  
+    fetchData();
   }, [initializeIzinUsaha]);
 
   const isEditing = (record: IzinUsaha) => record.id.toString() === editingKey;
@@ -250,9 +284,9 @@ const IzinUsaha: React.FC = () => {
   };
 
   const handleOk = () => {
-    addIzinUsaha({ ...formik.values, id: izinUsaha.length + 1 });
+    addIzinUsaha({ ...formik.values, id: izinUsaha.length + 2 });
     setIsModalVisible(false);
-    formik.resetForm();
+    form.resetFields();
   };
 
   const handleCancel = () => {
@@ -267,7 +301,7 @@ const IzinUsaha: React.FC = () => {
 
   return (
     <div>
-      <Button type="primary" onClick={showModal}>
+      <Button type="primary" onClick={showModal} className="mb-4">
         Tambah Izin Usaha
       </Button>
       <Modal
@@ -277,6 +311,8 @@ const IzinUsaha: React.FC = () => {
         onCancel={handleCancel}
       >
         <Form>
+          {/* jenis izin nanti berupa select */}
+          {/* Izin Usaha 2 */}
         <Form.Item
             name="type"
             label="Jenis Izin"

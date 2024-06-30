@@ -9,20 +9,27 @@ import {
   Modal,
   Upload,
   Spin,
+  DatePicker,
+  message,
+  Checkbox,
 } from "antd";
 import useAttachmentStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
 import { UploadOutlined } from "@ant-design/icons";
 import LandasanHukum from "./VendorLandasanHukum2";
+import dayjs from "dayjs";
+import { getCookie } from "cookies-next";
+import axios from "axios";
 
 const { TextArea } = Input;
 
 interface AttachmentDoc {
   id: number;
-  namaAttachment: string;
-  kategoriAttachment: string;
-  fileAttachment: any;
+  name: string;
+  document: string;
+  category: string;
+  expiration_date: string;
 }
 
 const AttachmentDocument: React.FC = () => {
@@ -43,24 +50,96 @@ const AttachmentDocument: React.FC = () => {
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState<string>("");
   const [loadingSubmit, setLoadingSubmit] = useState(false); // State untuk loading saat submit
+  const [isChecked, setIsChecked] = useState(false); 
 
+  const [tableKey, setTableKey] = useState(0);
+  
   const formik = useFormik({
     initialValues: {
-      namaAttachment: "",
-      kategoriAttachment: "",
-      fileAttachment: "",
+      name: "",
+      document: "",
+      category: "",
+      expiration_date: "",
     },
-    onSubmit: (values) => {
-      addAttachment({ ...values, id: attachmentDoc.length + 1 });
-      setIsModalVisible(false);
-      formik.resetForm();
+    onSubmit: async (values) => {
+      const token = getCookie("token");
+      const userId = getCookie("user_id");
+      const vendorId = getCookie("vendor_id");
+    
+      if (!token || !userId || !vendorId) {
+        message.error("Token, User ID, or Vendor ID is missing.");
+        return;
+      }
+    
+      try {
+        const formData = new FormData();
+        formData.append("document", values.document); // Menggunakan originFileObj untuk file asli
+        formData.append("name", values.name);
+        formData.append("category", values.category);
+        formData.append("expiration_date", values.expiration_date);
+    
+        const response = await axios.post(
+          "https://vendor.eproc.latansa.sch.id/api/vendor/attachment",
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+              "Content-Type": "multipart/form-data", // Penting untuk FormData
+            },
+          }
+        );
+    
+        console.log("Response from API:", response.data);
+        setIsModalVisible(false);
+        message.success("Dokumen berhasil ditambahkan");
+        formik.resetForm();
+      } catch (error) {
+        console.error("Gagal menambahkan dokumen:", error);
+        message.error("Gagal menambahkan dokumen. Silakan coba lagi.");
+      }
     },
   });
 
+  // ini untuk get dengan type data array of object
   useEffect(() => {
-    // Initialize data if needed
-    const initialData: AttachmentDoc[] = []; // Load your initial data here
-    initializeAttachment(initialData);
+    const fetchBankAccounts = async () => {
+      try {
+        const token = getCookie("token");
+        const userId = getCookie("user_id");
+        const vendorId = getCookie("vendor_id");
+  
+        if (!token || !userId || !vendorId) {
+          message.error("Please login first.");
+          return;
+        }
+  
+        const response = await axios.get(
+          "https://vendor.eproc.latansa.sch.id/api/vendor/attachment",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          }
+        );
+  
+        // Check if response.data is an object containing an array
+        if (response.data && Array.isArray(response.data.data)) {
+          initializeAttachment(response.data.data); // Initialize Tenaga Ahli state with the array of Tenaga Ahli objects
+        } else {
+          console.error("Tenaga Ahli data fetched is not in expected format:", response.data);
+          message.error("Tenaga Ahli data fetched is not in expected format.");
+        }
+      } catch (error) {
+        console.error("Error fetching Tenaga Ahli data:", error);
+        message.error("Failed to fetch Tenaga Ahli data. Please try again later.");
+      }
+    };
+  
+    fetchBankAccounts();
   }, [initializeAttachment]);
 
   const isEditing = (record: AttachmentDoc) =>
@@ -78,6 +157,13 @@ const AttachmentDocument: React.FC = () => {
   const save = async (id: React.Key) => {
     try {
       const row = (await form.validateFields()) as AttachmentDoc;
+      const updatedRow = {
+        ...row,
+        id: Number(id),
+        tanggalLahirTenagaAhli: dayjs(row.expiration_date).format(
+          "DD-MM-YYYY",
+        ),
+      };
       editAttachment({ ...row, id: Number(id) });
       setEditingKey("");
     } catch (errInfo) {
@@ -89,49 +175,68 @@ const AttachmentDocument: React.FC = () => {
     removeAttachment(Number(id));
   };
 
-  // Fungsi untuk menangani perubahan file
   const handleFileChange = (info: any) => {
-    console.log("File Info:", info);
-    // Dapatkan nama file dari informasi file yang diunggah
-    const { name } = info.file;
-    formik.setFieldValue("fileAttachment", name); // Atur nilai fileAttachment dengan nama file
+    if (info.file.status === "done") {
+      message.success(`${info.file.name} file uploaded successfully`);
+      formik.setFieldValue("document", info.file.originFileObj);
+      formik.setFieldValue("documentname", info.file.name); 
+    } else if (info.file.status === "error") {
+      message.error(`${info.file.name} file upload failed.`);
+    }
   };
 
-  // Konfigurasi untuk komponen Upload
   const uploadProps = {
     name: "file",
     multiple: false,
     onChange: handleFileChange,
-    beforeUpload: () => false, // Menonaktifkan perilaku upload default
+    beforeUpload: (file: File) => {
+      const isSupportedFormat =
+        file.type === "image/jpeg" ||
+        file.type === "image/png" ||
+        file.type === "image/jpg" ||
+        file.type === "application/pdf";
+  
+      if (!isSupportedFormat) {
+        message.error("Hanya file JPEG, JPG, PNG, atau PDF yang diizinkan!");
+        return Upload.LIST_IGNORE;
+      }
+  
+      const isLt2M = file.size / 1024 / 1024 < 2;
+      if (!isLt2M) {
+        message.error("File must smaller than 2MB!");
+        return Upload.LIST_IGNORE;
+      }
+  
+      return isSupportedFormat && isLt2M;
+    },
   };
 
   const columns = [
     { title: "No", dataIndex: "id", key: "id" },
     {
       title: "Nama Dokumen",
-      dataIndex: "namaAttachment",
-      key: "namaAttachment",
+      dataIndex: "name",
+      key: "name",
       editable: true,
     },
     {
       title: "Kategori Dokumen",
-      dataIndex: "kategoriAttachment",
-      key: "kategoriAttachment",
+      dataIndex: "category",
+      key: "category",
       editable: true,
     },
     {
       title: "Dokumen",
-      dataIndex: "fileAttachment",
-      key: "fileAttachment",
-      render: (text: any, record: AttachmentDoc) => (
-        <span>{record.fileAttachment}</span> // Menampilkan nama file
-      ),
+      dataIndex: "document",
+      key: "document",
     },
     {
       title: "Masa Berlaku Dokumen",
-      dataIndex: "expAttachment",
-      key: "expAttachment",
+      dataIndex: "expiration_date",
+      key: "expiration_date",
       editable: true,
+      render: (text: string) =>
+        text ? dayjs(text, "DD-MM-YYYY").format("DD-MM-YYYY") : "",
     },
     {
       title: "Operation",
@@ -180,9 +285,12 @@ const AttachmentDocument: React.FC = () => {
       onCell: (record: AttachmentDoc) => ({
         record,
         inputType:
-          col.dataIndex === "noKTP" || col.dataIndex === "npwp"
-            ? "number"
-            : "text",
+        col.dataIndex === "expiration_date"
+        ? "date"
+        : col.dataIndex === "identity_no" ||
+          col.dataIndex === "npwp_no"
+          ? "number"
+          : "text",
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record),
@@ -197,98 +305,168 @@ const AttachmentDocument: React.FC = () => {
   const handleOk = () => {
     addAttachment({
       ...formik.values,
-      id: attachmentDoc.length + 1,
+      id: attachmentDoc.length + 2,
     });
     setIsModalVisible(false);
-    form.resetFields();
   };
 
   const handleCancel = () => {
     setIsModalVisible(false);
   };
 
-  const handleSubmitAll = () => {
-    setLoadingSubmit(true); // Mengaktifkan loading saat submit
+  const handleSubmit = () => {
+    console.log("Submitting data:", attachmentDoc);
+    // Additional submission logic if needed
+    formik.handleSubmit();
+  };
+
+  // const handleSubmitAll = async () => {
+  //   const token = getCookie("token");
+  //   const userId = getCookie("user_id");
+  //   const vendorId = getCookie("vendor_id");
   
-    // Simulasi pengiriman data ke backend
-    const formData = {
-      attachmentData: attachmentDoc,
-      pengurusPerusahaan: pengurusPerusahaan,
-      landasanHukum: landasanHukum,
-      izinUsaha: izinUsaha,
-      pengalaman: pengalaman,
-      sptTahunan: sptTahunan,
-      tenagaAhli: tenagaAhli
-      // tambahkan data dari komponen LandasanHukum atau komponen lainnya jika diperlukan
-    };
+  //   if (!token || !userId || !vendorId) {
+  //     message.error("Token, User ID, or Vendor ID is missing.");
+  //     return;
+  //   }
   
-    // Kirim formData ke backend (contoh menggunakan fetch)
-    fetch('https://contohApiProcurement.com/api/v1/form', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // tambahkan header lainnya jika diperlukan
-      },
-      body: JSON.stringify(formData),
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Response from backend:', data); // Menampilkan data respons dari backend
-      // tambahkan logika penanganan respons di sini
-      setLoadingSubmit(false); // Mematikan loading setelah selesai
-    })
-    .catch(error => {
-      console.error('Error sending data to backend:', error);
-      // tambahkan penanganan kesalahan jika terjadi
-      setLoadingSubmit(false); // Mematikan loading pada error
-    });
+  //   try {
+  //     setLoadingSubmit(true); // Mengatur state loading sebelum memulai request
+  //     await axios.post(
+  //       "https://vendor.eproc.latansa.sch.id/api/vendor/submit",
+  //       { status: "yes" },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "User-ID": userId,
+  //           "Vendor-ID": vendorId,
+  //         },
+  //       }
+  //     );
+  
+  //     message.success("Status berhasil diperbarui.");
+  //   } catch (error) {
+  //     console.error("Gagal memperbarui status:", error);
+  //     message.error("Gagal memperbarui status. Silakan coba lagi.");
+  //   } finally {
+  //     setLoadingSubmit(false); // Mengatur state loading setelah request selesai
+  //   }
+  // };
+
+  const handleSubmitAll = async () => {
+    setLoadingSubmit(true);
+
+    const token = getCookie("token");
+    const userId = getCookie("user_id");
+    const vendorId = getCookie("vendor_id");
+
+    if (!token || !userId || !vendorId) {
+      message.error("Token, User ID, or Vendor ID is missing.");
+      setLoadingSubmit(false);
+      return;
+    }
+
+    try {
+      const formData = {
+        submit: isChecked ? "yes" : "no", // Menyesuaikan nilai submit berdasarkan isChecked
+      };
+
+      const response = await axios.post(
+        "https://vendor.eproc.latansa.sch.id/api/vendor/submit",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "User-ID": userId,
+            "Vendor-ID": vendorId,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Response from API:", response.data);
+      message.success("Data berhasil disubmit!");
+    } catch (error) {
+      console.error("Gagal men-submit data:", error);
+      message.error("Gagal men-submit data. Silakan coba lagi.");
+    } finally {
+      setLoadingSubmit(false);
+    }
+  };
+
+  const handleCheckboxChange = (e: { target: { checked: boolean | ((prevState: boolean) => boolean); }; }) => {
+    setIsChecked(e.target.checked); // Mengubah nilai isChecked berdasarkan status Checkbox
   };
 
   return (
     <div>
-      <Button type="primary" onClick={showModal}>
+      <Button type="primary" onClick={showModal} className="mb-4">
         Tambah Dokumen
       </Button>
       <Modal
         title="Tambah Dokumen"
-        visible={isModalVisible} // Gunakan visible bukan open untuk modal
+        open={isModalVisible} // Gunakan visible bukan open untuk modal
         onOk={handleOk}
         onCancel={handleCancel}
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            name="namaAttachment"
+            name="name"
             label="Nama Dokumen"
             rules={[{ required: true, message: "Dokumen tidak boleh kosong" }]}
           >
             <Input
-              value={formik.values.namaAttachment}
+              value={formik.values.name}
               onChange={formik.handleChange}
             />
           </Form.Item>
           <Form.Item
-            name="kategoriAttachment"
+            name="category"
             label="Kategori Dokumen"
             rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
           >
             <Input
-              value={formik.values.kategoriAttachment}
+              value={formik.values.category}
               onChange={formik.handleChange}
             />
           </Form.Item>
           <Form.Item
-            name="fileAttachment"
+            name="document"
             label="File"
             rules={[{ required: true, message: "File attachment is required" }]}
           >
-            <Upload {...uploadProps}>
+            <Upload 
+            {...uploadProps} >
               <Button icon={<UploadOutlined />}>Upload</Button>
             </Upload>
+          </Form.Item>
+          <Form.Item
+            name="expiration_date"
+            label="Tanggal Lahir"
+            rules={[
+              { required: true, message: "Tanggal Lahir tidak boleh kosong" },
+            ]}
+          >
+            <DatePicker
+              format="DD-MM-YYYY"
+              value={
+                formik.values.expiration_date
+                  ? dayjs(formik.values.expiration_date, "DD-MM-YYYY")
+                  : null
+              }
+              onChange={(date) =>
+                formik.setFieldValue(
+                  "expiration_date",
+                  date ? date.format("DD-MM-YYYY") : "",
+                )
+              }
+            />
           </Form.Item>
         </Form>
       </Modal>
       <Form form={form} component={false}>
         <Table
+          rowKey={(record) => record.id.toString()}
           components={{
             body: {
               cell: EditableCell,
@@ -302,8 +480,19 @@ const AttachmentDocument: React.FC = () => {
             onChange: cancel,
           }}
         />
-        <Button type="primary" onClick={handleSubmitAll} loading={loadingSubmit}>
-          Submit All
+       <p>Apa kamu yakin?</p>
+      <Checkbox onChange={handleCheckboxChange}></Checkbox>
+      <Button
+        type="primary"
+        onClick={handleSubmitAll}
+        loading={loadingSubmit}
+        disabled={!isChecked}
+        style={{ marginLeft: 8 }}
+      >
+        Submit All
+      </Button>
+        <Button type="primary" onClick={handleSubmit}>
+          Save
         </Button>
       </Form>
     </div>

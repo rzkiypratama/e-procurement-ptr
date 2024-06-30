@@ -74,21 +74,45 @@ const PengurusPerusahaan: React.FC = () => {
     },
   });
 
-  // useEffect(() => {
-  //   const fetchBankAccounts = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         "https://vendor.eproc.latansa.sch.id/api/vendor/bank"
-  //       );
-  //       initializeBankAccount(response.data);
-  //     } catch (error) {
-  //       console.error("Failed to fetch data", error);
-  //       message.error("Failed to fetch data");
-  //     }
-  //   };
-
-  //   fetchBankAccounts();
-  // }, [initializeBankAccount]);
+  // ini untuk get dengan type data array of object
+  useEffect(() => {
+    const fetchBankAccounts = async () => {
+      try {
+        const token = getCookie("token");
+        const userId = getCookie("user_id");
+        const vendorId = getCookie("vendor_id");
+  
+        if (!token || !userId || !vendorId) {
+          message.error("Please login first.");
+          return;
+        }
+  
+        const response = await axios.get(
+          "https://vendor.eproc.latansa.sch.id/api/vendor/bank",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          }
+        );
+  
+        // Check if response.data is an object containing an array
+        if (response.data && Array.isArray(response.data.data)) {
+          initializeBankAccount(response.data.data); // Initialize bank account state with the array of bank account objects
+        } else {
+          console.error("Bank account data fetched is not in expected format:", response.data);
+          message.error("Bank account data fetched is not in expected format.");
+        }
+      } catch (error) {
+        console.error("Error fetching bank account data:", error);
+        message.error("Failed to fetch bank account data. Please try again later.");
+      }
+    };
+  
+    fetchBankAccounts();
+  }, [initializeBankAccount]);
 
   const isEditing = (record: BankAccount) =>
     record.id.toString() === editingKey;
@@ -213,7 +237,7 @@ const PengurusPerusahaan: React.FC = () => {
   const handleOk = () => {
     addBankAccount({
       ...formik.values,
-      id: bankAccount.length + 1,
+      id: bankAccount.length + 2,
     });
     setIsModalVisible(false);
     form.resetFields();
@@ -230,7 +254,7 @@ const PengurusPerusahaan: React.FC = () => {
 
   return (
     <div>
-      <Button type="primary" onClick={showModal}>
+      <Button type="primary" onClick={showModal} className="mb-4">
         Tambah Rekening Perusahaan
       </Button>
       <Modal

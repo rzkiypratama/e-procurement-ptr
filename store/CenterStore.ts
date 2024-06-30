@@ -33,17 +33,17 @@ interface BankAccount {
 }
 interface PengurusPerusahaan {
   id: number;
-  namaPengurus: string;
-  jabatanPengurus: string;
-  noKTPPengurus: string;
-  npwpPengurus: string;
+  name: string;
+  position_id: number;
+  identity_no: string;
+  npwp_no: string;
 }
 
 interface LandasanHukum {
   id: number;
-  nomorDokumen: string;
-  namaNotaris: string;
-  tahunDokumen: string;
+  document_no: string;
+  document_date: string;
+  notaris_name: string;
 }
 
 interface IzinUsaha {
@@ -58,33 +58,34 @@ interface IzinUsaha {
 
 interface Pengalaman {
   id: number;
-  namaPekerjaan: string;
-  bidangPekerjaan: string;
-  lokasiPekerjaan: string;
+  job_name: string;
+  business_field_id: string;
+  location: string;
 }
 
 interface SPTTahunan {
   id: number;
-  tahunSpt: string;
-  nomorSPT: string;
-  tanggalSpt: string;
+  year: string;
+  spt_number: string;
+  date: string;
 }
 
 interface TenagaAhli {
   id: number;
-  namaTenagaAhli: string;
-  tanggalLahirTenagaAhli: string;
-  nomorKtpTenagaAhli: string;
-  npwpTenagaAhli: string;
-  pendidikanTenagaAhli: string;
-  pengalamanTenagaAhli: string;
+  name: string;
+  birth_date: string;
+  identity_no: string;
+  npwp_no: string;
+  last_education: string;
+  last_experience: string;
 }
 
 interface AttachmentDoc {
   id: number;
-  namaAttachment: string;
-  kategoriAttachment: string;
-  fileAttachment: string;
+  name: string;
+  document: string;
+  category: string;
+  expiration_date: string;
 }
 
 // State Interfaces

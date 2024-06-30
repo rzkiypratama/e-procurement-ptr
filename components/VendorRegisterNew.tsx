@@ -627,7 +627,7 @@ const ProfilePerusahaan: React.FC = () => {
       label: "Contact Info",
       children: (
         <Form form={form} component={false}>
-          <Button type="primary" onClick={showModal}>
+          <Button type="primary" onClick={showModal} className="mb-4">
             Tambah Kontak
           </Button>
           <Table

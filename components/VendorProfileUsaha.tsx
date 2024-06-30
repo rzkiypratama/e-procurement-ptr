@@ -82,7 +82,6 @@ const PengurusPerusahaan: React.FC = () => {
           }
         );
         console.log("Response from API:", response.data);
-        // addProfilePerusahaan({ ...values, id: profilePerusahaan.length + 1 });
         setIsModalVisible(false);
         formik.resetForm();
       } catch (error) {
@@ -108,14 +107,59 @@ const PengurusPerusahaan: React.FC = () => {
     },
   });
 
+  // get untuk type data object
+
   useEffect(() => {
-    // Initialize data if needed
-    const initialData: ProfilePerusahaan[] = []; // Load your initial data here
-    initializeProfilePerusahaan(initialData);
+    const fetchProfilePerusahaan = async () => {
+      try {
+        const token = getCookie("token");
+        const userId = getCookie("user_id");
+        const vendorId = getCookie("vendor_id");
+  
+        if (!token || !userId || !vendorId) {
+          message.error("Token, User ID, or Vendor ID is missing.");
+          return;
+        }
+  
+        const response = await axios.get(
+          "https://vendor.eproc.latansa.sch.id/api/vendor/informasi-umum",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          }
+        );
+  
+        console.log("Response from API:", response.data);
+  
+        // Pastikan response.data adalah objek dan sesuai dengan struktur yang diharapkan
+        if (typeof response.data === "object" && !Array.isArray(response.data)) {
+          // Ambil nilai objek dalam response.data, karena berupa object of objects
+          const values: ProfilePerusahaan[] = Object.values(response.data);
+  
+          // Initialize data yang dibutuhkan dari objek-objek ini
+          initializeProfilePerusahaan(values);
+        } else {
+          console.error("Response data is not in expected format:", response.data);
+          message.error("Failed to fetch company profile information.");
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        message.error("Failed to fetch company profile information.");
+      }
+    };
+  
+    fetchProfilePerusahaan();
   }, [initializeProfilePerusahaan]);
 
-  const isEditing = (record: ProfilePerusahaan) =>
-    record.id.toString() === editingKey;
+  const isEditing = (record: ProfilePerusahaan) => {
+    if (record && record.id) {
+      return record.id.toString() === editingKey;
+    }
+    return false;
+  };
 
   const edit = (record: Partial<ProfilePerusahaan> & { id: React.Key }) => {
     form.setFieldsValue({ ...record });
@@ -139,47 +183,6 @@ const PengurusPerusahaan: React.FC = () => {
   const handleDelete = (id: React.Key) => {
     removeProfilePerusahaan(Number(id));
   };
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const token = getCookie("token");
-  //       const userId = getCookie("user_id");
-  //       const vendorId = getCookie("vendor_id");
-
-  //       if (!token || !userId || !vendorId) {
-  //         message.error("Token, User ID, or Vendor ID is missing.");
-  //         return;
-  //       }
-
-  //       const response = await axios.get(
-  //         "https://vendor.eproc.latansa.sch.id/api/vendor/informasi-umum",
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${token}`,
-  //             "User-ID": userId,
-  //             "Vendor-ID": vendorId,
-  //             "Content-Type": "application/json",
-  //           },
-  //         }
-  //       );
-  //       console.log("Response from API:", response.data);
-
-  //       if (Array.isArray(response.data.data)) {
-  //         // Initialize data
-  //         initializeProfilePerusahaan(response.data.data);
-  //       } else {
-  //         console.error("Invalid response data structure:", response.data);
-  //         message.error("Failed to fetch contact information.");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching data:", error);
-  //       message.error("Failed to fetch contact information.");
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, [initializeProfilePerusahaan]);
 
 
   const columns = [
@@ -325,10 +328,10 @@ const PengurusPerusahaan: React.FC = () => {
   const handleOk = () => {
     addProfilePerusahaan({
       ...formik.values,
-      id: profilePerusahaan.length + 1,
+      id: profilePerusahaan.length + 2,
     });
     setIsModalVisible(false);
-    form.resetFields();
+    // form.resetFields();
   };
 
   const handleCancel = () => {
@@ -343,23 +346,24 @@ const PengurusPerusahaan: React.FC = () => {
 
   return (
     <div>
-      <Button type="primary" onClick={showModal}>
+      <Button type="primary" onClick={showModal} className="mb-4">
         Tambah Profile Perusahaan
       </Button>
       <Modal
         title="Tambah Profile Perusahaan"
         open={isModalVisible}
         onCancel={handleCancel}
-        footer={[
-          <>
-           <Button onClick={handleCancel}>
-            Batalkan
-          </Button>
-          <Button key="submit" type="primary" onClick={handleSubmit}>
-            Simpan Data
-          </Button>
-          </>
-        ]}
+        onOk={handleOk}
+        // footer={[
+        //   <>
+        //    <Button onClick={handleCancel}>
+        //     Batalkan
+        //   </Button>
+        //   <Button key="submit" type="primary" onClick={handleSubmit}>
+        //     Simpan Data
+        //   </Button>
+        //   </>
+        // ]}
       >
         <Form form={form} layout="vertical">
           <Form.Item
@@ -503,9 +507,9 @@ const PengurusPerusahaan: React.FC = () => {
             onChange: cancel,
           }}
         />
-        {/* <Button type="primary" onClick={handleSubmit}>
+        <Button type="primary" onClick={handleSubmit}>
           Submit
-        </Button> */}
+        </Button>
       </Form>
     </div>
   );
