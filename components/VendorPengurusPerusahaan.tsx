@@ -55,7 +55,7 @@ const PengurusPerusahaan: React.FC = () => {
       }
       try {
         const response = await axios.post(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/director",
+          "https://vendorv2.delpis.online/api/vendor/director",
           values,
           {
             headers: {
@@ -82,14 +82,14 @@ const PengurusPerusahaan: React.FC = () => {
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-  
+
         if (!token || !userId || !vendorId) {
           message.error("Please login first.");
           return;
         }
-  
+
         const response = await axios.get(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/director",
+          "https://vendorv2.delpis.online/api/vendor/director",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -98,7 +98,7 @@ const PengurusPerusahaan: React.FC = () => {
             },
           }
         );
-  
+
         // Check if response.data is an object containing an array
         if (response.data && Array.isArray(response.data.data)) {
           initializePengurusPerusahaan(response.data.data); // Initialize bank account state with the array of bank account objects
@@ -111,7 +111,7 @@ const PengurusPerusahaan: React.FC = () => {
         message.error("Failed to fetch bank account data. Please try again later.");
       }
     };
-  
+
     fetchPengurusPerusahaan();
   }, [initializePengurusPerusahaan]);
 
@@ -231,7 +231,7 @@ const PengurusPerusahaan: React.FC = () => {
           <Form.Item
             name="name"
             label="Nama"
-            // rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
+          // rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
           >
             <Input
               value={formik.values.name}
@@ -241,7 +241,7 @@ const PengurusPerusahaan: React.FC = () => {
           <Form.Item
             name="position_id"
             label="Jabatan"
-            // rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
+          // rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
           >
             <Input
               value={formik.values.position_id}
@@ -256,19 +256,19 @@ const PengurusPerusahaan: React.FC = () => {
             <Input
               value={formik.values.identity_no}
               onChange={formik.handleChange}
-              // onChange={(value) => formik.setFieldValue("identity_no", value)}
+            // onChange={(value) => formik.setFieldValue("identity_no", value)}
             />
           </Form.Item>
           <Form.Item
             name="npwp_no"
             label="NPWP"
-            // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+          // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
           >
             <Input
               value={formik.values.npwp_no}
               onChange={formik.handleChange}
-              // on change dibawah untuk Input berupa number InputNumber
-              // onChange={(value) => formik.setFieldValue("npwp_no", value)}
+            // on change dibawah untuk Input berupa number InputNumber
+            // onChange={(value) => formik.setFieldValue("npwp_no", value)}
             />
           </Form.Item>
         </Form>
@@ -288,7 +288,7 @@ const PengurusPerusahaan: React.FC = () => {
             onChange: cancel,
           }}
         />
-         <Button type="primary" onClick={handleSubmit}>
+        <Button type="primary" onClick={handleSubmit}>
           Submit
         </Button>
       </Form>

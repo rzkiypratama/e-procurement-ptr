@@ -50,10 +50,10 @@ const AttachmentDocument: React.FC = () => {
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState<string>("");
   const [loadingSubmit, setLoadingSubmit] = useState(false); // State untuk loading saat submit
-  const [isChecked, setIsChecked] = useState(false); 
+  const [isChecked, setIsChecked] = useState(false);
 
   const [tableKey, setTableKey] = useState(0);
-  
+
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -65,21 +65,21 @@ const AttachmentDocument: React.FC = () => {
       const token = getCookie("token");
       const userId = getCookie("user_id");
       const vendorId = getCookie("vendor_id");
-    
+
       if (!token || !userId || !vendorId) {
         message.error("Token, User ID, or Vendor ID is missing.");
         return;
       }
-    
+
       try {
         const formData = new FormData();
         formData.append("document", values.document); // Menggunakan originFileObj untuk file asli
         formData.append("name", values.name);
         formData.append("category", values.category);
         formData.append("expiration_date", values.expiration_date);
-    
+
         const response = await axios.post(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/attachment",
+          "https://vendorv2.delpis.online/api/vendor/attachment",
           formData,
           {
             headers: {
@@ -90,7 +90,7 @@ const AttachmentDocument: React.FC = () => {
             },
           }
         );
-    
+
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
         message.success("Dokumen berhasil ditambahkan");
@@ -109,14 +109,14 @@ const AttachmentDocument: React.FC = () => {
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-  
+
         if (!token || !userId || !vendorId) {
           message.error("Please login first.");
           return;
         }
-  
+
         const response = await axios.get(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/attachment",
+          "https://vendorv2.delpis.online/api/vendor/attachment",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -125,7 +125,7 @@ const AttachmentDocument: React.FC = () => {
             },
           }
         );
-  
+
         // Check if response.data is an object containing an array
         if (response.data && Array.isArray(response.data.data)) {
           initializeAttachment(response.data.data); // Initialize Tenaga Ahli state with the array of Tenaga Ahli objects
@@ -138,7 +138,7 @@ const AttachmentDocument: React.FC = () => {
         message.error("Failed to fetch Tenaga Ahli data. Please try again later.");
       }
     };
-  
+
     fetchBankAccounts();
   }, [initializeAttachment]);
 
@@ -179,7 +179,7 @@ const AttachmentDocument: React.FC = () => {
     if (info.file.status === "done") {
       message.success(`${info.file.name} file uploaded successfully`);
       formik.setFieldValue("document", info.file.originFileObj);
-      formik.setFieldValue("documentname", info.file.name); 
+      formik.setFieldValue("documentname", info.file.name);
     } else if (info.file.status === "error") {
       message.error(`${info.file.name} file upload failed.`);
     }
@@ -195,18 +195,18 @@ const AttachmentDocument: React.FC = () => {
         file.type === "image/png" ||
         file.type === "image/jpg" ||
         file.type === "application/pdf";
-  
+
       if (!isSupportedFormat) {
         message.error("Hanya file JPEG, JPG, PNG, atau PDF yang diizinkan!");
         return Upload.LIST_IGNORE;
       }
-  
+
       const isLt2M = file.size / 1024 / 1024 < 2;
       if (!isLt2M) {
         message.error("File must smaller than 2MB!");
         return Upload.LIST_IGNORE;
       }
-  
+
       return isSupportedFormat && isLt2M;
     },
   };
@@ -285,12 +285,12 @@ const AttachmentDocument: React.FC = () => {
       onCell: (record: AttachmentDoc) => ({
         record,
         inputType:
-        col.dataIndex === "expiration_date"
-        ? "date"
-        : col.dataIndex === "identity_no" ||
-          col.dataIndex === "npwp_no"
-          ? "number"
-          : "text",
+          col.dataIndex === "expiration_date"
+            ? "date"
+            : col.dataIndex === "identity_no" ||
+              col.dataIndex === "npwp_no"
+              ? "number"
+              : "text",
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record),
@@ -324,16 +324,16 @@ const AttachmentDocument: React.FC = () => {
   //   const token = getCookie("token");
   //   const userId = getCookie("user_id");
   //   const vendorId = getCookie("vendor_id");
-  
+
   //   if (!token || !userId || !vendorId) {
   //     message.error("Token, User ID, or Vendor ID is missing.");
   //     return;
   //   }
-  
+
   //   try {
   //     setLoadingSubmit(true); // Mengatur state loading sebelum memulai request
   //     await axios.post(
-  //       "https://vendor.eproc.latansa.sch.id/api/vendor/submit",
+  //       "https://vendorv2.delpis.online/api/vendor/submit",
   //       { status: "yes" },
   //       {
   //         headers: {
@@ -343,7 +343,7 @@ const AttachmentDocument: React.FC = () => {
   //         },
   //       }
   //     );
-  
+
   //     message.success("Status berhasil diperbarui.");
   //   } catch (error) {
   //     console.error("Gagal memperbarui status:", error);
@@ -372,7 +372,7 @@ const AttachmentDocument: React.FC = () => {
       };
 
       const response = await axios.post(
-        "https://vendor.eproc.latansa.sch.id/api/vendor/submit",
+        "https://vendorv2.delpis.online/api/vendor/submit",
         formData,
         {
           headers: {
@@ -435,8 +435,8 @@ const AttachmentDocument: React.FC = () => {
             label="File"
             rules={[{ required: true, message: "File attachment is required" }]}
           >
-            <Upload 
-            {...uploadProps} >
+            <Upload
+              {...uploadProps} >
               <Button icon={<UploadOutlined />}>Upload</Button>
             </Upload>
           </Form.Item>
@@ -486,20 +486,20 @@ const AttachmentDocument: React.FC = () => {
       </Form>
       <div className="flex flex-col justify-center items-center mt-10">
         <div className="flex gap-3 w-[40rem] items-center">
-        <Checkbox onChange={handleCheckboxChange}></Checkbox>
-      <p className="text-center">Anda setuju bahwa Data yang Anda Masukkan telah benar, jika terdapat 
-        kekeliruan maka proses akan berlangsung sesuai dengan hukum yang berlaku.
-       </p>
+          <Checkbox onChange={handleCheckboxChange}></Checkbox>
+          <p className="text-center">Anda setuju bahwa Data yang Anda Masukkan telah benar, jika terdapat
+            kekeliruan maka proses akan berlangsung sesuai dengan hukum yang berlaku.
+          </p>
         </div>
-      <Button
-        type="primary"
-        onClick={handleSubmitAll}
-        loading={loadingSubmit}
-        disabled={!isChecked}
-        className="mt-5"
-      >
-        Submit All
-      </Button>
+        <Button
+          type="primary"
+          onClick={handleSubmitAll}
+          loading={loadingSubmit}
+          disabled={!isChecked}
+          className="mt-5"
+        >
+          Submit All
+        </Button>
       </div>
     </div>
   );

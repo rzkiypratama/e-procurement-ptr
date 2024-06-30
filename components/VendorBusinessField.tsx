@@ -104,7 +104,7 @@ const VendorBusinessField = () => {
             console.log("Form Values:", values);
             setLoading(true);
             try {
-                const response = await axios.post("https://vendor.eproc.latansa.sch.id/api/master/vendor-business-field", values, {
+                const response = await axios.post("https://vendorv2.delpis.online/api/master/vendor-business-field", values, {
                     headers: {
                         "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
                     }
@@ -172,7 +172,7 @@ const VendorBusinessField = () => {
     const listVendorBusinessField = async () => {
         setLoading(true)
         try {
-            const response = await axios.get("https://vendor.eproc.latansa.sch.id/api/master/vendor-business-field", {
+            const response = await axios.get("https://vendorv2.delpis.online/api/master/vendor-business-field", {
                 headers: {
                     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
                 }
@@ -221,7 +221,7 @@ const VendorBusinessField = () => {
         console.log(body)
         setLoading(true)
         try {
-            const response = await axios.post(`https://vendor.eproc.latansa.sch.id/api/master/vendor-business-field/${selectedId}`, body, {
+            const response = await axios.post(`https://vendorv2.delpis.online/api/master/vendor-business-field/${selectedId}`, body, {
                 headers: {
                     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
                 }
@@ -245,7 +245,7 @@ const VendorBusinessField = () => {
     const deleteVendorBusinessField = async () => {
         setLoading(true)
         try {
-            const response = await axios.delete(`https://vendor.eproc.latansa.sch.id/api/master/vendor-business-field/${selectedId}`, {
+            const response = await axios.delete(`https://vendorv2.delpis.online/api/master/vendor-business-field/${selectedId}`, {
                 headers: {
                     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
                 }

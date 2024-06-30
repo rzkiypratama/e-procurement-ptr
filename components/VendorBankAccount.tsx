@@ -53,7 +53,7 @@ const PengurusPerusahaan: React.FC = () => {
       }
       try {
         const response = await axios.post(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/bank",
+          "https://vendorv2.delpis.online/api/vendor/bank",
           values,
           {
             headers: {
@@ -81,14 +81,14 @@ const PengurusPerusahaan: React.FC = () => {
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-  
+
         if (!token || !userId || !vendorId) {
           message.error("Please login first.");
           return;
         }
-  
+
         const response = await axios.get(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/bank",
+          "https://vendorv2.delpis.online/api/vendor/bank",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -97,7 +97,7 @@ const PengurusPerusahaan: React.FC = () => {
             },
           }
         );
-  
+
         // Check if response.data is an object containing an array
         if (response.data && Array.isArray(response.data.data)) {
           initializeBankAccount(response.data.data); // Initialize bank account state with the array of bank account objects
@@ -110,7 +110,7 @@ const PengurusPerusahaan: React.FC = () => {
         message.error("Failed to fetch bank account data. Please try again later.");
       }
     };
-  
+
     fetchBankAccounts();
   }, [initializeBankAccount]);
 
@@ -220,8 +220,8 @@ const PengurusPerusahaan: React.FC = () => {
             : col.dataIndex === "city_id" ||
               col.dataIndex === "province_id" ||
               col.dataIndex === "vendor_type"
-            ? "select"
-            : "text",
+              ? "select"
+              : "text",
         dataIndex: col.dataIndex,
         title: col.title,
         options: col.options,
@@ -249,7 +249,7 @@ const PengurusPerusahaan: React.FC = () => {
 
   const handleSubmit = async () => {
     console.log("Submitting data:", bankAccount);
-  formik.handleSubmit()
+    formik.handleSubmit()
   };
 
   return (
@@ -299,7 +299,7 @@ const PengurusPerusahaan: React.FC = () => {
           <Form.Item
             name="account_number"
             label="Nomor Rekening Perusahaan"
-            // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+          // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
           >
             <Input
               value={formik.values.account_number}

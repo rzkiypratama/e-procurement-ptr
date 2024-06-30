@@ -23,7 +23,7 @@ interface Pengalaman {
   job_name: string;
   business_field_id: string;
   location: string;
-  }
+}
 
 const PengurusPerusahaan: React.FC = () => {
   const {
@@ -39,9 +39,9 @@ const PengurusPerusahaan: React.FC = () => {
 
   const formik = useFormik({
     initialValues: {
-        job_name: "",
-        business_field_id: "",
-        location: "",
+      job_name: "",
+      business_field_id: "",
+      location: "",
     },
     onSubmit: async (values) => {
       const token = getCookie("token");
@@ -54,7 +54,7 @@ const PengurusPerusahaan: React.FC = () => {
       }
       try {
         const response = await axios.post(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/experience",
+          "https://vendorv2.delpis.online/api/vendor/experience",
           values,
           {
             headers: {
@@ -82,14 +82,14 @@ const PengurusPerusahaan: React.FC = () => {
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-  
+
         if (!token || !userId || !vendorId) {
           message.error("Please login first.");
           return;
         }
-  
+
         const response = await axios.get(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/experience",
+          "https://vendorv2.delpis.online/api/vendor/experience",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -98,7 +98,7 @@ const PengurusPerusahaan: React.FC = () => {
             },
           }
         );
-  
+
         // Check if response.data is an object containing an array
         if (response.data && Array.isArray(response.data.data)) {
           initializePengalaman(response.data.data); // Initialize Data Pengalaman state with the array of Data Pengalaman objects
@@ -111,7 +111,7 @@ const PengurusPerusahaan: React.FC = () => {
         message.error("Failed to fetch Data Pengalaman data. Please try again later.");
       }
     };
-  
+
     fetchBankAccounts();
   }, [initializePengalaman]);
 
@@ -277,8 +277,8 @@ const PengurusPerusahaan: React.FC = () => {
         />
       </Form>
       <Button type="primary" onClick={handleSubmit}>
-          Save
-        </Button>
+        Save
+      </Button>
     </div>
   );
 };
