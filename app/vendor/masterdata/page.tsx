@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation'
 import VendorPosition from '@/components/VendorPosition';
 import VendorBusinessField from '@/components/VendorBusinessField';
-import Layout from '@/components/Layout';
+import Layout from '@/components/LayoutNew';
 import CurrencyData from '@/components/Currency';
 
 const MasterData = () => {

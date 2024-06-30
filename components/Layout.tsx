@@ -36,7 +36,7 @@ const items = [
   //   getItem('Team 2', '2'),
   // ]),
   getItem('Vendor Management', 'sub2', <TeamOutlined />, [
-    getItem(<Link href="/vendor/register">Registration</Link>, '3'),
+    getItem(<Link href="/vendor/register">Registrationsss</Link>, '3'),
     getItem(<Link href="/vendor/verification">Verification</Link>, '4'),
     getItem(<Link href="/vendor/register">Evaluation</Link>, '5'),
     getItem('Master Data', 'sub4', <DatabaseOutlined />, [

@@ -4,6 +4,7 @@ import { Layout, Menu, theme } from 'antd';
 import {
   TeamOutlined,
   UserOutlined,
+  DatabaseOutlined
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -35,15 +36,24 @@ const items = [
     getItem('Team 2', '2'),
   ]),
   getItem('Vendor Management', 'sub2', <TeamOutlined />, [
-    getItem(<Link href="/vendor/register">Registration</Link>, '3'),
-    getItem(<Link href="/vendor/">Verification</Link>, '4'),
-    getItem(<Link href="/vendor/evaluation">Evaluation</Link>, '5'),
-    getItem(<Link href="/vendor/master-data">Master Data</Link>, '6'),
+    getItem(<Link href="/vendor/register">Registrationsss</Link>, '3'),
+    getItem(<Link href="/vendor/verification">Verification</Link>, '4'),
+    getItem(<Link href="/vendor/register">Evaluation</Link>, '5'),
+    getItem('Master Data', 'sub4', <DatabaseOutlined />, [
+      getItem(<Link href="/vendor/masterdata?type=position">Vendor Position</Link>, '6'),
+      getItem(<Link href="/vendor/masterdata?type=business-field">Vendor Business Field</Link>, '9'),
+      getItem(<Link href="/vendor/masterdata?type=currency">Currency</Link>, '10')
+    ]),
   ]),
   getItem('User Requisition', 'sub3', <UserOutlined />, [
     getItem('Menu 1', '7'),
     getItem('Menu 2', '8'),
+
   ]),
+  // getItem('User Requisition', 'sub3', <UserOutlined />, [
+  //   getItem('Menu 1', '7'),
+  //   getItem('Menu 2', '8'),
+  // ]),
 ];
 
 const MyLayout: React.FC<Props> = ({ children }) => {
@@ -78,7 +88,7 @@ const MyLayout: React.FC<Props> = ({ children }) => {
   };
 
   return (
-    <Layout className="h-full">
+    <Layout className="h-max">
       <Header className="bg-blue-500 text-white flex items-center justify-between">
         <div className="text-xl">Delpis</div>
       </Header>
@@ -130,7 +140,7 @@ const MyLayout: React.FC<Props> = ({ children }) => {
             </div>
           </Content>
           <Footer className="text-center">
-            @rzkiypratama ©{new Date().getFullYear()}
+          Delapan Pilar Intisolusi ©{new Date().getFullYear()}
           </Footer>
         </Layout>
       </Layout>
