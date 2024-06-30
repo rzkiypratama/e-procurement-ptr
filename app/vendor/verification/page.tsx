@@ -10,6 +10,8 @@ import VendorTenagaAhli from "@/components/VendorTenagaAhli";
 import VendorPengalaman from "@/components/VendorPengalaman";
 import VendorAttachmenDoc from "@/components/VendorAttachmenDoc";
 import Layout from "@/components/Layout";
+import DashboardVendor from "@/components/DashboardVendor";
+import VendorRegisteredList from "@/components/VendorRegisteredList";
 
 
 const { TabPane } = Tabs;
@@ -17,10 +19,10 @@ const { TabPane } = Tabs;
 const RegisterPage = () => {
   return (
     <Layout>
-    <div className="container mx-auto flex flex-col content-center">
-      <h1 className="font-bold text-center text-5xl mb-5">Registrasi Lama</h1>
-      <VendorRegister />
-    </div>
+      <div className="container mx-auto flex flex-col content-center p-8">
+        <h1 className="font-bold text-start text-xl mb-5">Dashboard</h1>
+        <VendorRegisteredList />
+      </div>
     </Layout>
   );
 };
