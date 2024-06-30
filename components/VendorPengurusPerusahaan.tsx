@@ -8,18 +8,21 @@ import {
   Typography,
   Popconfirm,
   Modal,
+  message,
 } from "antd";
 import usePengurusPerusahaanStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
+import { getCookie } from "cookies-next";
+import axios from "axios";
 
 const { TextArea } = Input;
 interface PengurusPerusahaan {
   id: number;
-  namaPengurus: string;
-  jabatanPengurus: string;
-  noKTPPengurus: string;
-  npwpPengurus: string;
+  name: string;
+  position_id: number;
+  identity_no: string;
+  npwp_no: string;
 }
 
 const PengurusPerusahaan: React.FC = () => {
@@ -36,23 +39,80 @@ const PengurusPerusahaan: React.FC = () => {
 
   const formik = useFormik({
     initialValues: {
-      namaPengurus: "",
-      jabatanPengurus: "",
-      noKTPPengurus: "",
-      npwpPengurus: "",
+      name: "",
+      position_id: 0,
+      identity_no: "",
+      npwp_no: "",
     },
-    onSubmit: (values) => {
-      console.log("Pengurus Value:", values);
-      addPengurusPerusahaan({ ...values, id: pengurusPerusahaan.length + 1 });
-      setIsModalVisible(false);
-      formik.resetForm();
+    onSubmit: async (values) => {
+      const token = getCookie("token");
+      const userId = getCookie("user_id");
+      const vendorId = getCookie("vendor_id");
+
+      if (!token || !userId || !vendorId) {
+        message.error("Token, User ID, or Vendor ID is missing.");
+        return;
+      }
+      try {
+        const response = await axios.post(
+          "https://vendor.eproc.latansa.sch.id/api/vendor/director",
+          values,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          }
+        );
+        console.log("Response from API:", response.data);
+        setIsModalVisible(false);
+        message.success("Bank Account added successful");
+        formik.resetForm();
+      } catch (error) {
+        console.error("Failed to submit data", error);
+        message.error("Failed to submit data");
+      }
     },
   });
 
   useEffect(() => {
-    // Initialize data if needed
-    const initialData: PengurusPerusahaan[] = []; // Load your initial data here
-    initializePengurusPerusahaan(initialData);
+    const fetchPengurusPerusahaan = async () => {
+      try {
+        const token = getCookie("token");
+        const userId = getCookie("user_id");
+        const vendorId = getCookie("vendor_id");
+  
+        if (!token || !userId || !vendorId) {
+          message.error("Please login first.");
+          return;
+        }
+  
+        const response = await axios.get(
+          "https://vendor.eproc.latansa.sch.id/api/vendor/director",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          }
+        );
+  
+        // Check if response.data is an object containing an array
+        if (response.data && Array.isArray(response.data.data)) {
+          initializePengurusPerusahaan(response.data.data); // Initialize bank account state with the array of bank account objects
+        } else {
+          console.error("Bank account data fetched is not in expected format:", response.data);
+          message.error("Bank account data fetched is not in expected format.");
+        }
+      } catch (error) {
+        console.error("Error fetching bank account data:", error);
+        message.error("Failed to fetch bank account data. Please try again later.");
+      }
+    };
+  
+    fetchPengurusPerusahaan();
   }, [initializePengurusPerusahaan]);
 
   const isEditing = (record: PengurusPerusahaan) =>
@@ -83,10 +143,10 @@ const PengurusPerusahaan: React.FC = () => {
 
   const columns = [
     { title: "No", dataIndex: "id", key: "id" },
-    { title: "Nama", dataIndex: "namaPengurus", key: "namaPengurus", editable: true },
-    { title: "Jabatan", dataIndex: "jabatanPengurus", key: "jabatanPengurus", editable: true },
-    { title: "No KTP", dataIndex: "noKTPPengurus", key: "noKTPPengurus", editable: true },
-    { title: "NPWP", dataIndex: "npwpPengurus", key: "npwpPengurus", editable: true },
+    { title: "Nama", dataIndex: "name", key: "name", editable: true },
+    { title: "Jabatan", dataIndex: "position_id", key: "position_id", editable: true },
+    { title: "No KTP", dataIndex: "identity_no", key: "identity_no", editable: true },
+    { title: "NPWP", dataIndex: "npwp_no", key: "npwp_no", editable: true },
     {
       title: "Operation",
       dataIndex: "operation",
@@ -124,7 +184,7 @@ const PengurusPerusahaan: React.FC = () => {
       onCell: (record: PengurusPerusahaan) => ({
         record,
         inputType:
-          col.dataIndex === "noKTPPengurus" || col.dataIndex === "npwpPengurus"
+          col.dataIndex === "identity_no" || col.dataIndex === "npwp_no"
             ? "number"
             : "text",
         dataIndex: col.dataIndex,
@@ -141,10 +201,9 @@ const PengurusPerusahaan: React.FC = () => {
   const handleOk = () => {
     addPengurusPerusahaan({
       ...formik.values,
-      id: pengurusPerusahaan.length + 1,
+      id: pengurusPerusahaan.length + 2,
     });
     setIsModalVisible(false);
-    form.resetFields();
   };
 
   const handleCancel = () => {
@@ -154,11 +213,12 @@ const PengurusPerusahaan: React.FC = () => {
   const handleSubmit = () => {
     console.log("Submitting data:", pengurusPerusahaan);
     // Additional submission logic if needed
+    formik.handleSubmit()
   };
 
   return (
     <div>
-      <Button type="primary" onClick={showModal}>
+      <Button type="primary" onClick={showModal} className="mb-4">
         Tambah Pengurus Perusahaan
       </Button>
       <Modal
@@ -169,43 +229,46 @@ const PengurusPerusahaan: React.FC = () => {
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            name="namaPengurus"
+            name="name"
             label="Nama"
             // rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
           >
             <Input
-              value={formik.values.namaPengurus}
+              value={formik.values.name}
               onChange={formik.handleChange}
             />
           </Form.Item>
           <Form.Item
-            name="jabatanPengurus"
+            name="position_id"
             label="Jabatan"
             // rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
           >
             <Input
-              value={formik.values.jabatanPengurus}
+              value={formik.values.position_id}
               onChange={formik.handleChange}
             />
           </Form.Item>
           <Form.Item
-            name="noKTPPengurus"
+            name="identity_no"
             label="No KTP"
             rules={[{ required: true, message: "KTP harus berupa angka" }]}
           >
-            <InputNumber
-              value={formik.values.noKTPPengurus}
-              // onChange={(value) => formik.setFieldValue("noKTPPengurus", value)}
+            <Input
+              value={formik.values.identity_no}
+              onChange={formik.handleChange}
+              // onChange={(value) => formik.setFieldValue("identity_no", value)}
             />
           </Form.Item>
           <Form.Item
-            name="npwpPengurus"
+            name="npwp_no"
             label="NPWP"
             // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
           >
-            <InputNumber
-              value={formik.values.npwpPengurus}
-              onChange={(value) => formik.setFieldValue("npwpPengurus", value)}
+            <Input
+              value={formik.values.npwp_no}
+              onChange={formik.handleChange}
+              // on change dibawah untuk Input berupa number InputNumber
+              // onChange={(value) => formik.setFieldValue("npwp_no", value)}
             />
           </Form.Item>
         </Form>

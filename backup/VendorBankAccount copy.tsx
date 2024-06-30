@@ -13,9 +13,8 @@ import {
 } from "antd";
 import axios from "axios";
 import useBankAccountStore from "../store/CenterStore";
-import EditableCell from "./EditableCell";
+import EditableCell from "../components/EditableCell";
 import { useFormik } from "formik";
-import { getCookie } from "cookies-next";
 
 interface BankAccount {
   id: number;
@@ -43,29 +42,14 @@ const PengurusPerusahaan: React.FC = () => {
       account_number: "",
     },
     onSubmit: async (values) => {
-      const token = getCookie("token");
-      const userId = getCookie("user_id");
-      const vendorId = getCookie("vendor_id");
-
-      if (!token || !userId || !vendorId) {
-        message.error("Token, User ID, or Vendor ID is missing.");
-        return;
-      }
       try {
         const response = await axios.post(
           "https://vendor.eproc.latansa.sch.id/api/vendor/bank",
-          values,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "User-ID": userId,
-              "Vendor-ID": vendorId,
-            },
-          }
+          values
         );
-        console.log("Response from API:", response.data);
+        console.log("Bank Value:", values);
+        // addBankAccount({ ...response.data, id: bankAccount.length + 1 });
         setIsModalVisible(false);
-        message.success("Bank Account added successful");
         formik.resetForm();
       } catch (error) {
         console.error("Failed to submit data", error);
@@ -74,43 +58,19 @@ const PengurusPerusahaan: React.FC = () => {
     },
   });
 
-  // ini untuk get dengan type data array of object
   useEffect(() => {
     const fetchBankAccounts = async () => {
       try {
-        const token = getCookie("token");
-        const userId = getCookie("user_id");
-        const vendorId = getCookie("vendor_id");
-  
-        if (!token || !userId || !vendorId) {
-          message.error("Please login first.");
-          return;
-        }
-  
         const response = await axios.get(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/bank",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "User-ID": userId,
-              "Vendor-ID": vendorId,
-            },
-          }
+          "https://vendor.eproc.latansa.sch.id/api/vendor/bank"
         );
-  
-        // Check if response.data is an object containing an array
-        if (response.data && Array.isArray(response.data.data)) {
-          initializeBankAccount(response.data.data); // Initialize bank account state with the array of bank account objects
-        } else {
-          console.error("Bank account data fetched is not in expected format:", response.data);
-          message.error("Bank account data fetched is not in expected format.");
-        }
+        initializeBankAccount(response.data);
       } catch (error) {
-        console.error("Error fetching bank account data:", error);
-        message.error("Failed to fetch bank account data. Please try again later.");
+        console.error("Failed to fetch data", error);
+        message.error("Failed to fetch data");
       }
     };
-  
+
     fetchBankAccounts();
   }, [initializeBankAccount]);
 
@@ -237,7 +197,7 @@ const PengurusPerusahaan: React.FC = () => {
   const handleOk = () => {
     addBankAccount({
       ...formik.values,
-      id: bankAccount.length + 2,
+      id: bankAccount.length + 1,
     });
     setIsModalVisible(false);
     form.resetFields();
@@ -254,7 +214,7 @@ const PengurusPerusahaan: React.FC = () => {
 
   return (
     <div>
-      <Button type="primary" onClick={showModal} className="mb-4">
+      <Button type="primary" onClick={showModal}>
         Tambah Rekening Perusahaan
       </Button>
       <Modal

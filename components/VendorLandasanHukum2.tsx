@@ -9,19 +9,22 @@ import {
   Typography,
   Popconfirm,
   Modal,
+  message,
 } from "antd";
 import dayjs from "dayjs";
 import useLandasanHukumStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
+import axios from "axios";
+import { getCookie } from "cookies-next";
 
 const { TextArea } = Input;
 
 interface LandasanHukum {
   id: number;
-  nomorDokumen: string;
-  namaNotaris: string;
-  tahunDokumen: string;
+  document_no: string;
+  document_date: string;
+  notaris_name: string;
 }
 
 const LandasanHukum: React.FC = () => {
@@ -38,21 +41,79 @@ const LandasanHukum: React.FC = () => {
 
   const formik = useFormik({
     initialValues: {
-      namaNotaris: "",
-      nomorDokumen: "",
-      tahunDokumen: "",
+      notaris_name: "",
+      document_no: "",
+      document_date: "",
     },
-    onSubmit: (values) => {
-      console.log("Landasan Hukum Value:", values);
-      addLandasanHukum({ ...values, id: landasanHukum.length + 1 });
-      setIsModalVisible(false);
-      formik.resetForm();
+    onSubmit: async (values) => {
+      const token = getCookie("token");
+      const userId = getCookie("user_id");
+      const vendorId = getCookie("vendor_id");
+
+      if (!token || !userId || !vendorId) {
+        message.error("Token, User ID, or Vendor ID is missing.");
+        return;
+      }
+      try {
+        const response = await axios.post(
+          "https://vendor.eproc.latansa.sch.id/api/vendor/legal-foundation",
+          values,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          }
+        );
+        console.log("Response from API:", response.data);
+        setIsModalVisible(false);
+        message.success("Dokumen Landasan Hukum added successful");
+        formik.resetForm();
+      } catch (error) {
+        console.error("Failed to submit data", error);
+        message.error("Failed to submit data");
+      }
     },
   });
 
   useEffect(() => {
-    const initialData: LandasanHukum[] = [];
-    initializeLandasanHukum(initialData);
+    const fetchBankAccounts = async () => {
+      try {
+        const token = getCookie("token");
+        const userId = getCookie("user_id");
+        const vendorId = getCookie("vendor_id");
+  
+        if (!token || !userId || !vendorId) {
+          message.error("Please login first.");
+          return;
+        }
+  
+        const response = await axios.get(
+          "https://vendor.eproc.latansa.sch.id/api/vendor/legal-foundation",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          }
+        );
+  
+        // Check if response.data is an object containing an array
+        if (response.data && Array.isArray(response.data.data)) {
+          initializeLandasanHukum(response.data.data); // Initialize bank account state with the array of bank account objects
+        } else {
+          console.error("Bank account data fetched is not in expected format:", response.data);
+          message.error("Bank account data fetched is not in expected format.");
+        }
+      } catch (error) {
+        console.error("Error fetching bank account data:", error);
+        message.error("Failed to fetch bank account data. Please try again later.");
+      }
+    };
+  
+    fetchBankAccounts();
   }, [initializeLandasanHukum]);
 
   const isEditing = (record: LandasanHukum) =>
@@ -61,8 +122,8 @@ const LandasanHukum: React.FC = () => {
   const edit = (record: Partial<LandasanHukum> & { id: React.Key }) => {
     form.setFieldsValue({
       ...record,
-      tahunDokumen: record.tahunDokumen
-        ? dayjs(record.tahunDokumen, "DD-MM-YYYY")
+      tahunDokumen: record.document_date
+        ? dayjs(record.document_date, "DD-MM-YYYY")
         : null,
     });
     setEditingKey(record.id.toString());
@@ -78,7 +139,7 @@ const LandasanHukum: React.FC = () => {
       const updatedRow = {
         ...row,
         id: Number(id),
-        tahunDokumen: dayjs(row.tahunDokumen).format("DD-MM-YYYY"),
+        tahunDokumen: dayjs(row.document_date).format("DD-MM-YYYY"),
       };
       editLandasanHukum(updatedRow);
       setEditingKey("");
@@ -95,20 +156,20 @@ const LandasanHukum: React.FC = () => {
     { title: "No", dataIndex: "id", key: "id" },
     {
       title: "Nama Notaris",
-      dataIndex: "namaNotaris",
-      key: "namaNotaris",
+      dataIndex: "notaris_name",
+      key: "notaris_name",
       editable: true,
     },
     {
       title: "Nomor Dokumen",
-      dataIndex: "nomorDokumen",
-      key: "nomorDokumen",
+      dataIndex: "document_no",
+      key: "document_no",
       editable: true,
     },
     {
       title: "Tahun Dokumen",
-      dataIndex: "tahunDokumen",
-      key: "tahunDokumen",
+      dataIndex: "document_date",
+      key: "document_date",
       editable: true,
       render: (text: string) =>
         text ? dayjs(text, "DD-MM-YYYY").format("DD-MM-YYYY") : "",
@@ -160,8 +221,8 @@ const LandasanHukum: React.FC = () => {
       onCell: (record: LandasanHukum) => ({
         record,
         inputType:
-                col.dataIndex === "tahunDokumen" || col.dataIndex.includes("tahunDokumen") ? "date" :
-                col.dataIndex === "nomorDokumen" || col.dataIndex.includes("nomorDokumen") ? "number" :
+                col.dataIndex === "document_date" || col.dataIndex.includes("document_date") ? "date" :
+                col.dataIndex === "document_no" || col.dataIndex.includes("document_no") ? "number" :
                 "text",
         dataIndex: col.dataIndex,
         title: col.title,
@@ -175,9 +236,9 @@ const LandasanHukum: React.FC = () => {
   };
 
   const handleOk = () => {
-    addLandasanHukum({ ...formik.values, id: landasanHukum.length + 1 });
+    addLandasanHukum({ ...formik.values, id: landasanHukum.length + 2 });
     setIsModalVisible(false);
-    formik.resetForm();
+    form.resetFields();
   };
 
   const handleCancel = () => {
@@ -188,11 +249,12 @@ const LandasanHukum: React.FC = () => {
   const handleSubmit = () => {
     console.log("Submitting data:", landasanHukum);
     // Additional submission logic if needed
+    formik.handleSubmit()
   };
 
   return (
     <div>
-      <Button type="primary" onClick={showModal}>
+      <Button type="primary" onClick={showModal} className="mb-4">
         Tambah Landasan Hukum
       </Button>
       <Modal
@@ -203,37 +265,37 @@ const LandasanHukum: React.FC = () => {
       >
         <Form>
           <Form.Item
-            name="namaNotaris"
+            name="notaris_name"
             label="Nama Notaris"
             // rules={[{ required: true }]}
           >
             <Input
-              name="namaNotaris"
-              value={formik.values.namaNotaris}
+              name="notaris_name"
+              value={formik.values.notaris_name}
               onChange={formik.handleChange}
             />
           </Form.Item>
           <Form.Item
-            name="nomorDokumen"
+            name="document_no"
             label="Nomor Dokumen"
             // rules={[{ required: true }]}
           >
-            <InputNumber
-              name="nomorDokumen"
-              value={formik.values.nomorDokumen}
-              onChange={(value) => formik.setFieldValue("nomorDokumen", value)}
+            <Input
+              name="document_no"
+              value={formik.values.document_no}
+              onChange={formik.handleChange}
             />
           </Form.Item>
           <Form.Item
-            name="tahunDokumen"
+            name="document_date"
             label="Tahun Dokumen"
             // rules={[{ required: true }]}
           >
             <DatePicker
-              name="tahunDokumen"
+              name="document_date"
               format="DD-MM-YYYY"
               onChange={(date, dateString) =>
-                formik.setFieldValue("tahunDokumen", dateString)
+                formik.setFieldValue("document_date", dateString)
               }
             />
           </Form.Item>

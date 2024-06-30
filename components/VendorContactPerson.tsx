@@ -4,15 +4,13 @@ import {
   Button,
   Form,
   Input,
-  InputNumber,
-  DatePicker,
   Typography,
   Popconfirm,
   Modal,
+  Select,
   message,
 } from "antd";
-import dayjs from "dayjs";
-import useIzinUsahaStore from "../store/CenterStore";
+import useContactPersonStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
 import axios from "axios";
@@ -20,36 +18,38 @@ import { getCookie } from "cookies-next";
 
 const { TextArea } = Input;
 
-interface IzinUsaha {
-  id: number;
-  type: string;
-  permit_number: string;
-  start_date: string;
-  end_date: string;
-  licensing_agency: string;
-  vendor_business_field_id: number;
-}
+const { Option } = Select;
 
-const IzinUsaha: React.FC = () => {
+interface ContactPerson {
+    id: number;
+    contact_name: string;
+    contact_email: string;
+    contact_identity_no: string;
+    contact_phone: string;
+    contact_npwp: string;
+    position_id: string;
+  }
+
+const ContactInfo: React.FC = () => {
   const {
-    izinUsaha,
-    addIzinUsaha,
-    editIzinUsaha,
-    removeIzinUsaha,
-    initializeIzinUsaha,
-  } = useIzinUsahaStore();
+    contactInfo,
+    addContactInfo,
+    editContactInfo,
+    removeContactInfo,
+    initializeContactInfo,
+  } = useContactPersonStore();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState<string>("");
 
   const formik = useFormik({
     initialValues: {
-      type: "",
-      permit_number: "",
-      start_date: "",
-      end_date: "",
-      licensing_agency: "",
-      vendor_business_field_id: 0,
+      contact_name: "",
+      contact_email: "",
+      contact_phone: "",
+      contact_identity_no: "",
+      contact_npwp: "",
+      position_id: "",
     },
     onSubmit: async (values, { setErrors }) => {
       // Dapatkan token, user_id, dan vendor_id dari cookies
@@ -58,13 +58,13 @@ const IzinUsaha: React.FC = () => {
       const vendorId = getCookie("vendor_id");
 
       if (!token || !userId || !vendorId) {
-        message.error("Please login first.");
+        message.error("Token, User ID, or Vendor ID is missing.");
         return;
       }
 
       try {
         const response = await axios.post(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/business-permit",
+          "https://vendor.eproc.latansa.sch.id/api/vendor/contact-person",
           values,
           {
             headers: {
@@ -76,7 +76,7 @@ const IzinUsaha: React.FC = () => {
         );
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
-        message.success("Izin Usaha added successful");
+        message.success("Contact added successful");
         formik.resetForm();
       } catch (error) {
         console.error("Error submitting data:", error);
@@ -102,19 +102,19 @@ const IzinUsaha: React.FC = () => {
   });
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchContactInfo = async () => {
       try {
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
   
         if (!token || !userId || !vendorId) {
-          message.error("Please login first.");
+          message.error("Token, User ID, or Vendor ID is missing.");
           return;
         }
   
         const response = await axios.get(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/business-permit",
+          "https://vendor.eproc.latansa.sch.id/api/vendor/contact-person",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -124,34 +124,35 @@ const IzinUsaha: React.FC = () => {
           }
         );
   
-        // Check if response.data is an object containing an array
-        if (response.data && Array.isArray(response.data.data)) {
-          initializeIzinUsaha(response.data.data); // Initialize izinUsaha state with the array of IzinUsaha objects
+        console.log("Response from API:", response.data);
+  
+        // Pastikan response.data adalah object dan memiliki properti yang berisi array
+        if (typeof response.data === "object" && Array.isArray(response.data.data)) {
+          initializeContactInfo(response.data.data);
         } else {
-          console.error("Data fetched is not in expected format:", response.data);
-          message.error("Data fetched is not in expected format.");
+          console.error("Response data is not in expected format:", response.data);
+          message.error("Failed to fetch contact information.");
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-        message.error("Failed to fetch data. Please try again later.");
+        message.error("Failed to fetch contact information.");
       }
     };
   
-    fetchData();
-  }, [initializeIzinUsaha]);
+    fetchContactInfo();
+  }, [initializeContactInfo]);
 
-  const isEditing = (record: IzinUsaha) => record.id.toString() === editingKey;
+  useEffect(() => {
+    // Initialize data if needed
+    const initialData: ContactPerson[] = []; // Load your initial data here
+    initializeContactInfo(initialData);
+  }, [initializeContactInfo]);
 
-  const edit = (record: Partial<IzinUsaha> & { id: React.Key }) => {
-    form.setFieldsValue({
-      ...record,
-      tanggalIzin: record.start_date
-        ? dayjs(record.start_date, "DD-MM-YYYY")
-        : null,
-      tanggalBerakhir: record.end_date
-        ? dayjs(record.end_date, "DD-MM-YYYY")
-        : null,
-    });
+  const isEditing = (record: ContactPerson) =>
+    record.id.toString() === editingKey;
+
+  const edit = (record: Partial<ContactPerson> & { id: React.Key }) => {
+    form.setFieldsValue({ ...record });
     setEditingKey(record.id.toString());
   };
 
@@ -161,14 +162,8 @@ const IzinUsaha: React.FC = () => {
 
   const save = async (id: React.Key) => {
     try {
-      const row = (await form.validateFields()) as IzinUsaha;
-      const updatedRow = {
-        ...row,
-        id: Number(id),
-        tanggalIzin: dayjs(row.start_date).format("DD-MM-YYYY"),
-        tanggalBerakhir: dayjs(row.start_date).format("DD-MM-YYYY"),
-      };
-      editIzinUsaha(updatedRow);
+      const row = (await form.validateFields()) as ContactPerson;
+      editContactInfo({ ...row, id: Number(id) });
       setEditingKey("");
     } catch (errInfo) {
       console.log("Validate Failed:", errInfo);
@@ -176,55 +171,51 @@ const IzinUsaha: React.FC = () => {
   };
 
   const handleDelete = (id: React.Key) => {
-    removeIzinUsaha(Number(id));
+    removeContactInfo(Number(id));
   };
 
   const columns = [
     { title: "No", dataIndex: "id", key: "id" },
     {
-      title: "Jenis Izin",
-      dataIndex: "type",
-      key: "type",
+      title: "Nama",
+      dataIndex: "contact_name",
+      key: "contact_name",
       editable: true,
     },
     {
-      title: "Nomor Izin",
-      dataIndex: "permit_number",
-      key: "permit_number",
+      title: "Email",
+      dataIndex: "contact_email",
+      key: "contact_email",
       editable: true,
     },
     {
-      title: "Tanggal Izin",
-      dataIndex: "start_date",
-      key: "start_date",
-      editable: true,
-      render: (text: string) =>
-        text ? dayjs(text, "DD-MM-YYYY").format("DD-MM-YYYY") : "",
-    },
-    {
-      title: "Tanggal Berakhir",
-      dataIndex: "end_date",
-      key: "end_date",
-      editable: true,
-      render: (text: string) =>
-        text ? dayjs(text, "DD-MM-YYYY").format("DD-MM-YYYY") : "",
-    },
-    {
-      title: "Instansi Pemberi Izin",
-      dataIndex: "licensing_agency",
-      key: "licensing_agency",
+      title: "No KTP",
+      dataIndex: "contact_identity_no",
+      key: "contact_identity_no",
       editable: true,
     },
     {
-      title: "Bidang Usaha",
-      dataIndex: "vendor_business_field_id",
-      key: "vendor_business_field_id",
+      title: "No NPWP",
+      dataIndex: "contact_npwp",
+      key: "contact_npwp",
+      editable: true,
+    },
+    {
+      title: "Nomor Telepon",
+      dataIndex: "contact_phone",
+      key: "contact_phone",
+      editable: true,
+    },
+    {
+      title: "Jabatan",
+      dataIndex: "position_id",
+      key: "position_id",
       editable: true,
     },
     {
       title: "Operation",
       dataIndex: "operation",
-      render: (_: any, record: IzinUsaha) => {
+      render: (_: any, record: ContactPerson) => {
         const editable = isEditing(record);
         return editable ? (
           <span>
@@ -265,13 +256,14 @@ const IzinUsaha: React.FC = () => {
     }
     return {
       ...col,
-      onCell: (record: IzinUsaha) => ({
+      onCell: (record: ContactPerson) => ({
         record,
         inputType:
-        col.dataIndex === "permit_number" || col.dataIndex.includes("permit_number") ? "text" :
-        col.dataIndex === "start_date" || col.dataIndex.includes("start_date") ? "date" :
-        col.dataIndex === "end_date" || col.dataIndex.includes("end_date") ? "date" :
-        "text",
+        col.dataIndex === "noKTPPengurus" || col.dataIndex === "npwpPengurus"
+          ? "number"
+          : col.dataIndex === "position_id" || col.dataIndex === "province_id"
+          ? "select"
+          : "text",
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record),
@@ -284,104 +276,110 @@ const IzinUsaha: React.FC = () => {
   };
 
   const handleOk = () => {
-    addIzinUsaha({ ...formik.values, id: izinUsaha.length + 2 });
+    addContactInfo({
+      ...formik.values,
+      id: contactInfo.length + 2,
+    });
     setIsModalVisible(false);
     form.resetFields();
   };
 
   const handleCancel = () => {
     setIsModalVisible(false);
-    formik.resetForm();
   };
 
   const handleSubmit = () => {
-    console.log("Submitting data:", izinUsaha);
-    formik.handleSubmit();
+    console.log("Submitting data:", contactInfo);
+    // Additional submission logic if needed
+    formik.handleSubmit(); // Trigger Formik's submit function
   };
 
   return (
     <div>
       <Button type="primary" onClick={showModal} className="mb-4">
-        Tambah Izin Usaha
+        Tambah Kontak Perusahaan
       </Button>
       <Modal
-        title="Tambah Izin Usaha"
+        title="Tambah Kontak Perusahaan"
         open={isModalVisible}
-        onOk={handleOk}
         onCancel={handleCancel}
+        onOk={handleOk}
+        // footer={[
+        //   <>
+        //    <Button onClick={handleCancel}>
+        //     Batalkan
+        //   </Button>
+        //   <Button key="submit" type="primary" onClick={handleSubmit}>
+        //     Simpan Data
+        //   </Button>
+        //   </>
+        // ]}
       >
-        <Form>
-          {/* jenis izin nanti berupa select */}
-          {/* Izin Usaha 2 */}
-        <Form.Item
-            name="type"
-            label="Jenis Izin"
-            rules={[{ required: true }]}
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="contact_name"
+            label="Nama"
+            // rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
           >
             <Input
-              name="type"
-              value={formik.values.type}
+              value={formik.values.contact_name}
               onChange={formik.handleChange}
             />
           </Form.Item>
           <Form.Item
-            name="permit_number"
-            label="Nomor Izin"
-            rules={[{ required: true }]}
+            name="contact_email"
+            label="Email"
+            // rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
           >
             <Input
-              name="permit_number"
-              value={formik.values.permit_number}
+              value={formik.values.contact_email}
               onChange={formik.handleChange}
             />
           </Form.Item>
           <Form.Item
-            name="start_date"
-            label="Tanggal Izin"
-            rules={[{ required: true }]}
+            name="contact_identity_no"
+            label="No KTP"
+            rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+            hasFeedback
           >
-            <DatePicker
-              format="DD-MM-YYYY"
-              name="start_date"
-              onChange={(date, dateString) =>
-                formik.setFieldValue("start_date", dateString)
+            <Input
+              value={formik.values.contact_identity_no}
+              //   onChange={(value) => formik.setFieldValue("noKTPPengurus", value)}
+              onChange={formik.handleChange}
+            />
+          </Form.Item>
+          <Form.Item
+            name="contact_phone"
+            label="No Telepon"
+            // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+          >
+            <Input
+              value={formik.values.contact_phone}
+              onChange={(e) =>
+                formik.setFieldValue("contact_phone", e.target.value)
               }
             />
           </Form.Item>
           <Form.Item
-            name="end_date"
-            label="Tanggal Berakhir"
-            rules={[{ required: true }]}
-          >
-            <DatePicker
-              name="end_date"
-              format="DD-MM-YYYY"
-              onChange={(date, dateString) =>
-                formik.setFieldValue("end_date", dateString)
-              }
-            />
-          </Form.Item>
-          <Form.Item
-            name="licensing_agency"
-            label="Instansi Pemberi Izin"
-            rules={[{ required: true }]}
+            name="contact_npwp"
+            label="NPWP"
+            // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
           >
             <Input
-              name="licensing_agency"
-              value={formik.values.licensing_agency}
+              value={formik.values.contact_npwp}
               onChange={formik.handleChange}
             />
           </Form.Item>
-          <Form.Item
-            name="vendor_business_field_id"
-            label="Bidang Usaha"
-            rules={[{ required: true }]}
-          >
-            <Input
-              name="vendor_business_field_id"
-              value={formik.values.vendor_business_field_id}
-              onChange={formik.handleChange}
-            />
+          <Form.Item label="Jabatan" required hasFeedback>
+            <Select
+              id="position_id"
+              onChange={(value) => formik.setFieldValue("position_id", value)}
+              onBlur={formik.handleBlur}
+              value={formik.values.position_id}
+            >
+              <Option value="1">Direktur</Option>
+              <Option value="2">Manager</Option>
+            </Select>
           </Form.Item>
         </Form>
       </Modal>
@@ -394,7 +392,7 @@ const IzinUsaha: React.FC = () => {
             },
           }}
           bordered
-          dataSource={izinUsaha}
+          dataSource={contactInfo}
           columns={mergedColumns}
           rowClassName="editable-row"
           pagination={{
@@ -402,11 +400,11 @@ const IzinUsaha: React.FC = () => {
           }}
         />
         <Button type="primary" onClick={handleSubmit}>
-          Save
+          Simpan Data
         </Button>
       </Form>
     </div>
   );
 };
 
-export default IzinUsaha;
+export default ContactInfo;

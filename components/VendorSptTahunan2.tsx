@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { Table, Button, Form, Input, InputNumber, DatePicker, Typography, Popconfirm, Modal } from "antd";
+import { Table, Button, Form, Input, InputNumber, DatePicker, Typography, Popconfirm, Modal, message } from "antd";
 import dayjs from "dayjs";
 import useSPTStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
+import { getCookie } from "cookies-next";
+import axios from "axios";
 
 const { TextArea } = Input;
 
 interface SPTTahunan {
-    id: number;
-    tahunSpt: string;
-    nomorSPT: string;
-    tanggalSpt: string;
+  id: number;
+  year: string;
+  spt_number: string;
+  date: string;
   }
 
 const SPTTahunan: React.FC = () => {
@@ -28,21 +30,80 @@ const SPTTahunan: React.FC = () => {
 
   const formik = useFormik({
     initialValues: {
-      tahunSpt: "",
-      nomorSPT: "",
-      tanggalSpt: "",
+      year: "",
+      spt_number: "",
+      date: "",
     },
-    onSubmit: (values) => {
-      console.log("SPT Value:", values);
-      addSPTTahunan({ ...values, id: sptTahunan.length + 1 });
-      setIsModalVisible(false);
-      formik.resetForm();
+   onSubmit: async (values) => {
+      const token = getCookie("token");
+      const userId = getCookie("user_id");
+      const vendorId = getCookie("vendor_id");
+
+      if (!token || !userId || !vendorId) {
+        message.error("Token, User ID, or Vendor ID is missing.");
+        return;
+      }
+      try {
+        const response = await axios.post(
+          "https://vendor.eproc.latansa.sch.id/api/vendor/annual-spt",
+          values,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          }
+        );
+        console.log("Response from API:", response.data);
+        setIsModalVisible(false);
+        message.success("SPT added successful");
+        formik.resetForm();
+      } catch (error) {
+        console.error("Failed to submit data", error);
+        message.error("Failed to submit data");
+      }
     },
   });
 
+  // ini untuk get dengan type data array of object
   useEffect(() => {
-    const initialData: SPTTahunan[] = [];
-    initializeSPTTahunan(initialData);
+    const fetchBankAccounts = async () => {
+      try {
+        const token = getCookie("token");
+        const userId = getCookie("user_id");
+        const vendorId = getCookie("vendor_id");
+  
+        if (!token || !userId || !vendorId) {
+          message.error("Please login first.");
+          return;
+        }
+  
+        const response = await axios.get(
+          "https://vendor.eproc.latansa.sch.id/api/vendor/annual-spt",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          }
+        );
+  
+        // Check if response.data is an object containing an array
+        if (response.data && Array.isArray(response.data.data)) {
+          initializeSPTTahunan(response.data.data); // Initialize SPT state with the array of SPT objects
+        } else {
+          console.error("SPT data fetched is not in expected format:", response.data);
+          message.error("SPT data fetched is not in expected format.");
+        }
+      } catch (error) {
+        console.error("Error fetching SPT data:", error);
+        message.error("Failed to fetch SPT data. Please try again later.");
+      }
+    };
+  
+    fetchBankAccounts();
   }, [initializeSPTTahunan]);
 
   const isEditing = (record: SPTTahunan) => record.id.toString() === editingKey;
@@ -50,7 +111,7 @@ const SPTTahunan: React.FC = () => {
   const edit = (record: Partial<SPTTahunan> & { id: React.Key }) => {
     form.setFieldsValue({
       ...record,
-      tanggalSpt: record.tanggalSpt ? dayjs(record.tanggalSpt, "DD-MM-YYYY") : null,
+      tanggalSpt: record.date ? dayjs(record.date, "DD-MM-YYYY") : null,
     });
     setEditingKey(record.id.toString());
   };
@@ -65,7 +126,7 @@ const SPTTahunan: React.FC = () => {
       const updatedRow = {
         ...row,
         id: Number(id),
-        tanggalSpt: dayjs(row.tanggalSpt).format("DD-MM-YYYY"),
+        tanggalSpt: dayjs(row.date).format("DD-MM-YYYY"),
       };
       editSPTTahunan(updatedRow);
       setEditingKey("");
@@ -82,20 +143,20 @@ const SPTTahunan: React.FC = () => {
     { title: "No", dataIndex: "id", key: "id" },
     {
       title: "Tahun Izin",
-      dataIndex: "tahunIzinSpt",
-      key: "tahunIzinSpt",
+      dataIndex: "year",
+      key: "year",
       editable: true,
     },
     {
       title: "Nomor Izin",
-      dataIndex: "nomorSpt",
-      key: "nomorSpt",
+      dataIndex: "spt_number",
+      key: "spt_number",
       editable: true,
     },
     {
       title: "Tahun Dokumen",
-      dataIndex: "tahunSpt",
-      key: "tahunSpt",
+      dataIndex: "date",
+      key: "date",
       editable: true,
       render: (text: string) => (text ? dayjs(text, "DD-MM-YYYY").format("DD-MM-YYYY") : ""),
     },
@@ -135,7 +196,7 @@ const SPTTahunan: React.FC = () => {
       ...col,
       onCell: (record: SPTTahunan) => ({
         record,
-        inputType: col.dataIndex === "tahunSpt" ? "date" : col.dataIndex.includes("tahunSpt") ? "date" : col.dataIndex === "tahunIzinSpt" ? "number" : "text",
+        inputType: col.dataIndex === "date" ? "date" : col.dataIndex.includes("date") ? "date" : col.dataIndex === "year" ? "number" : "text",
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record),
@@ -148,9 +209,8 @@ const SPTTahunan: React.FC = () => {
   };
 
   const handleOk = () => {
-    addSPTTahunan({ ...formik.values, id: sptTahunan.length + 1 });
+    addSPTTahunan({ ...formik.values, id: sptTahunan.length + 2 });
     setIsModalVisible(false);
-    formik.resetForm();
   };
 
   const handleCancel = () => {
@@ -161,32 +221,36 @@ const SPTTahunan: React.FC = () => {
   const handleSubmit = () => {
     console.log("Submitting data:", sptTahunan);
     // Additional submission logic if needed
+    formik.handleSubmit()
   };
 
   return (
     <div>
-    <Button type="primary" onClick={showModal}>
+    <Button type="primary" onClick={showModal} className="mb-4">
       Tambah SPT
     </Button>
     <Modal title="Tambah SPT" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
       <Form form={form}>
-        <Form.Item name="tahunIzinSpt" label="Tahun Izin" rules={[{ required: true }]}>
+        <Form.Item name="year" label="Tahun Izin" rules={[{ required: true }]}>
           <Input
-            value={formik.values.tahunSpt}
-            onChange={(e) => formik.setFieldValue("tahunIzinSpt", e.target.value)}
+            value={formik.values.year}
+            onChange={(e) => formik.setFieldValue("year", e.target.value)}
           />
         </Form.Item>
-        <Form.Item name="nomorSpt" label="Nomor Izin" rules={[{ required: true }]}>
-          <InputNumber
-            value={formik.values.nomorSPT}
-            onChange={(value) => formik.setFieldValue("nomorSpt", value)}
+        <Form.Item name="spt_number" label="Nomor Izin" rules={[{ required: true }]}>
+          <Input
+            value={formik.values.spt_number}
+            onChange={formik.handleChange}
           />
         </Form.Item>
-        <Form.Item name="tahunSpt" label="Tanggal Dokumen" rules={[{ required: true }]}>
+        <Form.Item name="date" label="Tanggal Dokumen" rules={[{ required: true }]}>
           <DatePicker
-            value={formik.values.tanggalSpt ? dayjs(formik.values.tanggalSpt, "DD-MM-YYYY") : null}
+            value={formik.values.date ? dayjs(formik.values.date, "DD-MM-YYYY") : null}
             format="DD-MM-YYYY"
-            onChange={(date, dateString) => formik.setFieldValue("tanggalSpt", dateString)}
+            // onchange yang benar untuk type date
+            onChange={(date, dateString) =>
+              formik.setFieldValue("date", dateString)
+            }
           />
         </Form.Item>
       </Form>
@@ -206,6 +270,9 @@ const SPTTahunan: React.FC = () => {
           onChange: cancel,
         }}
       />
+      <Button type="primary" onClick={handleSubmit}>
+          Save
+        </Button>
     </Form>
   </div>
   );

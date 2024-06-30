@@ -1,66 +1,105 @@
 import { create } from 'zustand';
 
-// Define state shape
-interface VendorState {
-  username: string;
+interface RegisterProfilePerusahaan {
   company_name: string;
-  company_npwp: string;
-  company_phone_number: string;
-  company_email: string;
-  company_fax: string;
-  company_address: string;
-  city_id: number;
-  postal_code: number;
+  company_npwp: number;
   vendor_type: string;
-  vendor_number: string;
+  company_address: string;
+  city_id: string;
+  province_id: string;
+  postal_code: number;
+  company_phone_number: string;
+  company_fax: string;
+  company_email: string;
 }
 
-interface ContactPerson {
+interface RegisterContactInfo {
+  id: number;
   contact_name: string;
-  contact_email: string;
-  contact_npwp: string;
-  contact_identity_no: string;
   contact_phone: string;
-  position_id: number;
+  contact_email: string;
+  position_id: string;
+  contact_identity_no: string;
+  contact_npwp: string;
 }
 
-interface UserState {
-  user_name: string;
-  email: string;
+interface RegisterAuthorization {
+  username: string;
+  password: string;
 }
 
-interface StoreState {
-  vendor: VendorState;
-  contactPersons: ContactPerson[];
-  user: UserState;
-  setVendor: (vendor: VendorState) => void;
-  setContactPersons: (contactPersons: ContactPerson[]) => void;
-  setUser: (user: UserState) => void;
+interface RegisterState {
+  registerProfilePerusahaan: RegisterProfilePerusahaan;
+  registerContactInfo: RegisterContactInfo[];
+  registerAuthorization: RegisterAuthorization;
+  
+  isLoading: boolean;
+  setLoading: (loading: boolean) => void;
+  isFormValid: boolean;
+  setFormValid: (isValid: boolean) => void;
+
+  initializeProfilePerusahaan: (profilePerusahaan: RegisterProfilePerusahaan) => void;
+
+  addContactInfo: (contactInfo: RegisterContactInfo) => void;
+  editContactInfo: (contactInfo: RegisterContactInfo) => void;
+  removeContactInfo: (id: number) => void;
+  initializeContactInfo: (contactInfo: RegisterContactInfo[]) => void;
+
+  initializeAuthorization: (authInfo: RegisterAuthorization) => void;
 }
 
-// Initial state
-const useStore = create<StoreState>((set) => ({
-  vendor: {
-    username: '',
+const useFormStore = create<RegisterState>((set) => ({
+  registerProfilePerusahaan: {
     company_name: '',
-    company_npwp: '',
-    company_phone_number: '',
-    company_email: '',
-    company_fax: '',
-    company_address: '',
-    city_id: 0,
-    postal_code: 0,
+    company_npwp: 0,
     vendor_type: '',
-    vendor_number: '',
+    company_address: '',
+    city_id: '',
+    province_id: '',
+    company_phone_number: '',
+    company_fax: '',
+    company_email: '',
+    postal_code: 0,
   },
-  contactPersons: [],
-  user: {
-    user_name: '',
-    email: '',
+  registerContactInfo: [
+    {
+      id: 0,
+      contact_name: '',
+      contact_phone: '',
+      contact_email: '',
+      position_id: '',
+      contact_identity_no: '',
+      contact_npwp: '',
+    }
+  ],
+  registerAuthorization: {
+    username: '',
+    password: '',
   },
-  setVendor: (vendor) => set((state) => ({ vendor })),
-  setContactPersons: (contactPersons) => set((state) => ({ contactPersons })),
-  setUser: (user) => set((state) => ({ user })),
+  isLoading: false,
+  setLoading: (isLoading) => set({ isLoading }),
+  isFormValid: false,
+  setFormValid: (isValid) => set({ isFormValid: isValid }),
+
+  // Profile Perusahaan Actions
+  initializeProfilePerusahaan: (profilePerusahaan) => set({ registerProfilePerusahaan: profilePerusahaan }),
+
+  // Contact Info Actions
+  addContactInfo: (contactInfo) => set((state) => ({
+    registerContactInfo: [...state.registerContactInfo, contactInfo],
+  })),
+  editContactInfo: (contactInfo) => set((state) => ({
+    registerContactInfo: state.registerContactInfo.map((item) => item.id === contactInfo.id ? contactInfo : item),
+  })),
+  removeContactInfo: (id) => set((state) => ({
+    registerContactInfo: state.registerContactInfo.filter((item) => item.id !== id),
+  })),
+  initializeContactInfo: (contactInfo) => set(() => ({
+    registerContactInfo: [...contactInfo],
+  })),
+
+  // Authorization Actions
+  initializeAuthorization: (authInfo) => set({ registerAuthorization: authInfo }),
 }));
 
-export default useStore;
+export default useFormStore;

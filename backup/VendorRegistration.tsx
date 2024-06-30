@@ -9,11 +9,13 @@ import {
   Space,
   Modal,
   Spin,
-  message
+  message,
+  InputNumber,
 } from "antd";
 import { useFormStore } from "../store";
 import { useFormik } from "formik";
 import axios from "axios";
+import NumericInput from "@/lib/NumericInput";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -50,10 +52,27 @@ const RegistrationForm = () => {
       ...contactInfo,
       ...authorization,
     },
+    validate: (values) => {
+      const errors: { [key: string]: string } = {};
+      if (!values.username) {
+        errors.username = 'Username is required';
+      } else if (values.username.length < 8) {
+        errors.username = 'The username must be at least 8 characters';
+      }
+      if (!values.company_phone_number) {
+        errors.company_phone_number = 'Company number is required';
+      } else if (!/^\d+$/.test(values.company_phone_number)) {
+        errors.company_phone_number = 'Company number must be a number';
+      }
+      return errors;
+    },
     onSubmit: async (values) => {
       setLoading(true);
       try {
-        const response = await axios.post("https://vendor.eproc.latansa.sch.id/api/auth/register", values);
+        const response = await axios.post(
+          "https://vendor.eproc.latansa.sch.id/api/auth/register",
+          values,
+        );
         console.log("Response from API:", response.data);
         setFormSubmitted(true);
         message.success(`register successfully`);
@@ -70,7 +89,7 @@ const RegistrationForm = () => {
         vendor_type: values.vendor_type,
         company_address: values.company_address,
         city_id: values.city_id,
-        province: values.province,
+        province_id: values.province_id,
         postal_code: values.postal_code,
         company_phone_number: values.company_phone_number,
         company_fax: values.company_fax,
@@ -113,7 +132,7 @@ const RegistrationForm = () => {
       contact_email: formik.values.contact_email,
       position_id: formik.values.position_id,
       contact_npwp: formik.values.contact_npwp,
-      contact_identity_no: formik.values.contact_identity_no
+      contact_identity_no: formik.values.contact_identity_no,
     };
 
     const updatedContacts = [...contactPersons, newContact];
@@ -121,14 +140,24 @@ const RegistrationForm = () => {
 
     formik.setValues({
       ...formik.values,
-      contact_name: updatedContacts.map((contact) => contact.contact_name).join(" | "),
-      contact_phone: updatedContacts.map((contact) => contact.contact_phone).join(" | "),
-      contact_email: updatedContacts.map((contact) => contact.contact_email).join(" | "),
-      contact_identity_no: updatedContacts.map((contact) => contact.contact_identity_no).join(" | "),
+      contact_name: updatedContacts
+        .map((contact) => contact.contact_name)
+        .join(" | "),
+      contact_phone: updatedContacts
+        .map((contact) => contact.contact_phone)
+        .join(" | "),
+      contact_email: updatedContacts
+        .map((contact) => contact.contact_email)
+        .join(" | "),
+      contact_identity_no: updatedContacts
+        .map((contact) => contact.contact_identity_no)
+        .join(" | "),
       position_id: updatedContacts
         .map((contact) => contact.position_id)
         .join(" | "),
-        contact_npwp: updatedContacts.map((contact) => contact.contact_npwp).join(" | "),
+      contact_npwp: updatedContacts
+        .map((contact) => contact.contact_npwp)
+        .join(" | "),
     });
 
     setNextId(nextId + 1);
@@ -295,18 +324,12 @@ const RegistrationForm = () => {
                   </Form.Item>
                   <Form.Item
                     label="Alamat Perusahaan"
-                    validateStatus={
-                      formik.errors.company_address &&
-                      formik.touched.company_address
-                        ? "error"
-                        : ""
-                    }
-                    help={
-                      formik.errors.company_address &&
-                      formik.touched.company_address
-                        ? formik.errors.company_address
-                        : ""
-                    }
+                    hasFeedback
+                  rules={[
+                    {
+                      required: true,
+                      message: "Harap isi data",
+                    }]}
                   >
                     <Input
                       id="company_address"
@@ -314,12 +337,16 @@ const RegistrationForm = () => {
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       value={formik.values.company_address}
+                      minLength={2}
+                      maxLength={5}
                     />
                   </Form.Item>
                   <Form.Item
                     label="Kota"
                     validateStatus={
-                      formik.errors.city_id && formik.touched.city_id ? "error" : ""
+                      formik.errors.city_id && formik.touched.city_id
+                        ? "error"
+                        : ""
                     }
                     help={
                       formik.errors.city_id && formik.touched.city_id
@@ -327,7 +354,7 @@ const RegistrationForm = () => {
                         : ""
                     }
                   >
-                     <Select
+                    <Select
                       id="city_id"
                       onChange={(value) =>
                         formik.setFieldValue("city_id", value)
@@ -339,27 +366,27 @@ const RegistrationForm = () => {
                       <Option value={2}>Banjarnegara</Option>
                     </Select>
                   </Form.Item>
-                  {/* <Form.Item
+                  <Form.Item
                     label="Provinsi"
                     validateStatus={
-                      formik.errors.province && formik.touched.province
+                      formik.errors.province_id && formik.touched.province_id
                         ? "error"
                         : ""
                     }
                     help={
-                      formik.errors.province && formik.touched.province
-                        ? formik.errors.province
+                      formik.errors.province_id && formik.touched.province_id
+                        ? formik.errors.province_id
                         : ""
                     }
                   >
                     <Input
-                      id="province"
-                      name="province"
+                      id="province_id"
+                      name="province_id"
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      value={formik.values.province}
+                      value={formik.values.province_id}
                     />
-                  </Form.Item> */}
+                  </Form.Item>
                   <Form.Item
                     label="Kode Pos"
                     validateStatus={
@@ -373,23 +400,25 @@ const RegistrationForm = () => {
                         : ""
                     }
                   >
-                    <Input
-                      id="postal_code"
-                      name="postal_code"
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
+                    <InputNumber
+                      placeholder="Input a number"
                       value={formik.values.postal_code}
+                      onChange={(value) =>
+                        formik.setFieldValue("postal_code", value)
+                      }
                     />
                   </Form.Item>
                   <Form.Item
                     label="Nomor Telepon Perusahaan"
                     validateStatus={
-                      formik.errors.company_phone_number && formik.touched.company_phone_number
+                      formik.errors.company_phone_number &&
+                      formik.touched.company_phone_number
                         ? "error"
                         : ""
                     }
                     help={
-                      formik.errors.company_phone_number && formik.touched.company_phone_number
+                      formik.errors.company_phone_number &&
+                      formik.touched.company_phone_number
                         ? formik.errors.company_phone_number
                         : ""
                     }
@@ -415,34 +444,42 @@ const RegistrationForm = () => {
                         : ""
                     }
                   >
-                    <Input
+                    {/* <Input
                       id="company_fax"
                       name="company_fax"
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       value={formik.values.company_fax}
+                    /> */}
+
+                    <NumericInput
+        placeholder="Input a number"
+        value={formik.values.company_fax}
+        onChange={(value) => formik.setFieldValue("company_fax", value)}
                     />
                   </Form.Item>
                   <Form.Item
                     label="Email Perusahaan"
                     validateStatus={
-                      formik.errors.company_email && formik.touched.company_email
+                      formik.errors.company_email &&
+                      formik.touched.company_email
                         ? "error"
                         : ""
                     }
                     help={
-                      formik.errors.company_email && formik.touched.company_email
+                      formik.errors.company_email &&
+                      formik.touched.company_email
                         ? formik.errors.company_email
                         : ""
                     }
                     rules={[
                       {
-                        type: 'email',
-                        message: 'The input is not valid E-mail!',
+                        type: "email",
+                        message: "The input is not valid E-mail!",
                       },
                       {
                         required: true,
-                        message: 'Please input your E-mail!',
+                        message: "Please input your E-mail!",
                       },
                     ]}
                   >
@@ -454,9 +491,6 @@ const RegistrationForm = () => {
                       value={formik.values.company_email}
                     />
                   </Form.Item>
-                  {/* <Button type="primary" htmlType="submit">
-            Next
-          </Button> */}
                 </Form>
               </div>
             </TabPane>
@@ -466,7 +500,11 @@ const RegistrationForm = () => {
                   Tambah Contact
                 </Button>
               </Form>
-              <Table dataSource={contactPersons} columns={columns} rowKey={(record) => record.id.toString()} />
+              <Table
+                dataSource={contactPersons}
+                columns={columns}
+                rowKey={(record) => record.id.toString()}
+              />
             </TabPane>
             <TabPane tab="Authorization" key="3">
               <Form onFinish={handleSubmit} layout="vertical">
@@ -484,6 +522,7 @@ const RegistrationForm = () => {
                       : ""
                   }
                   hasFeedback
+                  required
                 >
                   <Input
                     id="username"
@@ -619,17 +658,17 @@ const RegistrationForm = () => {
                   { required: true, message: "Please input your position!" },
                 ]}
               >
-                 <Select
-                      id="position_id"
-                      onChange={(value) =>
-                        formik.setFieldValue("position_id", value)
-                      }
-                      onBlur={formik.handleBlur}
-                      value={formik.values.position_id}
-                    >
-                      <Option value="1">Direktur</Option>
-                      <Option value="2">Komisaris</Option>
-                    </Select>
+                <Select
+                  id="position_id"
+                  onChange={(value) =>
+                    formik.setFieldValue("position_id", value)
+                  }
+                  onBlur={formik.handleBlur}
+                  value={formik.values.position_id}
+                >
+                  <Option value="1">Direktur</Option>
+                  <Option value="2">Komisaris</Option>
+                </Select>
               </Form.Item>
 
               <Form.Item

@@ -1,7 +1,7 @@
 "use client";
 import { Tabs } from "antd";
 import VendorRegisterNew from "@/components/VendorRegisterNew";
-import VendorRegister from "@/components/VendorRegistration";
+import VendorRegister from "@/backup/VendorRegistration";
 import VendorIzinUsaha from "@/components/VendorIzinUsaha2";
 import VendorLandasanHukum from "@/components/VendorLandasanHukum2";
 import VendorPengurusPerusahaan from "@/components/VendorPengurusPerusahaan";
