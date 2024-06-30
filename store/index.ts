@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface GeneralInfoFormValues {
   company_name: string;
@@ -6,7 +6,7 @@ interface GeneralInfoFormValues {
   vendor_type: string;
   company_address: string;
   city_id: string;
-  province: string;
+  province_id: string;
   postal_code: number;
   company_phone_number: string;
   company_fax: string;
@@ -25,7 +25,6 @@ interface ContactInfoFormValues {
 interface AuthorizationFormValues {
   username: string;
   password: string;
-  // confirmpassord: string;
 }
 
 interface FormState {
@@ -48,23 +47,23 @@ export const useFormStore = create<FormState>((set) => ({
     vendor_type: "",
     company_address: "",
     city_id: "",
-    province: "",
+    province_id: "",
     postal_code: 0,
     company_phone_number: "",
     company_fax: "",
     company_email: "",
   },
   contactInfo: {
-  contact_name: "",
-  contact_phone: "",
-  contact_email: "",
-  position_id: "",
-  contact_identity_no: "",
-  contact_npwp: "",
+    contact_name: "",
+    contact_phone: "",
+    contact_email: "",
+    position_id: "",
+    contact_identity_no: "",
+    contact_npwp: "",
   },
   authorization: {
-    username: '',
-    password: '',
+    username: "",
+    password: "",
   },
   setGeneralInfo: (info) => set({ generalInfo: info }),
   setContactInfo: (info) => set({ contactInfo: info }),

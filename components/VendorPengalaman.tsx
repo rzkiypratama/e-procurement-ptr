@@ -8,18 +8,21 @@ import {
   Typography,
   Popconfirm,
   Modal,
+  message,
 } from "antd";
 import usePengalamanStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
+import { getCookie } from "cookies-next";
+import axios from "axios";
 
 const { TextArea } = Input;
 
 interface Pengalaman {
-    id: number;
-    namaPekerjaan: string;
-    bidangPekerjaan: string;
-    lokasiPekerjaan: string;
+  id: number;
+  job_name: string;
+  business_field_id: string;
+  location: string;
   }
 
 const PengurusPerusahaan: React.FC = () => {
@@ -36,22 +39,80 @@ const PengurusPerusahaan: React.FC = () => {
 
   const formik = useFormik({
     initialValues: {
-        namaPekerjaan: "",
-        bidangPekerjaan: "",
-        lokasiPekerjaan: "",
+        job_name: "",
+        business_field_id: "",
+        location: "",
     },
-    onSubmit: (values) => {
-      console.log("Pengurus Value:", values);
-      addPengalaman({ ...values, id: pengalaman.length + 1 });
-      setIsModalVisible(false);
-      formik.resetForm();
+    onSubmit: async (values) => {
+      const token = getCookie("token");
+      const userId = getCookie("user_id");
+      const vendorId = getCookie("vendor_id");
+
+      if (!token || !userId || !vendorId) {
+        message.error("Token, User ID, or Vendor ID is missing.");
+        return;
+      }
+      try {
+        const response = await axios.post(
+          "https://vendor.eproc.latansa.sch.id/api/vendor/experience",
+          values,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          }
+        );
+        console.log("Response from API:", response.data);
+        setIsModalVisible(false);
+        message.success("Data Pengalaman added successful");
+        formik.resetForm();
+      } catch (error) {
+        console.error("Failed to submit data", error);
+        message.error("Failed to submit data");
+      }
     },
   });
 
+  // ini untuk get dengan type data array of object
   useEffect(() => {
-    // Initialize data if needed
-    const initialData: Pengalaman[] = []; // Load your initial data here
-    initializePengalaman(initialData);
+    const fetchBankAccounts = async () => {
+      try {
+        const token = getCookie("token");
+        const userId = getCookie("user_id");
+        const vendorId = getCookie("vendor_id");
+  
+        if (!token || !userId || !vendorId) {
+          message.error("Please login first.");
+          return;
+        }
+  
+        const response = await axios.get(
+          "https://vendor.eproc.latansa.sch.id/api/vendor/experience",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          }
+        );
+  
+        // Check if response.data is an object containing an array
+        if (response.data && Array.isArray(response.data.data)) {
+          initializePengalaman(response.data.data); // Initialize Data Pengalaman state with the array of Data Pengalaman objects
+        } else {
+          console.error("Data Pengalaman data fetched is not in expected format:", response.data);
+          message.error("Data Pengalaman data fetched is not in expected format.");
+        }
+      } catch (error) {
+        console.error("Error fetching Data Pengalaman data:", error);
+        message.error("Failed to fetch Data Pengalaman data. Please try again later.");
+      }
+    };
+  
+    fetchBankAccounts();
   }, [initializePengalaman]);
 
   const isEditing = (record: Pengalaman) =>
@@ -82,9 +143,9 @@ const PengurusPerusahaan: React.FC = () => {
 
   const columns = [
     { title: "No", dataIndex: "id", key: "id" },
-    { title: "Nama Pekerjaan", dataIndex: "namaPekerjaan", key: "namaPekerjaan", editable: true },
-    { title: "Bidang Pekerjaan", dataIndex: "bidangPekerjaan", key: "bidangPekerjaan", editable: true },
-    { title: "Lokasi Pekerjaan", dataIndex: "lokasiPekerjaan", key: "lokasiPekerjaan", editable: true },
+    { title: "Nama Pekerjaan", dataIndex: "job_name", key: "job_name", editable: true },
+    { title: "Bidang Pekerjaan", dataIndex: "business_field_id", key: "business_field_id", editable: true },
+    { title: "Lokasi Pekerjaan", dataIndex: "location", key: "location", editable: true },
     {
       title: "Operation",
       dataIndex: "operation",
@@ -139,10 +200,10 @@ const PengurusPerusahaan: React.FC = () => {
   const handleOk = () => {
     addPengalaman({
       ...formik.values,
-      id: pengalaman.length + 1,
+      id: pengalaman.length + 2,
     });
     setIsModalVisible(false);
-    form.resetFields();
+    // form.resetFields();
   };
 
   const handleCancel = () => {
@@ -152,11 +213,12 @@ const PengurusPerusahaan: React.FC = () => {
   const handleSubmit = () => {
     console.log("Submitting data:", pengalaman);
     // Additional submission logic if needed
+    formik.handleSubmit();
   };
 
   return (
     <div>
-      <Button type="primary" onClick={showModal}>
+      <Button type="primary" onClick={showModal} className="mb-4">
         Tambah Pengalaman
       </Button>
       <Modal
@@ -167,32 +229,32 @@ const PengurusPerusahaan: React.FC = () => {
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            name="namaPekerjaan"
+            name="job_name"
             label="Nama Pekerjaan"
             rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
           >
             <Input
-              value={formik.values.namaPekerjaan}
+              value={formik.values.job_name}
               onChange={formik.handleChange}
             />
           </Form.Item>
           <Form.Item
-            name="bidangPekerjaan"
+            name="business_field_id"
             label="Bidang Pekerjaan"
             rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
           >
             <Input
-              value={formik.values.bidangPekerjaan}
+              value={formik.values.business_field_id}
               onChange={formik.handleChange}
             />
           </Form.Item>
           <Form.Item
-            name="lokasiPekerjaan"
+            name="location"
             label="Lokasi Pekerjaan"
             rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
           >
             <Input
-              value={formik.values.lokasiPekerjaan}
+              value={formik.values.location}
               onChange={formik.handleChange}
             />
           </Form.Item>
@@ -214,6 +276,9 @@ const PengurusPerusahaan: React.FC = () => {
           }}
         />
       </Form>
+      <Button type="primary" onClick={handleSubmit}>
+          Save
+        </Button>
     </div>
   );
 };

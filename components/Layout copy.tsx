@@ -30,20 +30,20 @@ function getItem(
 }
 
 const items = [
-  // getItem('User Management', 'sub1', <UserOutlined />, [
-  //   getItem(<Link href="/vendor/verification">Registration</Link>, '1'),
-  //   getItem('Team 2', '2'),
-  // ]),
+  getItem('User Management', 'sub1', <UserOutlined />, [
+    getItem(<Link href="/vendor/verification">Registration</Link>, '1'),
+    getItem('Team 2', '2'),
+  ]),
   getItem('Vendor Management', 'sub2', <TeamOutlined />, [
     getItem(<Link href="/vendor/register">Registration</Link>, '3'),
-    getItem(<Link href="/vendor/registration-list">Verification</Link>, '4'),
+    getItem(<Link href="/vendor/">Verification</Link>, '4'),
     getItem(<Link href="/vendor/evaluation">Evaluation</Link>, '5'),
     getItem(<Link href="/vendor/master-data">Master Data</Link>, '6'),
   ]),
-  // getItem('User Requisition', 'sub3', <UserOutlined />, [
-  //   getItem('Menu 1', '7'),
-  //   getItem('Menu 2', '8'),
-  // ]),
+  getItem('User Requisition', 'sub3', <UserOutlined />, [
+    getItem('Menu 1', '7'),
+    getItem('Menu 2', '8'),
+  ]),
 ];
 
 const MyLayout: React.FC<Props> = ({ children }) => {
@@ -78,7 +78,7 @@ const MyLayout: React.FC<Props> = ({ children }) => {
   };
 
   return (
-    <Layout className="h-max">
+    <Layout className="h-full">
       <Header className="bg-blue-500 text-white flex items-center justify-between">
         <div className="text-xl">Delpis</div>
       </Header>
@@ -130,7 +130,7 @@ const MyLayout: React.FC<Props> = ({ children }) => {
             </div>
           </Content>
           <Footer className="text-center">
-          Delapan Pilar Intisolusi ©{new Date().getFullYear()}
+            @rzkiypratama ©{new Date().getFullYear()}
           </Footer>
         </Layout>
       </Layout>
