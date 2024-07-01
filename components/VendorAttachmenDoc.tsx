@@ -175,13 +175,36 @@ const AttachmentDocument: React.FC = () => {
     removeAttachment(Number(id));
   };
 
-  const handleFileChange = (info: any) => {
-    if (info.file.status === "done") {
-      message.success(`${info.file.name} file uploaded successfully`);
-      formik.setFieldValue("document", info.file.originFileObj);
-      formik.setFieldValue("documentname", info.file.name); 
-    } else if (info.file.status === "error") {
-      message.error(`${info.file.name} file upload failed.`);
+  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files && e.target.files[0];
+  //   if (file) {
+  //     if (file.type !== "image/jpeg" && file.type !== "image/png") {
+  //       message.error("Hanya file JPEG atau PNG yang diizinkan!");
+  //       return;
+  //     }
+  //     if (file.size / 1024 / 1024 >= 2) {
+  //       message.error("File must smaller than 2MB!");
+  //       return;
+  //     }
+  //     formik.setFieldValue("document", file);
+  //     message.success(`${file.name} file ready to upload`);
+  //   }
+  // };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      if (file.type !== "image/jpeg" && file.type !== "image/png") {
+        message.error("Hanya file JPEG atau PNG yang diizinkan!");
+        return;
+      }
+      if (file.size / 1024 / 1024 >= 2) {
+        message.error("File must smaller than 2MB!");
+        return;
+      }
+      // Set field value with the whole file object
+      formik.setFieldValue("document", file);
+      message.success(`${file.name} file selected successfully`);
     }
   };
 
@@ -190,24 +213,17 @@ const AttachmentDocument: React.FC = () => {
     multiple: false,
     onChange: handleFileChange,
     beforeUpload: (file: File) => {
-      const isSupportedFormat =
-        file.type === "image/jpeg" ||
-        file.type === "image/png" ||
-        file.type === "image/jpg" ||
-        file.type === "application/pdf";
-  
-      if (!isSupportedFormat) {
-        message.error("Hanya file JPEG, JPG, PNG, atau PDF yang diizinkan!");
+      const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
+      if (!isJpgOrPng) {
+        message.error("Hanya file JPEG atau PNG yang diizinkan!");
         return Upload.LIST_IGNORE;
       }
-  
       const isLt2M = file.size / 1024 / 1024 < 2;
       if (!isLt2M) {
         message.error("File must smaller than 2MB!");
         return Upload.LIST_IGNORE;
       }
-  
-      return isSupportedFormat && isLt2M;
+      return isJpgOrPng && isLt2M;
     },
   };
 
@@ -229,6 +245,7 @@ const AttachmentDocument: React.FC = () => {
       title: "Dokumen",
       dataIndex: "document",
       key: "document",
+      editable: true,
     },
     {
       title: "Masa Berlaku Dokumen",
@@ -320,39 +337,6 @@ const AttachmentDocument: React.FC = () => {
     formik.handleSubmit();
   };
 
-  // const handleSubmitAll = async () => {
-  //   const token = getCookie("token");
-  //   const userId = getCookie("user_id");
-  //   const vendorId = getCookie("vendor_id");
-  
-  //   if (!token || !userId || !vendorId) {
-  //     message.error("Token, User ID, or Vendor ID is missing.");
-  //     return;
-  //   }
-  
-  //   try {
-  //     setLoadingSubmit(true); // Mengatur state loading sebelum memulai request
-  //     await axios.post(
-  //       "https://vendor.eproc.latansa.sch.id/api/vendor/submit",
-  //       { status: "yes" },
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           "User-ID": userId,
-  //           "Vendor-ID": vendorId,
-  //         },
-  //       }
-  //     );
-  
-  //     message.success("Status berhasil diperbarui.");
-  //   } catch (error) {
-  //     console.error("Gagal memperbarui status:", error);
-  //     message.error("Gagal memperbarui status. Silakan coba lagi.");
-  //   } finally {
-  //     setLoadingSubmit(false); // Mengatur state loading setelah request selesai
-  //   }
-  // };
-
   const handleSubmitAll = async () => {
     setLoadingSubmit(true);
 
@@ -408,6 +392,16 @@ const AttachmentDocument: React.FC = () => {
         open={isModalVisible} // Gunakan visible bukan open untuk modal
         onOk={handleOk}
         onCancel={handleCancel}
+          // footer={[
+        //   <>
+        //    <Button onClick={handleCancel}>
+        //     Batalkan
+        //   </Button>
+        //   <Button key="submit" type="primary" onClick={handleSubmit}>
+        //     Simpan Data
+        //   </Button>
+        //   </>
+        // ]}
       >
         <Form form={form} layout="vertical">
           <Form.Item
@@ -435,10 +429,10 @@ const AttachmentDocument: React.FC = () => {
             label="File"
             rules={[{ required: true, message: "File attachment is required" }]}
           >
-            <Upload 
-            {...uploadProps} >
-              <Button icon={<UploadOutlined />}>Upload</Button>
-            </Upload>
+            <input type="file"
+             {...uploadProps}
+            
+            ></input>
           </Form.Item>
           <Form.Item
             name="expiration_date"

@@ -13,6 +13,16 @@ interface ProfilePerusahaan {
   company_phone_number: string;
   company_email: string;
   company_fax: string;
+  province_id: string;
+  city: {
+    id: number;
+    province_id: number;
+    name: string;
+    province: {
+      id: number;
+      name: string;
+    };
+  };
 }
 
 interface ContactPerson {

@@ -15,10 +15,7 @@ import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
 import axios from "axios";
 import { getCookie } from "cookies-next";
-
-const { TextArea } = Input;
-
-const { Option } = Select;
+import {cityOptions, provinceOptions } from "@/utils/cityOptions"
 
 interface ProfilePerusahaan {
   id: number;
@@ -31,6 +28,16 @@ interface ProfilePerusahaan {
   company_phone_number: string;
   company_email: string;
   company_fax: string;
+  province_id: string;
+  city: {
+    id: number;
+    province_id: number;
+    name: string;
+    province: {
+      id: number;
+      name: string;
+    };
+  };
 }
 
 const PengurusPerusahaan: React.FC = () => {
@@ -108,19 +115,18 @@ const PengurusPerusahaan: React.FC = () => {
   });
 
   // get untuk type data object
-
   useEffect(() => {
     const fetchProfilePerusahaan = async () => {
       try {
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-  
+
         if (!token || !userId || !vendorId) {
           message.error("Token, User ID, or Vendor ID is missing.");
           return;
         }
-  
+
         const response = await axios.get(
           "https://vendor.eproc.latansa.sch.id/api/vendor/informasi-umum",
           {
@@ -131,18 +137,19 @@ const PengurusPerusahaan: React.FC = () => {
             },
           }
         );
-  
+
         console.log("Response from API:", response.data);
-  
-        // Pastikan response.data adalah objek dan sesuai dengan struktur yang diharapkan
-        if (typeof response.data === "object" && !Array.isArray(response.data)) {
-          // Ambil nilai objek dalam response.data, karena berupa object of objects
-          const values: ProfilePerusahaan[] = Object.values(response.data);
-  
-          // Initialize data yang dibutuhkan dari objek-objek ini
-          initializeProfilePerusahaan(values);
+
+        if (response.data && response.data.data) {
+          const profileData: ProfilePerusahaan = {
+            ...response.data.data,
+            city_id: response.data.data.city.name,
+            province_id: response.data.data.city.province.name
+          };
+
+          initializeProfilePerusahaan([profileData]);
         } else {
-          console.error("Response data is not in expected format:", response.data);
+          console.error("Failed to fetch company profile information.");
           message.error("Failed to fetch company profile information.");
         }
       } catch (error) {
@@ -150,7 +157,7 @@ const PengurusPerusahaan: React.FC = () => {
         message.error("Failed to fetch company profile information.");
       }
     };
-  
+
     fetchProfilePerusahaan();
   }, [initializeProfilePerusahaan]);
 
@@ -184,6 +191,15 @@ const PengurusPerusahaan: React.FC = () => {
     removeProfilePerusahaan(Number(id));
   };
 
+  const getProvinceName = (provinceId: string) => {
+    const province_id = provinceOptions.find(option => option.value === provinceId);
+    return province_id ? province_id.label : provinceId;
+  };
+  
+  const getCityName = (cityId: string) => {
+    const city_id = cityOptions.find(option => option.value === cityId);
+    return city_id ? city_id.label : cityId;
+  };
 
   const columns = [
     { title: "No", dataIndex: "id", key: "id" },
@@ -232,20 +248,16 @@ const PengurusPerusahaan: React.FC = () => {
       dataIndex: "city_id",
       key: "city_id",
       editable: true,
-      options: [
-        { value: "268", label: "Banjarbaru" },
-        { value: "267", label: "Bandung" },
-      ],
+      options: cityOptions,
+      render: (text: string) => getCityName(text),
     },
     {
       title: "Provinsi",
       dataIndex: "province_id",
       key: "province_id",
       editable: true,
-      options: [
-        { value: "16", label: "Kalimantan Selatan" },
-        { value: "15", label: "Jawa Barat" },
-      ],
+      options: provinceOptions,
+      render: (text: string) => getProvinceName(text),
     },
     {
       title: "Kode Pos",
@@ -329,6 +341,15 @@ const PengurusPerusahaan: React.FC = () => {
     addProfilePerusahaan({
       ...formik.values,
       id: profilePerusahaan.length + 2,
+      city: {
+        id: 0,
+        province_id: 0,
+        name: "",
+        province: {
+          id: 0,
+          name: ""
+        }
+      }
     });
     setIsModalVisible(false);
     // form.resetFields();
