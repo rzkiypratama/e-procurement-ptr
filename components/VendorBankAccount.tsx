@@ -108,10 +108,13 @@ const PengurusPerusahaan: React.FC = () => {
             },
           }
         );
-
-        // Check if response.data is an object containing an array
         if (response.data && Array.isArray(response.data.data)) {
-          initializeBankAccount(response.data.data); // Initialize bank account state with the array of bank account objects
+          const mappedData = response.data.data.map((account: { bank: { bank_name: any; }; bank_id: any; currency: { currency_name: any; }; currency_id: any; }) => ({
+            ...account,
+            bank_id: account.bank ? account.bank.bank_name : account.bank_id,
+            currency_id: account.currency ? account.currency.currency_name : account.currency_id,
+          }));
+          initializeBankAccount(mappedData);
         } else {
           console.error("Bank account data fetched is not in expected format:", response.data);
           message.error("Bank account data fetched is not in expected format.");
