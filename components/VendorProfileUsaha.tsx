@@ -78,7 +78,7 @@ const PengurusPerusahaan: React.FC = () => {
 
       try {
         const response = await axios.post(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/informasi-umum",
+          "https://vendorv2.delpis.online/api/vendor/informasi-umum",
           values,
           {
             headers: {
@@ -128,7 +128,7 @@ const PengurusPerusahaan: React.FC = () => {
         }
 
         const response = await axios.get(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/informasi-umum",
+          "https://vendorv2.delpis.online/api/vendor/informasi-umum",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -321,8 +321,8 @@ const PengurusPerusahaan: React.FC = () => {
           col.dataIndex === "noKTPPengurus" || col.dataIndex === "npwpPengurus"
             ? "number"
             : col.dataIndex === "city_id" ||
-                col.dataIndex === "province_id" ||
-                col.dataIndex === "vendor_type"
+              col.dataIndex === "province_id" ||
+              col.dataIndex === "vendor_type"
               ? "select"
               : "text",
         dataIndex: col.dataIndex,
@@ -375,22 +375,22 @@ const PengurusPerusahaan: React.FC = () => {
         open={isModalVisible}
         onCancel={handleCancel}
         onOk={handleOk}
-        // footer={[
-        //   <>
-        //    <Button onClick={handleCancel}>
-        //     Batalkan
-        //   </Button>
-        //   <Button key="submit" type="primary" onClick={handleSubmit}>
-        //     Simpan Data
-        //   </Button>
-        //   </>
-        // ]}
+      // footer={[
+      //   <>
+      //    <Button onClick={handleCancel}>
+      //     Batalkan
+      //   </Button>
+      //   <Button key="submit" type="primary" onClick={handleSubmit}>
+      //     Simpan Data
+      //   </Button>
+      //   </>
+      // ]}
       >
         <Form form={form} layout="vertical">
           <Form.Item
             name="company_name"
             label="Nama Perusahaan"
-            // rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
+          // rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
           >
             <Input
               value={formik.values.company_name}
@@ -400,7 +400,7 @@ const PengurusPerusahaan: React.FC = () => {
           <Form.Item
             name="company_email"
             label="Email Perusahaan"
-            // rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
+          // rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
           >
             <Input
               value={formik.values.company_email}
@@ -422,7 +422,7 @@ const PengurusPerusahaan: React.FC = () => {
           <Form.Item
             name="company_phone_number"
             label="No Telepon Perusahaan"
-            // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+          // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
           >
             <Input
               value={formik.values.company_phone_number}
@@ -451,7 +451,7 @@ const PengurusPerusahaan: React.FC = () => {
             id="company_address"
             name="company_address"
             label="Alamat Perusahaan"
-            // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+          // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
           >
             <Input
               value={formik.values.company_address}
@@ -475,7 +475,7 @@ const PengurusPerusahaan: React.FC = () => {
             </Select>
           </Form.Item>
           <Form.Item label="Provinsi" required hasFeedback>
-          <Select
+            <Select
               id="province_id"
               onChange={(value) => formik.setFieldValue("province_id", value)}
               onBlur={formik.handleBlur}
@@ -493,7 +493,7 @@ const PengurusPerusahaan: React.FC = () => {
           <Form.Item
             name="postal_code"
             label="Kode Pos Perusahaan"
-            // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+          // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
           >
             <Input
               value={formik.values.postal_code}
@@ -503,7 +503,7 @@ const PengurusPerusahaan: React.FC = () => {
           <Form.Item
             name="company_fax"
             label="Nomor Fax Perusahaan"
-            // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+          // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
           >
             <Input
               value={formik.values.company_fax}

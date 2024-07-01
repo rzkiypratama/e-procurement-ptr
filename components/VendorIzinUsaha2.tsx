@@ -64,7 +64,7 @@ const IzinUsaha: React.FC = () => {
 
       try {
         const response = await axios.post(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/business-permit",
+          "https://vendorv2.delpis.online/api/vendor/business-permit",
           values,
           {
             headers: {
@@ -107,14 +107,14 @@ const IzinUsaha: React.FC = () => {
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-  
+
         if (!token || !userId || !vendorId) {
           message.error("Please login first.");
           return;
         }
-  
+
         const response = await axios.get(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/business-permit",
+          "https://vendorv2.delpis.online/api/vendor/business-permit",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -123,7 +123,7 @@ const IzinUsaha: React.FC = () => {
             },
           }
         );
-  
+
         // Check if response.data is an object containing an array
         if (response.data && Array.isArray(response.data.data)) {
           initializeIzinUsaha(response.data.data); // Initialize izinUsaha state with the array of IzinUsaha objects
@@ -136,7 +136,7 @@ const IzinUsaha: React.FC = () => {
         message.error("Failed to fetch data. Please try again later.");
       }
     };
-  
+
     fetchData();
   }, [initializeIzinUsaha]);
 
@@ -268,10 +268,10 @@ const IzinUsaha: React.FC = () => {
       onCell: (record: IzinUsaha) => ({
         record,
         inputType:
-        col.dataIndex === "permit_number" || col.dataIndex.includes("permit_number") ? "text" :
-        col.dataIndex === "start_date" || col.dataIndex.includes("start_date") ? "date" :
-        col.dataIndex === "end_date" || col.dataIndex.includes("end_date") ? "date" :
-        "text",
+          col.dataIndex === "permit_number" || col.dataIndex.includes("permit_number") ? "text" :
+            col.dataIndex === "start_date" || col.dataIndex.includes("start_date") ? "date" :
+              col.dataIndex === "end_date" || col.dataIndex.includes("end_date") ? "date" :
+                "text",
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record),
@@ -313,7 +313,7 @@ const IzinUsaha: React.FC = () => {
         <Form>
           {/* jenis izin nanti berupa select */}
           {/* Izin Usaha 2 */}
-        <Form.Item
+          <Form.Item
             name="type"
             label="Jenis Izin"
             rules={[{ required: true }]}

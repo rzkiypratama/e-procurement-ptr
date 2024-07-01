@@ -46,14 +46,14 @@ const MyLayout: React.FC<Props> = ({ children }) => {
 
 	const items: MenuItem[] = [
 		getItem(<Link href="/vendor/profile">Company Profile</Link>, '9', <div />),
-		getItem(<Link href="https://eproc.delpis.online/admin">User Management</Link>, '1', <UserOutlined />),
+		getItem(<Link href="https://eproc.delpis.online/admin" target='_blank'>User Management</Link>, '1', <UserOutlined />),
 		{
 			key: 'sub2',
 			icon: <TeamOutlined />,
 			label: 'Vendor Management',
 			children: [
 				getItem(<Link href="/vendor/registration-list">Registration</Link>, '3', <div />),
-				getItem(<Link href="/vendor/verification" target='_blank'>Verification</Link>, '4', <div />),
+				getItem(<Link href="/vendor/verification">Verification</Link>, '4', <div />),
 				getItem(<Link href="/vendor/register">Evaluation</Link>, '5', <div />),
 				{
 					key: 'sub1-3',
@@ -71,13 +71,13 @@ const MyLayout: React.FC<Props> = ({ children }) => {
 
 	return (
 		<Layout className="h-max">
-			<Header className="site-layout-background text-white flex items-center justify-between">
+			<Header className="bg-blue-500 text-white flex items-center justify-between">
 				<div className="text-xl">Delpis</div>
 			</Header>
 			<Layout className='h-max'>
-				<Sider collapsible collapsed={collapsed} onCollapse={onCollapse}>
+				<Sider collapsible collapsed={collapsed} onCollapse={onCollapse} theme='light'>
 					<div className="demo-logo-vertical" />
-					<Menu theme="dark" defaultSelectedKeys={['1']} mode="inline">
+					<Menu theme="light" defaultSelectedKeys={['1']} mode="inline">
 						{items.map((item) =>
 							item.children ? (
 								<Menu.SubMenu key={item.key} icon={item.icon} title={item.label}>

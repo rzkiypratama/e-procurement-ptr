@@ -70,7 +70,7 @@ const RegistrationForm = () => {
       setLoading(true);
       try {
         const response = await axios.post(
-          "https://vendor.eproc.latansa.sch.id/api/auth/register",
+          "https://vendorv2.delpis.online/api/auth/register",
           values,
         );
         console.log("Response from API:", response.data);
@@ -325,11 +325,11 @@ const RegistrationForm = () => {
                   <Form.Item
                     label="Alamat Perusahaan"
                     hasFeedback
-                  rules={[
-                    {
-                      required: true,
-                      message: "Harap isi data",
-                    }]}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Harap isi data",
+                      }]}
                   >
                     <Input
                       id="company_address"
@@ -412,13 +412,13 @@ const RegistrationForm = () => {
                     label="Nomor Telepon Perusahaan"
                     validateStatus={
                       formik.errors.company_phone_number &&
-                      formik.touched.company_phone_number
+                        formik.touched.company_phone_number
                         ? "error"
                         : ""
                     }
                     help={
                       formik.errors.company_phone_number &&
-                      formik.touched.company_phone_number
+                        formik.touched.company_phone_number
                         ? formik.errors.company_phone_number
                         : ""
                     }
@@ -453,22 +453,22 @@ const RegistrationForm = () => {
                     /> */}
 
                     <NumericInput
-        placeholder="Input a number"
-        value={formik.values.company_fax}
-        onChange={(value) => formik.setFieldValue("company_fax", value)}
+                      placeholder="Input a number"
+                      value={formik.values.company_fax}
+                      onChange={(value) => formik.setFieldValue("company_fax", value)}
                     />
                   </Form.Item>
                   <Form.Item
                     label="Email Perusahaan"
                     validateStatus={
                       formik.errors.company_email &&
-                      formik.touched.company_email
+                        formik.touched.company_email
                         ? "error"
                         : ""
                     }
                     help={
                       formik.errors.company_email &&
-                      formik.touched.company_email
+                        formik.touched.company_email
                         ? formik.errors.company_email
                         : ""
                     }

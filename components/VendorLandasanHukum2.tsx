@@ -56,7 +56,7 @@ const LandasanHukum: React.FC = () => {
       }
       try {
         const response = await axios.post(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/legal-foundation",
+          "https://vendorv2.delpis.online/api/vendor/legal-foundation",
           values,
           {
             headers: {
@@ -83,14 +83,14 @@ const LandasanHukum: React.FC = () => {
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-  
+
         if (!token || !userId || !vendorId) {
           message.error("Please login first.");
           return;
         }
-  
+
         const response = await axios.get(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/legal-foundation",
+          "https://vendorv2.delpis.online/api/vendor/legal-foundation",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -99,7 +99,7 @@ const LandasanHukum: React.FC = () => {
             },
           }
         );
-  
+
         // Check if response.data is an object containing an array
         if (response.data && Array.isArray(response.data.data)) {
           initializeLandasanHukum(response.data.data); // Initialize bank account state with the array of bank account objects
@@ -112,7 +112,7 @@ const LandasanHukum: React.FC = () => {
         message.error("Failed to fetch bank account data. Please try again later.");
       }
     };
-  
+
     fetchBankAccounts();
   }, [initializeLandasanHukum]);
 
@@ -221,9 +221,9 @@ const LandasanHukum: React.FC = () => {
       onCell: (record: LandasanHukum) => ({
         record,
         inputType:
-                col.dataIndex === "document_date" || col.dataIndex.includes("document_date") ? "date" :
-                col.dataIndex === "document_no" || col.dataIndex.includes("document_no") ? "number" :
-                "text",
+          col.dataIndex === "document_date" || col.dataIndex.includes("document_date") ? "date" :
+            col.dataIndex === "document_no" || col.dataIndex.includes("document_no") ? "number" :
+              "text",
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record),
@@ -267,7 +267,7 @@ const LandasanHukum: React.FC = () => {
           <Form.Item
             name="notaris_name"
             label="Nama Notaris"
-            // rules={[{ required: true }]}
+          // rules={[{ required: true }]}
           >
             <Input
               name="notaris_name"
@@ -278,7 +278,7 @@ const LandasanHukum: React.FC = () => {
           <Form.Item
             name="document_no"
             label="Nomor Dokumen"
-            // rules={[{ required: true }]}
+          // rules={[{ required: true }]}
           >
             <Input
               name="document_no"
@@ -289,7 +289,7 @@ const LandasanHukum: React.FC = () => {
           <Form.Item
             name="document_date"
             label="Tahun Dokumen"
-            // rules={[{ required: true }]}
+          // rules={[{ required: true }]}
           >
             <DatePicker
               name="document_date"

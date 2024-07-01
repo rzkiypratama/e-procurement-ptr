@@ -5,8 +5,9 @@ import VendorPosition from '@/components/VendorPosition';
 import VendorBusinessField from '@/components/VendorBusinessField';
 import Layout from '@/components/LayoutNew';
 import CurrencyData from '@/components/Currency';
+import { Suspense } from 'react'
 
-const MasterData = () => {
+const ViewVendorPosition = () => {
     const typeParams = useSearchParams()
 
     const type = typeParams.get('type')
@@ -44,6 +45,13 @@ const MasterData = () => {
             </Layout>
         )
     }
+}
+const MasterData = () => {
+    return (
+        <Suspense fallback={<>Loading...</>}>
+            <ViewVendorPosition />
+        </Suspense>
+    )
 };
 
 export default MasterData;

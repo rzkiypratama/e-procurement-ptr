@@ -111,7 +111,7 @@ const CurrencyData: React.FC = () => {
             console.log("Form Values: ", values);
             setLoading(true);
             try {
-                const response = await axios.post("https://vendor.eproc.latansa.sch.id/api/master/currency", values, {
+                const response = await axios.post("https://vendorv2.delpis.online/api/master/currency", values, {
                     headers: {
                         "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
                     }
@@ -186,7 +186,7 @@ const CurrencyData: React.FC = () => {
 
     const listCurrency = async () => {
         try {
-            const response = await axios.get("https://vendor.eproc.latansa.sch.id/api/master/currency", {
+            const response = await axios.get("https://vendorv2.delpis.online/api/master/currency", {
                 headers: {
                     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
                 }
@@ -235,7 +235,7 @@ const CurrencyData: React.FC = () => {
         }
         setLoading(true)
         try {
-            const response = await axios.post(`https://vendor.eproc.latansa.sch.id/api/master/currency/${selectedId}`, body, {
+            const response = await axios.post(`https://vendorv2.delpis.online/api/master/currency/${selectedId}`, body, {
                 headers: {
                     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
                 }
@@ -260,7 +260,7 @@ const CurrencyData: React.FC = () => {
     const deleteCurrency = async () => {
         setLoading(true)
         try {
-            const response = await axios.delete(`https://vendor.eproc.latansa.sch.id/api/master/currency/${selectedId}`, {
+            const response = await axios.delete(`https://vendorv2.delpis.online/api/master/currency/${selectedId}`, {
                 headers: {
                     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
                 }

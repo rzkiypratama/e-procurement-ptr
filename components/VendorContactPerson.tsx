@@ -21,14 +21,14 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 interface ContactPerson {
-    id: number;
-    contact_name: string;
-    contact_email: string;
-    contact_identity_no: string;
-    contact_phone: string;
-    contact_npwp: string;
-    position_id: string;
-  }
+  id: number;
+  contact_name: string;
+  contact_email: string;
+  contact_identity_no: string;
+  contact_phone: string;
+  contact_npwp: string;
+  position_id: string;
+}
 
 const ContactInfo: React.FC = () => {
   const {
@@ -64,7 +64,7 @@ const ContactInfo: React.FC = () => {
 
       try {
         const response = await axios.post(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/contact-person",
+          "https://vendorv2.delpis.online/api/vendor/contact-person",
           values,
           {
             headers: {
@@ -107,14 +107,14 @@ const ContactInfo: React.FC = () => {
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-  
+
         if (!token || !userId || !vendorId) {
           message.error("Token, User ID, or Vendor ID is missing.");
           return;
         }
-  
+
         const response = await axios.get(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/contact-person",
+          "https://vendorv2.delpis.online/api/vendor/contact-person",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -123,9 +123,9 @@ const ContactInfo: React.FC = () => {
             },
           }
         );
-  
+
         console.log("Response from API:", response.data);
-  
+
         // Pastikan response.data adalah object dan memiliki properti yang berisi array
         if (typeof response.data === "object" && Array.isArray(response.data.data)) {
           initializeContactInfo(response.data.data);
@@ -138,7 +138,7 @@ const ContactInfo: React.FC = () => {
         message.error("Failed to fetch contact information.");
       }
     };
-  
+
     fetchContactInfo();
   }, [initializeContactInfo]);
 
@@ -259,11 +259,11 @@ const ContactInfo: React.FC = () => {
       onCell: (record: ContactPerson) => ({
         record,
         inputType:
-        col.dataIndex === "noKTPPengurus" || col.dataIndex === "npwpPengurus"
-          ? "number"
-          : col.dataIndex === "position_id" || col.dataIndex === "province_id"
-          ? "select"
-          : "text",
+          col.dataIndex === "noKTPPengurus" || col.dataIndex === "npwpPengurus"
+            ? "number"
+            : col.dataIndex === "position_id" || col.dataIndex === "province_id"
+              ? "select"
+              : "text",
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record),
@@ -304,22 +304,22 @@ const ContactInfo: React.FC = () => {
         open={isModalVisible}
         onCancel={handleCancel}
         onOk={handleOk}
-        // footer={[
-        //   <>
-        //    <Button onClick={handleCancel}>
-        //     Batalkan
-        //   </Button>
-        //   <Button key="submit" type="primary" onClick={handleSubmit}>
-        //     Simpan Data
-        //   </Button>
-        //   </>
-        // ]}
+      // footer={[
+      //   <>
+      //    <Button onClick={handleCancel}>
+      //     Batalkan
+      //   </Button>
+      //   <Button key="submit" type="primary" onClick={handleSubmit}>
+      //     Simpan Data
+      //   </Button>
+      //   </>
+      // ]}
       >
         <Form form={form} layout="vertical">
           <Form.Item
             name="contact_name"
             label="Nama"
-            // rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
+          // rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
           >
             <Input
               value={formik.values.contact_name}
@@ -329,7 +329,7 @@ const ContactInfo: React.FC = () => {
           <Form.Item
             name="contact_email"
             label="Email"
-            // rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
+          // rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
           >
             <Input
               value={formik.values.contact_email}
@@ -351,7 +351,7 @@ const ContactInfo: React.FC = () => {
           <Form.Item
             name="contact_phone"
             label="No Telepon"
-            // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+          // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
           >
             <Input
               value={formik.values.contact_phone}
@@ -363,7 +363,7 @@ const ContactInfo: React.FC = () => {
           <Form.Item
             name="contact_npwp"
             label="NPWP"
-            // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+          // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
           >
             <Input
               value={formik.values.contact_npwp}

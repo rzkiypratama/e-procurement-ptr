@@ -62,7 +62,7 @@ const TenagaAhli: React.FC = () => {
       }
       try {
         const response = await axios.post(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/expert",
+          "https://vendorv2.delpis.online/api/vendor/expert",
           values,
           {
             headers: {
@@ -90,14 +90,14 @@ const TenagaAhli: React.FC = () => {
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-  
+
         if (!token || !userId || !vendorId) {
           message.error("Please login first.");
           return;
         }
-  
+
         const response = await axios.get(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/expert",
+          "https://vendorv2.delpis.online/api/vendor/expert",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -106,7 +106,7 @@ const TenagaAhli: React.FC = () => {
             },
           }
         );
-  
+
         // Check if response.data is an object containing an array
         if (response.data && Array.isArray(response.data.data)) {
           initializeTenagaAhli(response.data.data); // Initialize Tenaga Ahli state with the array of Tenaga Ahli objects
@@ -119,7 +119,7 @@ const TenagaAhli: React.FC = () => {
         message.error("Failed to fetch Tenaga Ahli data. Please try again later.");
       }
     };
-  
+
     fetchBankAccounts();
   }, [initializeTenagaAhli]);
 

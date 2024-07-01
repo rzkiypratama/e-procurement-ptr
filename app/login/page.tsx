@@ -23,23 +23,23 @@ const LoginForm: React.FC = () => {
     onSubmit: async (values) => {
       try {
         const response = await axios.post(
-          "https://vendor.eproc.latansa.sch.id/api/auth/login",
+          "https://vendorv2.delpis.online/api/auth/login",
           {
             username: values.username,
             password: values.password,
           }
         );
-    
+
         console.log("Response from server:", response); // Debugging response from server
-    
+
         if (response.data && response.data.data && response.data.data.token) {
           const { token, vendor_id, user_id } = response.data.data;
-    
+
           // Set cookies here
           setCookie('token', token.toString(), { secure: true, sameSite: 'none' });
           setCookie('user_id', user_id.toString(), { secure: true, sameSite: 'none' });
           setCookie('vendor_id', vendor_id.toString(), { secure: true, sameSite: 'none' });
-    
+
           message.success("Login successful!");
           router.push("/vendor/registration-list");
         } else {
@@ -74,6 +74,7 @@ const LoginForm: React.FC = () => {
         </div>
         <div className="w-96 rounded-md bg-white p-5 shadow-md">
           <Form layout="vertical" onFinish={formik.handleSubmit}>
+            <p className="text-md ps-4 font-semibold">Delpis e-Proc</p>
             <p className="pb-5 text-3xl font-semibold">Sign In</p>
             <Form.Item
               label="Username"

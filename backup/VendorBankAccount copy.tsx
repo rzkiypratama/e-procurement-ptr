@@ -44,7 +44,7 @@ const PengurusPerusahaan: React.FC = () => {
     onSubmit: async (values) => {
       try {
         const response = await axios.post(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/bank",
+          "https://vendorv2.delpis.online/api/vendor/bank",
           values
         );
         console.log("Bank Value:", values);
@@ -62,7 +62,7 @@ const PengurusPerusahaan: React.FC = () => {
     const fetchBankAccounts = async () => {
       try {
         const response = await axios.get(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/bank"
+          "https://vendorv2.delpis.online/api/vendor/bank"
         );
         initializeBankAccount(response.data);
       } catch (error) {
@@ -180,8 +180,8 @@ const PengurusPerusahaan: React.FC = () => {
             : col.dataIndex === "city_id" ||
               col.dataIndex === "province_id" ||
               col.dataIndex === "vendor_type"
-            ? "select"
-            : "text",
+              ? "select"
+              : "text",
         dataIndex: col.dataIndex,
         title: col.title,
         options: col.options,
@@ -209,7 +209,7 @@ const PengurusPerusahaan: React.FC = () => {
 
   const handleSubmit = async () => {
     console.log("Submitting data:", bankAccount);
-  formik.handleSubmit()
+    formik.handleSubmit()
   };
 
   return (
@@ -259,7 +259,7 @@ const PengurusPerusahaan: React.FC = () => {
           <Form.Item
             name="account_number"
             label="Nomor Rekening Perusahaan"
-            // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+          // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
           >
             <Input
               value={formik.values.account_number}

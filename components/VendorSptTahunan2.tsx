@@ -14,7 +14,7 @@ interface SPTTahunan {
   year: string;
   spt_number: string;
   date: string;
-  }
+}
 
 const SPTTahunan: React.FC = () => {
   const {
@@ -34,7 +34,7 @@ const SPTTahunan: React.FC = () => {
       spt_number: "",
       date: "",
     },
-   onSubmit: async (values) => {
+    onSubmit: async (values) => {
       const token = getCookie("token");
       const userId = getCookie("user_id");
       const vendorId = getCookie("vendor_id");
@@ -45,7 +45,7 @@ const SPTTahunan: React.FC = () => {
       }
       try {
         const response = await axios.post(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/annual-spt",
+          "https://vendorv2.delpis.online/api/vendor/annual-spt",
           values,
           {
             headers: {
@@ -73,14 +73,14 @@ const SPTTahunan: React.FC = () => {
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-  
+
         if (!token || !userId || !vendorId) {
           message.error("Please login first.");
           return;
         }
-  
+
         const response = await axios.get(
-          "https://vendor.eproc.latansa.sch.id/api/vendor/annual-spt",
+          "https://vendorv2.delpis.online/api/vendor/annual-spt",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -89,7 +89,7 @@ const SPTTahunan: React.FC = () => {
             },
           }
         );
-  
+
         // Check if response.data is an object containing an array
         if (response.data && Array.isArray(response.data.data)) {
           initializeSPTTahunan(response.data.data); // Initialize SPT state with the array of SPT objects
@@ -102,7 +102,7 @@ const SPTTahunan: React.FC = () => {
         message.error("Failed to fetch SPT data. Please try again later.");
       }
     };
-  
+
     fetchBankAccounts();
   }, [initializeSPTTahunan]);
 
@@ -226,55 +226,55 @@ const SPTTahunan: React.FC = () => {
 
   return (
     <div>
-    <Button type="primary" onClick={showModal} className="mb-4">
-      Tambah SPT
-    </Button>
-    <Modal title="Tambah SPT" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
-      <Form form={form}>
-        <Form.Item name="year" label="Tahun Izin" rules={[{ required: true }]}>
-          <Input
-            value={formik.values.year}
-            onChange={(e) => formik.setFieldValue("year", e.target.value)}
-          />
-        </Form.Item>
-        <Form.Item name="spt_number" label="Nomor Izin" rules={[{ required: true }]}>
-          <Input
-            value={formik.values.spt_number}
-            onChange={formik.handleChange}
-          />
-        </Form.Item>
-        <Form.Item name="date" label="Tanggal Dokumen" rules={[{ required: true }]}>
-          <DatePicker
-            value={formik.values.date ? dayjs(formik.values.date, "DD-MM-YYYY") : null}
-            format="DD-MM-YYYY"
-            // onchange yang benar untuk type date
-            onChange={(date, dateString) =>
-              formik.setFieldValue("date", dateString)
-            }
-          />
-        </Form.Item>
-      </Form>
-    </Modal>
-    <Form form={form} component={false}>
-      <Table
-        components={{
-          body: {
-            cell: EditableCell,
-          },
-        }}
-        bordered
-        dataSource={sptTahunan}
-        columns={mergedColumns}
-        rowClassName="editable-row"
-        pagination={{
-          onChange: cancel,
-        }}
-      />
-      <Button type="primary" onClick={handleSubmit}>
+      <Button type="primary" onClick={showModal} className="mb-4">
+        Tambah SPT
+      </Button>
+      <Modal title="Tambah SPT" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
+        <Form form={form}>
+          <Form.Item name="year" label="Tahun Izin" rules={[{ required: true }]}>
+            <Input
+              value={formik.values.year}
+              onChange={(e) => formik.setFieldValue("year", e.target.value)}
+            />
+          </Form.Item>
+          <Form.Item name="spt_number" label="Nomor Izin" rules={[{ required: true }]}>
+            <Input
+              value={formik.values.spt_number}
+              onChange={formik.handleChange}
+            />
+          </Form.Item>
+          <Form.Item name="date" label="Tanggal Dokumen" rules={[{ required: true }]}>
+            <DatePicker
+              value={formik.values.date ? dayjs(formik.values.date, "DD-MM-YYYY") : null}
+              format="DD-MM-YYYY"
+              // onchange yang benar untuk type date
+              onChange={(date, dateString) =>
+                formik.setFieldValue("date", dateString)
+              }
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+      <Form form={form} component={false}>
+        <Table
+          components={{
+            body: {
+              cell: EditableCell,
+            },
+          }}
+          bordered
+          dataSource={sptTahunan}
+          columns={mergedColumns}
+          rowClassName="editable-row"
+          pagination={{
+            onChange: cancel,
+          }}
+        />
+        <Button type="primary" onClick={handleSubmit}>
           Save
         </Button>
-    </Form>
-  </div>
+      </Form>
+    </div>
   );
 };
 
