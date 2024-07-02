@@ -297,13 +297,13 @@ const ProfilePerusahaan: React.FC = () => {
         record,
         inputType:
           col.dataIndex === "contact_identity_no" ||
-            col.dataIndex.includes("contact_identity_no")
+          col.dataIndex.includes("contact_identity_no")
             ? "number"
             : col.dataIndex === "contact_npwp" ||
-              col.dataIndex.includes("contact_npwp")
+                col.dataIndex.includes("contact_npwp")
               ? "number"
               : col.dataIndex === "tanggalBerakhir" ||
-                col.dataIndex.includes("tanggalBerakhir")
+                  col.dataIndex.includes("tanggalBerakhir")
                 ? "date"
                 : "text",
         dataIndex: col.dataIndex,
@@ -366,44 +366,44 @@ const ProfilePerusahaan: React.FC = () => {
               onChange={(value) => formik.setFieldValue("company_npwp", value)}
             />
           </Form.Item> */}
-          <Form.Item
-            name="company_npwp"
-            label="NPWP Perusahaan"
-            rules={[
-              {
-                required: true,
-                message: "Please enter NPWP number",
-              },
-              () => ({
-                validator(_, value) {
-                  if (!value) {
-                    return Promise.reject();
-                  }
-                  if (isNaN(value)) {
-                    return Promise.reject("NPWP code has to be a number.");
-                  }
-                  if (value.length < 16) {
-                    return Promise.reject(
-                      "NPWP can't be less than 16 digits",
-                    );
-                  }
-                  if (value.length > 16) {
-                    return Promise.reject(
-                      "NPWP code can't be more than 16 digits",
-                    );
-                  }
-                  return Promise.resolve();
-                },
-              }),
-            ]}
-            hasFeedback
-          >
-            <Input
-              value={formik.values.company_npwp}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-            />
-          </Form.Item>
+           <Form.Item
+                name="company_npwp"
+                label="NPWP Perusahaan"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter NPWP number",
+                  },
+                  () => ({
+                    validator(_, value) {
+                      if (!value) {
+                        return Promise.reject();
+                      }
+                      if (isNaN(value)) {
+                        return Promise.reject("NPWP code has to be a number.");
+                      }
+                      if (value.length < 16) {
+                        return Promise.reject(
+                          "NPWP can't be less than 16 digits",
+                        );
+                      }
+                      if (value.length > 16) {
+                        return Promise.reject(
+                          "NPWP code can't be more than 16 digits",
+                        );
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
+                hasFeedback
+              >
+                <Input
+                  value={formik.values.company_npwp}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                />
+              </Form.Item>
           <Form.Item
             label="Status"
             validateStatus={

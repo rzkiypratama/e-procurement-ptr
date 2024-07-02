@@ -270,13 +270,13 @@ const ProfilePerusahaan: React.FC = () => {
         record,
         inputType:
           col.dataIndex === "contact_identity_no" ||
-            col.dataIndex.includes("contact_identity_no")
+          col.dataIndex.includes("contact_identity_no")
             ? "number"
             : col.dataIndex === "contact_npwp" ||
-              col.dataIndex.includes("contact_npwp")
+                col.dataIndex.includes("contact_npwp")
               ? "number"
               : col.dataIndex === "tanggalBerakhir" ||
-                col.dataIndex.includes("tanggalBerakhir")
+                  col.dataIndex.includes("tanggalBerakhir")
                 ? "date"
                 : "text",
         dataIndex: col.dataIndex,
@@ -326,18 +326,18 @@ const ProfilePerusahaan: React.FC = () => {
           <Tabs activeKey={activeTab} onChange={handleTabChange}>
             <TabPane tab="Profile Perusahaan" key="1">
               <Form layout="vertical" form={form}>
-                <Form.Item label="Nama Perusahaan"
-                  validateStatus={
-                    formik.errors.company_name && formik.touched.company_name
-                      ? "error"
-                      : ""
-                  }
-                  help={
-                    formik.errors.company_name && formik.touched.company_name
-                      ? formik.errors.company_name
-                      : ""
-                  }
-                  required hasFeedback>
+                <Form.Item label="Nama Perusahaan" 
+                validateStatus={
+                  formik.errors.company_name && formik.touched.company_name
+                    ? "error"
+                    : ""
+                }
+                help={
+                  formik.errors.company_name && formik.touched.company_name
+                    ? formik.errors.company_name
+                    : ""
+                }
+                required hasFeedback>
                   <Input
                     id="company_name"
                     name="company_name"
@@ -347,18 +347,18 @@ const ProfilePerusahaan: React.FC = () => {
                     placeholder="Input company name"
                   />
                 </Form.Item>
-                <Form.Item label="NPWP Perusahaan"
-                  validateStatus={
-                    formik.errors.company_npwp && formik.touched.company_npwp
-                      ? "error"
-                      : ""
-                  }
-                  help={
-                    formik.errors.company_npwp && formik.touched.company_npwp
-                      ? formik.errors.company_npwp
-                      : ""
-                  }
-                  required hasFeedback>
+                <Form.Item label="NPWP Perusahaan" 
+                 validateStatus={
+                  formik.errors.company_npwp && formik.touched.company_npwp
+                    ? "error"
+                    : ""
+                }
+                help={
+                  formik.errors.company_npwp && formik.touched.company_npwp
+                    ? formik.errors.company_npwp
+                    : ""
+                }
+                required hasFeedback>
                   <NumericNumber
                     placeholder="Input a number"
                     value={formik.values.company_npwp}
@@ -367,18 +367,18 @@ const ProfilePerusahaan: React.FC = () => {
                     }
                   />
                 </Form.Item>
-                <Form.Item label="Status"
-                  validateStatus={
-                    formik.errors.vendor_type && formik.touched.vendor_type
-                      ? "error"
-                      : ""
-                  }
-                  help={
-                    formik.errors.vendor_type && formik.touched.vendor_type
-                      ? formik.errors.vendor_type
-                      : ""
-                  }
-                  required hasFeedback>
+                <Form.Item label="Status" 
+                 validateStatus={
+                  formik.errors.vendor_type && formik.touched.vendor_type
+                    ? "error"
+                    : ""
+                }
+                help={
+                  formik.errors.vendor_type && formik.touched.vendor_type
+                    ? formik.errors.vendor_type
+                    : ""
+                }
+                required hasFeedback>
                   <Select
                     id="vendor_type"
                     onChange={(value) =>
@@ -391,18 +391,18 @@ const ProfilePerusahaan: React.FC = () => {
                     <Option value="cabang">Cabang</Option>
                   </Select>
                 </Form.Item>
-                <Form.Item label="Alamat Perusahaan"
-                  validateStatus={
-                    formik.errors.company_address && formik.touched.company_address
-                      ? "error"
-                      : ""
-                  }
-                  help={
-                    formik.errors.company_address && formik.touched.company_address
-                      ? formik.errors.company_address
-                      : ""
-                  }
-                  required hasFeedback>
+                <Form.Item label="Alamat Perusahaan" 
+                 validateStatus={
+                  formik.errors.company_address && formik.touched.company_address
+                    ? "error"
+                    : ""
+                }
+                help={
+                  formik.errors.company_address && formik.touched.company_address
+                    ? formik.errors.company_address
+                    : ""
+                }
+                required hasFeedback>
                   <Input
                     id="company_address"
                     name="company_address"
@@ -412,18 +412,18 @@ const ProfilePerusahaan: React.FC = () => {
                     placeholder="Input company address"
                   />
                 </Form.Item>
-                <Form.Item label="Kota"
-                  validateStatus={
-                    formik.errors.city_id && formik.touched.city_id
-                      ? "error"
-                      : ""
-                  }
-                  help={
-                    formik.errors.city_id && formik.touched.city_id
-                      ? formik.errors.city_id
-                      : ""
-                  }
-                  required hasFeedback>
+                <Form.Item label="Kota" 
+                 validateStatus={
+                  formik.errors.city_id && formik.touched.city_id
+                    ? "error"
+                    : ""
+                }
+                help={
+                  formik.errors.city_id && formik.touched.city_id
+                    ? formik.errors.city_id
+                    : ""
+                }
+                required hasFeedback>
                   <Select
                     id="city_id"
                     onChange={(value) => formik.setFieldValue("city_id", value)}
@@ -434,18 +434,18 @@ const ProfilePerusahaan: React.FC = () => {
                     <Option value="2">Bandung</Option>
                   </Select>
                 </Form.Item>
-                <Form.Item label="Provinsi"
-                  validateStatus={
-                    formik.errors.province_id && formik.touched.province_id
-                      ? "error"
-                      : ""
-                  }
-                  help={
-                    formik.errors.province_id && formik.touched.province_id
-                      ? formik.errors.province_id
-                      : ""
-                  }
-                  required hasFeedback>
+                <Form.Item label="Provinsi" 
+                validateStatus={
+                  formik.errors.province_id && formik.touched.province_id
+                    ? "error"
+                    : ""
+                }
+                help={
+                  formik.errors.province_id && formik.touched.province_id
+                    ? formik.errors.province_id
+                    : ""
+                }
+                required hasFeedback>
                   <Select
                     id="province_id"
                     onChange={(value) =>
@@ -459,18 +459,18 @@ const ProfilePerusahaan: React.FC = () => {
                     <Option value={2}>Jawa Barat</Option>
                   </Select>
                 </Form.Item>
-                <Form.Item label="Kode POS"
-                  validateStatus={
-                    formik.errors.postal_code && formik.touched.postal_code
-                      ? "error"
-                      : ""
-                  }
-                  help={
-                    formik.errors.postal_code && formik.touched.postal_code
-                      ? formik.errors.postal_code
-                      : ""
-                  }
-                  required hasFeedback>
+                <Form.Item label="Kode POS" 
+                validateStatus={
+                  formik.errors.postal_code && formik.touched.postal_code
+                    ? "error"
+                    : ""
+                }
+                help={
+                  formik.errors.postal_code && formik.touched.postal_code
+                    ? formik.errors.postal_code
+                    : ""
+                }
+                required hasFeedback>
                   <InputNumber
                     id="postal_code"
                     placeholder="Input postal code"
@@ -480,18 +480,18 @@ const ProfilePerusahaan: React.FC = () => {
                     }
                   />
                 </Form.Item>
-                <Form.Item label="Nomor Telepon Perusahaan"
-                  validateStatus={
-                    formik.errors.company_phone_number && formik.touched.company_phone_number
-                      ? "error"
-                      : ""
-                  }
-                  help={
-                    formik.errors.company_phone_number && formik.touched.company_phone_number
-                      ? formik.errors.company_phone_number
-                      : ""
-                  }
-                  required hasFeedback>
+                <Form.Item label="Nomor Telepon Perusahaan" 
+                validateStatus={
+                  formik.errors.company_phone_number && formik.touched.company_phone_number
+                    ? "error"
+                    : ""
+                }
+                help={
+                  formik.errors.company_phone_number && formik.touched.company_phone_number
+                    ? formik.errors.company_phone_number
+                    : ""
+                }
+                required hasFeedback>
                   <NumericInput
                     value={formik.values.company_phone_number}
                     onChange={(value) =>
@@ -508,18 +508,18 @@ const ProfilePerusahaan: React.FC = () => {
                     value={formik.values.company_phone_number}
                   /> */}
                 </Form.Item>
-                <Form.Item label="Nomor Fax Perusahaan"
-                  validateStatus={
-                    formik.errors.company_fax && formik.touched.company_fax
-                      ? "error"
-                      : ""
-                  }
-                  help={
-                    formik.errors.company_fax && formik.touched.company_fax
-                      ? formik.errors.company_fax
-                      : ""
-                  }
-                  required hasFeedback>
+                <Form.Item label="Nomor Fax Perusahaan" 
+                validateStatus={
+                  formik.errors.company_fax && formik.touched.company_fax
+                    ? "error"
+                    : ""
+                }
+                help={
+                  formik.errors.company_fax && formik.touched.company_fax
+                    ? formik.errors.company_fax
+                    : ""
+                }
+                required hasFeedback>
                   <Input
                     id="company_fax"
                     name="company_fax"
@@ -530,17 +530,17 @@ const ProfilePerusahaan: React.FC = () => {
                   />
                 </Form.Item>
                 <Form.Item label="Email Perusahaan"
-                  validateStatus={
-                    formik.errors.company_email && formik.touched.company_email
-                      ? "error"
-                      : ""
-                  }
-                  help={
-                    formik.errors.company_email && formik.touched.company_email
-                      ? formik.errors.company_email
-                      : ""
-                  }
-                  required hasFeedback>
+                validateStatus={
+                  formik.errors.company_email && formik.touched.company_email
+                    ? "error"
+                    : ""
+                }
+                help={
+                  formik.errors.company_email && formik.touched.company_email
+                    ? formik.errors.company_email
+                    : ""
+                }
+                required hasFeedback>
                   <Input
                     id="company_email"
                     name="company_email"
@@ -751,10 +751,10 @@ const ProfilePerusahaan: React.FC = () => {
                 />
               </Form.Item>
               <Form.Item label="Nomor KTP" name="contact_identity_no" rules={[
-                { required: true, message: "Nomor KTP tidak boleh kosong", min: 5 },
-              ]}
+                  { required: true, message: "Nomor KTP tidak boleh kosong", min: 5 },
+                ]}
                 hasFeedback
-              >
+                >
                 <Input
                   placeholder="Input a number"
                   value={formik.values.contact_identity_no}

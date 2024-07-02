@@ -17,6 +17,7 @@ import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
 import { getCookie } from "cookies-next";
 import axios from "axios";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 
 const { TextArea } = Input;
 
@@ -41,6 +42,7 @@ const TenagaAhli: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false)
 
   const formik = useFormik({
     initialValues: {
@@ -61,6 +63,8 @@ const TenagaAhli: React.FC = () => {
         return;
       }
       try {
+  setIsLoading(true);
+
         const response = await axios.post(
           "https://vendorv2.delpis.online/api/vendor/expert",
           values,
@@ -75,10 +79,13 @@ const TenagaAhli: React.FC = () => {
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
         message.success("Tenaga Ahli added successful");
+    addTenagaAhli({ ...formik.values, id: tenagaAhli.length + 2 });
         formik.resetForm();
       } catch (error) {
         console.error("Failed to submit data", error);
         message.error("Failed to submit data");
+      } finally {
+        setIsLoading(false);
       }
     },
   });
@@ -87,15 +94,16 @@ const TenagaAhli: React.FC = () => {
   useEffect(() => {
     const fetchBankAccounts = async () => {
       try {
+        setIsLoading(true)
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-
+  
         if (!token || !userId || !vendorId) {
           message.error("Please login first.");
           return;
         }
-
+  
         const response = await axios.get(
           "https://vendorv2.delpis.online/api/vendor/expert",
           {
@@ -106,7 +114,7 @@ const TenagaAhli: React.FC = () => {
             },
           }
         );
-
+  
         // Check if response.data is an object containing an array
         if (response.data && Array.isArray(response.data.data)) {
           initializeTenagaAhli(response.data.data); // Initialize Tenaga Ahli state with the array of Tenaga Ahli objects
@@ -117,9 +125,11 @@ const TenagaAhli: React.FC = () => {
       } catch (error) {
         console.error("Error fetching Tenaga Ahli data:", error);
         message.error("Failed to fetch Tenaga Ahli data. Please try again later.");
+      } finally {
+        setIsLoading(false);
       }
     };
-
+  
     fetchBankAccounts();
   }, [initializeTenagaAhli]);
 
@@ -128,7 +138,7 @@ const TenagaAhli: React.FC = () => {
   const edit = (record: Partial<TenagaAhli> & { id: React.Key }) => {
     form.setFieldsValue({
       ...record,
-      tanggalLahirTenagaAhli: record.birth_date
+      birth_date: record.birth_date
         ? dayjs(record.birth_date, "DD-MM-YYYY")
         : null,
     });
@@ -141,23 +151,71 @@ const TenagaAhli: React.FC = () => {
 
   const save = async (id: React.Key) => {
     try {
-      const row = (await form.validateFields()) as TenagaAhli;
+      const token = getCookie("token");
+      const userId = getCookie("user_id");
+      const vendorId = getCookie("vendor_id");
+  
+      if (!token || !userId || !vendorId) {
+        message.error("Token, User ID, or Vendor ID is missing.");
+        return;
+      }
+  
+      const row = await form.validateFields();
       const updatedRow = {
         ...row,
         id: Number(id),
-        tanggalLahirTenagaAhli: dayjs(row.birth_date).format(
-          "DD-MM-YYYY",
-        ),
+        birth_date: dayjs(row.birth_date).format("DD-MM-YYYY"),
       };
+  
+      await axios.put(
+        `https://vendorv2.delpis.online/api/vendor/expert/${id}`,
+        updatedRow,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "User-ID": userId,
+            "Vendor-ID": vendorId,
+          },
+        }
+      );
+  
       editTenagaAhli(updatedRow);
       setEditingKey("");
-    } catch (errInfo) {
-      console.log("Validate Failed:", errInfo);
+      message.success("Tenaga Ahli updated successfully.");
+    } catch (error) {
+      console.error("Error updating Tenaga Ahli:", error);
+      message.error("Failed to update Tenaga Ahli. Please try again.");
     }
   };
 
-  const handleDelete = (id: React.Key) => {
-    removeTenagaAhli(Number(id));
+  const handleDelete = async (id: React.Key) => {
+    try {
+      const token = getCookie("token");
+      const userId = getCookie("user_id");
+      const vendorId = getCookie("vendor_id");
+  
+      if (!token || !userId || !vendorId) {
+        message.error("Token, User ID, or Vendor ID is missing.");
+        return;
+      }
+  
+      await axios.delete(
+        `https://vendorv2.delpis.online/api/vendor/expert/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "User-ID": userId,
+            "Vendor-ID": vendorId,
+          },
+        }
+      );
+  
+      removeTenagaAhli(Number(id));
+      message.success("Tenaga Ahli deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting Tenaga Ahli:", error);
+      message.error("Failed to delete Tenaga Ahli. Please try again.");
+    }
   };
 
   const columns = [
@@ -218,19 +276,18 @@ const TenagaAhli: React.FC = () => {
             </Popconfirm>
           </span>
         ) : (
-          <span>
+          <span className="flex items-center gap-5 justify-center">
             <Typography.Link
               disabled={editingKey !== ""}
               onClick={() => edit(record)}
-              style={{ marginRight: 8 }}
             >
-              Edit
+              <EditOutlined />
             </Typography.Link>
             <Popconfirm
               title="Sure to delete?"
               onConfirm={() => handleDelete(record.id)}
             >
-              <a>Delete</a>
+              <DeleteOutlined className="text-red-500" />
             </Popconfirm>
           </span>
         );
@@ -251,7 +308,7 @@ const TenagaAhli: React.FC = () => {
             ? "date"
             : col.dataIndex === "identity_no" ||
               col.dataIndex === "npwp_no"
-              ? "number"
+              ? "text"
               : "text",
         dataIndex: col.dataIndex,
         title: col.title,
@@ -288,9 +345,18 @@ const TenagaAhli: React.FC = () => {
       </Button>
       <Modal
         title="Tambah Tenaga Ahli"
-        visible={isModalVisible}
-        onOk={handleOk}
+        open={isModalVisible}
         onCancel={handleCancel}
+        footer={[
+          <>
+           <Button onClick={handleCancel}>
+            Batalkan
+          </Button>
+          <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
+            Simpan Data
+          </Button>
+          </>
+        ]}
       >
         <Form form={form} layout="vertical">
           <Form.Item
@@ -390,10 +456,8 @@ const TenagaAhli: React.FC = () => {
           pagination={{
             onChange: cancel,
           }}
+          loading={isLoading}
         />
-        <Button type="primary" onClick={handleSubmit}>
-          Save
-        </Button>
       </Form>
     </div>
   );

@@ -16,6 +16,7 @@ import { useFormik } from "formik";
 import axios from "axios";
 import { getCookie } from "cookies-next";
 import {cityOptions, provinceOptions } from "@/utils/cityOptions"
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 
 interface ProfilePerusahaan {
   id: number;
@@ -51,6 +52,7 @@ const PengurusPerusahaan: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false)
 
   const formik = useFormik({
     initialValues: {
@@ -77,6 +79,7 @@ const PengurusPerusahaan: React.FC = () => {
       }
 
       try {
+        setIsLoading(true);
         const response = await axios.post(
           "https://vendorv2.delpis.online/api/vendor/informasi-umum",
           values,
@@ -89,7 +92,19 @@ const PengurusPerusahaan: React.FC = () => {
           }
         );
         console.log("Response from API:", response.data);
-        setIsModalVisible(false);
+        addProfilePerusahaan({
+          ...formik.values,
+          id: profilePerusahaan.length + 2,
+          city: {
+            id: 0,
+            province_id: 0,
+            name: "",
+            province: {
+              id: 0,
+              name: ""
+            }
+          }
+        });
         formik.resetForm();
       } catch (error) {
         console.error("Error submitting data:", error);
@@ -110,6 +125,8 @@ const PengurusPerusahaan: React.FC = () => {
         } else {
           message.error("An unexpected error occurred. Please try again later.");
         }
+      } finally {
+        setIsLoading(false);
       }
     },
   });
@@ -118,6 +135,7 @@ const PengurusPerusahaan: React.FC = () => {
   useEffect(() => {
     const fetchProfilePerusahaan = async () => {
       try {
+        setIsLoading(true)
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
@@ -155,6 +173,8 @@ const PengurusPerusahaan: React.FC = () => {
       } catch (error) {
         console.error("Error fetching data:", error);
         message.error("Failed to fetch company profile information.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -289,19 +309,18 @@ const PengurusPerusahaan: React.FC = () => {
             </Popconfirm>
           </span>
         ) : (
-          <span>
+          <span className="flex items-center gap-5 justify-center">
             <Typography.Link
               disabled={editingKey !== ""}
               onClick={() => edit(record)}
-              style={{ marginRight: 8 }}
             >
-              Edit
+              <EditOutlined />
             </Typography.Link>
             <Popconfirm
               title="Sure to delete?"
               onConfirm={() => handleDelete(record.id)}
             >
-              <a>Delete</a>
+              <DeleteOutlined className="text-red-500" />
             </Popconfirm>
           </span>
         );
@@ -374,17 +393,16 @@ const PengurusPerusahaan: React.FC = () => {
         title="Tambah Profile Perusahaan"
         open={isModalVisible}
         onCancel={handleCancel}
-        onOk={handleOk}
-      // footer={[
-      //   <>
-      //    <Button onClick={handleCancel}>
-      //     Batalkan
-      //   </Button>
-      //   <Button key="submit" type="primary" onClick={handleSubmit}>
-      //     Simpan Data
-      //   </Button>
-      //   </>
-      // ]}
+        footer={[
+          <>
+           <Button onClick={handleCancel}>
+            Batalkan
+          </Button>
+          <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
+            Simpan Data
+          </Button>
+          </>
+        ]}
       >
         <Form form={form} layout="vertical">
           <Form.Item
@@ -514,7 +532,7 @@ const PengurusPerusahaan: React.FC = () => {
       </Modal>
       <Form form={form} component={false}>
         <Table
-          // rowKey={(record) => record.id.toString()}
+          rowKey={(record) => record.id.toString()}
           components={{
             body: {
               cell: EditableCell,
@@ -527,10 +545,8 @@ const PengurusPerusahaan: React.FC = () => {
           pagination={{
             onChange: cancel,
           }}
+          loading={isLoading}
         />
-        <Button type="primary" onClick={handleSubmit}>
-          Submit
-        </Button>
       </Form>
     </div>
   );

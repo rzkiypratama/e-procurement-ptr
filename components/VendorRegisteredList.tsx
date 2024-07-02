@@ -7,6 +7,8 @@ import {
 } from "antd";
 import axios from "axios";
 import vendorStore from "@/store/vendorStore";
+import Link from 'next/link';
+import { useRouter } from 'next/navigation'
 
 
 interface VendorRegisteredList {
@@ -22,6 +24,8 @@ interface VendorRegisteredList {
 }
 
 const VendorRegisteredList: React.FC = () => {
+    // console.log(localStorage.getItem('token'))
+    const router = useRouter()
     const {
         vendorRegisteredList,
         initializeVendorRegisteredList,
@@ -40,6 +44,13 @@ const VendorRegisteredList: React.FC = () => {
             title: "Company Name",
             dataIndex: "company_name",
             key: "company_name",
+            render: (_: any, record: VendorRegisteredList) => {
+                return (
+                    <Link href={`/vendor/verification/${record.id}`} style={{ marginRight: 8, textDecoration: 'underline' }} className="text-blue-500">
+                        {record.company_name}
+                    </Link>
+                );
+            },
         },
         {
             title: "Vendor Number",
@@ -95,7 +106,7 @@ const VendorRegisteredList: React.FC = () => {
         try {
             const response = await axios.get("https://vendorv2.delpis.online/api/verifikator/vendor", {
                 headers: {
-                    "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
+                    "Authorization": "Bearer 456|qufCPbuE8GsEN64j48YJjr4DZrLk2QTt8Fb3Txhx7bcab9de"
                 }
             });
             console.log("Response from API:", response.data.data);
@@ -117,7 +128,7 @@ const VendorRegisteredList: React.FC = () => {
 
     return (
         <div className='container h-screen max-w-full mx-auto'>
-            <h1 className="font-bold text-start text-xl mb-5">Registered Vendor</h1>
+            <h1 className="font-bold text-start text-xl mb-5">Vendor List</h1>
             <Button type="primary" onClick={() => console.log("Download Report")} className="mb-5 float-end">
                 Download Report
             </Button>

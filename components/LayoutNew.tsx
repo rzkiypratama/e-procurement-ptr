@@ -9,6 +9,7 @@ import {
 	DatabaseOutlined
 } from '@ant-design/icons';
 import Link from 'next/link';
+import ProfileAvatar from '@/lib/ProfileAvatar'
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -52,7 +53,7 @@ const MyLayout: React.FC<Props> = ({ children }) => {
 			icon: <TeamOutlined />,
 			label: 'Vendor Management',
 			children: [
-				getItem(<Link href="/vendor/registration-list">Registration</Link>, '3', <div />),
+				getItem(<Link href="/vendor/registration-list">Vendor List</Link>, '3', <div />),
 				getItem(<Link href="/vendor/verification">Verification</Link>, '4', <div />),
 				getItem(<Link href="/vendor/register">Evaluation</Link>, '5', <div />),
 				{
@@ -70,9 +71,10 @@ const MyLayout: React.FC<Props> = ({ children }) => {
 	];
 
 	return (
-		<Layout className="h-max">
+		<Layout className="h-screen">
 			<Header className="bg-blue-500 text-white flex items-center justify-between">
 				<div className="text-xl">Delpis</div>
+				<ProfileAvatar />
 			</Header>
 			<Layout className='h-max'>
 				<Sider collapsible collapsed={collapsed} onCollapse={onCollapse} theme='light'>
@@ -113,7 +115,7 @@ const MyLayout: React.FC<Props> = ({ children }) => {
 						</div>
 					</Content>
 					<Footer style={{ textAlign: 'center' }}>
-						Ant Design ©{new Date().getFullYear()} Created by Ant UED
+						Delpis ©{new Date().getFullYear()}
 					</Footer>
 				</Layout>
 			</Layout>

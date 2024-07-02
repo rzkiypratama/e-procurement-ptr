@@ -16,7 +16,7 @@ import {
 import useAttachmentStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
-import { UploadOutlined } from "@ant-design/icons";
+import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
 import LandasanHukum from "./VendorLandasanHukum2";
 import dayjs from "dayjs";
 import { getCookie } from "cookies-next";
@@ -51,6 +51,7 @@ const AttachmentDocument: React.FC = () => {
   const [editingKey, setEditingKey] = useState<string>("");
   const [loadingSubmit, setLoadingSubmit] = useState(false); // State untuk loading saat submit
   const [isChecked, setIsChecked] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
 
   const [tableKey, setTableKey] = useState(0);
 
@@ -72,6 +73,7 @@ const AttachmentDocument: React.FC = () => {
       }
 
       try {
+        setIsLoading(true)
         const formData = new FormData();
         formData.append("document", values.document); // Menggunakan originFileObj untuk file asli
         formData.append("name", values.name);
@@ -94,10 +96,16 @@ const AttachmentDocument: React.FC = () => {
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
         message.success("Dokumen berhasil ditambahkan");
+        addAttachment({
+          ...formik.values,
+          id: attachmentDoc.length + 2,
+        });
         formik.resetForm();
       } catch (error) {
         console.error("Gagal menambahkan dokumen:", error);
         message.error("Gagal menambahkan dokumen. Silakan coba lagi.");
+      } finally {
+        setIsLoading(false);
       }
     },
   });
@@ -106,6 +114,7 @@ const AttachmentDocument: React.FC = () => {
   useEffect(() => {
     const fetchBankAccounts = async () => {
       try {
+        setIsLoading(true)
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
@@ -136,6 +145,8 @@ const AttachmentDocument: React.FC = () => {
       } catch (error) {
         console.error("Error fetching Tenaga Ahli data:", error);
         message.error("Failed to fetch Tenaga Ahli data. Please try again later.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -145,10 +156,15 @@ const AttachmentDocument: React.FC = () => {
   const isEditing = (record: AttachmentDoc) =>
     record.id.toString() === editingKey;
 
-  const edit = (record: Partial<AttachmentDoc> & { id: React.Key }) => {
-    form.setFieldsValue({ ...record });
-    setEditingKey(record.id.toString());
-  };
+    const edit = (record: Partial<AttachmentDoc> & { id: React.Key }) => {
+      form.setFieldsValue({
+        ...record,
+        expiration_date: record.expiration_date
+          ? dayjs(record.expiration_date, "DD-MM-YYYY")
+          : null,
+      });
+      setEditingKey(record.id.toString());
+    };
 
   const cancel = () => {
     setEditingKey("");
@@ -160,7 +176,7 @@ const AttachmentDocument: React.FC = () => {
       const updatedRow = {
         ...row,
         id: Number(id),
-        tanggalLahirTenagaAhli: dayjs(row.expiration_date).format(
+        expiration_date: dayjs(row.expiration_date).format(
           "DD-MM-YYYY",
         ),
       };
@@ -171,25 +187,35 @@ const AttachmentDocument: React.FC = () => {
     }
   };
 
-  const handleDelete = (id: React.Key) => {
-    removeAttachment(Number(id));
+  const handleDelete = async (id: React.Key) => {
+    try {
+      const token = getCookie("token");
+      const userId = getCookie("user_id");
+      const vendorId = getCookie("vendor_id");
+  
+      if (!token || !userId || !vendorId) {
+        message.error("Token, User ID, or Vendor ID is missing.");
+        return;
+      }
+  
+      await axios.delete(
+        `https://vendorv2.delpis.online/api/vendor/attachment/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "User-ID": userId,
+            "Vendor-ID": vendorId,
+          },
+        }
+      );
+  
+      removeAttachment(Number(id));
+      message.success("Attachment deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting attachment:", error);
+      message.error("Failed to delete attachment. Please try again.");
+    }
   };
-
-  // const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = e.target.files && e.target.files[0];
-  //   if (file) {
-  //     if (file.type !== "image/jpeg" && file.type !== "image/png") {
-  //       message.error("Hanya file JPEG atau PNG yang diizinkan!");
-  //       return;
-  //     }
-  //     if (file.size / 1024 / 1024 >= 2) {
-  //       message.error("File must smaller than 2MB!");
-  //       return;
-  //     }
-  //     formik.setFieldValue("document", file);
-  //     message.success(`${file.name} file ready to upload`);
-  //   }
-  // };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0];
@@ -246,6 +272,7 @@ const AttachmentDocument: React.FC = () => {
       dataIndex: "document",
       key: "document",
       editable: true,
+      render: () => "document",
     },
     {
       title: "Masa Berlaku Dokumen",
@@ -273,19 +300,12 @@ const AttachmentDocument: React.FC = () => {
             </Popconfirm>
           </span>
         ) : (
-          <span>
-            <Typography.Link
-              disabled={editingKey !== ""}
-              onClick={() => edit(record)}
-              style={{ marginRight: 8 }}
-            >
-              Edit
-            </Typography.Link>
+          <span className="flex items-center justify-center">
             <Popconfirm
               title="Sure to delete?"
               onConfirm={() => handleDelete(record.id)}
             >
-              <a>Delete</a>
+              <DeleteOutlined className="text-red-500" />
             </Popconfirm>
           </span>
         );
@@ -336,39 +356,6 @@ const AttachmentDocument: React.FC = () => {
     // Additional submission logic if needed
     formik.handleSubmit();
   };
-
-  // const handleSubmitAll = async () => {
-  //   const token = getCookie("token");
-  //   const userId = getCookie("user_id");
-  //   const vendorId = getCookie("vendor_id");
-
-  //   if (!token || !userId || !vendorId) {
-  //     message.error("Token, User ID, or Vendor ID is missing.");
-  //     return;
-  //   }
-
-  //   try {
-  //     setLoadingSubmit(true); // Mengatur state loading sebelum memulai request
-  //     await axios.post(
-  //       "https://vendorv2.delpis.online/api/vendor/submit",
-  //       { status: "yes" },
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           "User-ID": userId,
-  //           "Vendor-ID": vendorId,
-  //         },
-  //       }
-  //     );
-
-  //     message.success("Status berhasil diperbarui.");
-  //   } catch (error) {
-  //     console.error("Gagal memperbarui status:", error);
-  //     message.error("Gagal memperbarui status. Silakan coba lagi.");
-  //   } finally {
-  //     setLoadingSubmit(false); // Mengatur state loading setelah request selesai
-  //   }
-  // };
 
   const handleSubmitAll = async () => {
     setLoadingSubmit(true);
@@ -423,18 +410,17 @@ const AttachmentDocument: React.FC = () => {
       <Modal
         title="Tambah Dokumen"
         open={isModalVisible} // Gunakan visible bukan open untuk modal
-        onOk={handleOk}
         onCancel={handleCancel}
-          // footer={[
-        //   <>
-        //    <Button onClick={handleCancel}>
-        //     Batalkan
-        //   </Button>
-        //   <Button key="submit" type="primary" onClick={handleSubmit}>
-        //     Simpan Data
-        //   </Button>
-        //   </>
-        // ]}
+        footer={[
+          <>
+           <Button onClick={handleCancel}>
+            Batalkan
+          </Button>
+          <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
+            Simpan Data
+          </Button>
+          </>
+        ]}
       >
         <Form form={form} layout="vertical">
           <Form.Item
@@ -469,9 +455,9 @@ const AttachmentDocument: React.FC = () => {
           </Form.Item>
           <Form.Item
             name="expiration_date"
-            label="Tanggal Lahir"
+            label="Masa Berlaku Dokumen"
             rules={[
-              { required: true, message: "Tanggal Lahir tidak boleh kosong" },
+              { required: true, message: "expiration date tidak boleh kosong" },
             ]}
           >
             <DatePicker
@@ -506,10 +492,8 @@ const AttachmentDocument: React.FC = () => {
           pagination={{
             onChange: cancel,
           }}
+          loading={isLoading}
         />
-        <Button type="primary" onClick={handleSubmit}>
-          Save
-        </Button>
       </Form>
       <div className="flex flex-col justify-center items-center mt-10">
         <div className="flex gap-3 w-[40rem] items-center">

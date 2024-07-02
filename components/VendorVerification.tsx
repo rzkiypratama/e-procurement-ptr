@@ -111,9 +111,9 @@ const VendorVerificationList: React.FC = () => {
         setIsLoading(true)
         try {
             const response = await axios.get("https://vendorv2.delpis.online/api/verifikator/vendor", {
-                headers: {
-                    "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
-                }
+                // headers: {
+                //     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
+                // }
             });
             console.log("Response from API:", response.data.data);
             let index = 0;

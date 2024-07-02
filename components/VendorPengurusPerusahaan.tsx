@@ -9,12 +9,15 @@ import {
   Popconfirm,
   Modal,
   message,
+  Select,
 } from "antd";
 import usePengurusPerusahaanStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
 import { getCookie } from "cookies-next";
 import axios from "axios";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { positionOptions } from "@/utils/positionOptioins";
 
 const { TextArea } = Input;
 interface PengurusPerusahaan {
@@ -36,6 +39,7 @@ const PengurusPerusahaan: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false)
 
   const formik = useFormik({
     initialValues: {
@@ -54,6 +58,7 @@ const PengurusPerusahaan: React.FC = () => {
         return;
       }
       try {
+        setIsLoading(true);
         const response = await axios.post(
           "https://vendorv2.delpis.online/api/vendor/director",
           values,
@@ -68,10 +73,16 @@ const PengurusPerusahaan: React.FC = () => {
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
         message.success("Bank Account added successful");
+        addPengurusPerusahaan({
+          ...formik.values,
+          id: pengurusPerusahaan.length + 2,
+        });
         formik.resetForm();
       } catch (error) {
         console.error("Failed to submit data", error);
         message.error("Failed to submit data");
+      }finally {
+        setIsLoading(false);
       }
     },
   });
@@ -79,15 +90,17 @@ const PengurusPerusahaan: React.FC = () => {
   useEffect(() => {
     const fetchPengurusPerusahaan = async () => {
       try {
+        setIsLoading(true);
+
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-
+  
         if (!token || !userId || !vendorId) {
           message.error("Please login first.");
           return;
         }
-
+  
         const response = await axios.get(
           "https://vendorv2.delpis.online/api/vendor/director",
           {
@@ -98,10 +111,14 @@ const PengurusPerusahaan: React.FC = () => {
             },
           }
         );
-
+  
         // Check if response.data is an object containing an array
         if (response.data && Array.isArray(response.data.data)) {
-          initializePengurusPerusahaan(response.data.data); // Initialize bank account state with the array of bank account objects
+          const mappedData = response.data.data.map((contact: { vendor_position: { name: any; }; position_id: any; }) => ({
+            ...contact,
+            position_id: contact.vendor_position ? contact.vendor_position.name : contact.position_id,
+          }));
+          initializePengurusPerusahaan(mappedData); // Initialize bank account state with the array of bank account objects
         } else {
           console.error("Bank account data fetched is not in expected format:", response.data);
           message.error("Bank account data fetched is not in expected format.");
@@ -109,9 +126,11 @@ const PengurusPerusahaan: React.FC = () => {
       } catch (error) {
         console.error("Error fetching bank account data:", error);
         message.error("Failed to fetch bank account data. Please try again later.");
+      }finally {
+        setIsLoading(false);
       }
     };
-
+  
     fetchPengurusPerusahaan();
   }, [initializePengurusPerusahaan]);
 
@@ -129,22 +148,82 @@ const PengurusPerusahaan: React.FC = () => {
 
   const save = async (id: React.Key) => {
     try {
-      const row = (await form.validateFields()) as PengurusPerusahaan;
-      editPengurusPerusahaan({ ...row, id: Number(id) });
+      const token = getCookie("token");
+      const userId = getCookie("user_id");
+      const vendorId = getCookie("vendor_id");
+  
+      if (!token || !userId || !vendorId) {
+        message.error("Token, User ID, or Vendor ID is missing.");
+        return;
+      }
+  
+      const row = await form.validateFields();
+      const updatedRow = {
+        ...row,
+        id: Number(id),
+      };
+  
+      await axios.put(
+        `https://vendorv2.delpis.online/api/vendor/director/${id}`,
+        updatedRow,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "User-ID": userId,
+            "Vendor-ID": vendorId,
+          },
+        }
+      );
+  
+      editPengurusPerusahaan(updatedRow);
       setEditingKey("");
-    } catch (errInfo) {
-      console.log("Validate Failed:", errInfo);
+      message.success("Director's details updated successfully.");
+    } catch (error) {
+      console.error("Error updating director's details:", error);
+      message.error("Failed to update director's details. Please try again.");
     }
   };
 
-  const handleDelete = (id: React.Key) => {
-    removePengurusPerusahaan(Number(id));
+  const handleDelete = async (id: React.Key) => {
+    try {
+      const token = getCookie("token");
+      const userId = getCookie("user_id");
+      const vendorId = getCookie("vendor_id");
+  
+      if (!token || !userId || !vendorId) {
+        message.error("Token, User ID, or Vendor ID is missing.");
+        return;
+      }
+  
+      await axios.delete(
+        `https://vendorv2.delpis.online/api/vendor/director/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "User-ID": userId,
+            "Vendor-ID": vendorId,
+          },
+        }
+      );
+  
+      removePengurusPerusahaan(Number(id));
+      message.success("Director deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting director:", error);
+      message.error("Failed to delete director. Please try again.");
+    }
+  };
+
+  const getPositionName = (positionId: string) => {
+    const vendor_position = positionOptions.find(option => option.value === positionId);
+    return vendor_position ? vendor_position.label : positionId;
   };
 
   const columns = [
     { title: "No", dataIndex: "id", key: "id" },
     { title: "Nama", dataIndex: "name", key: "name", editable: true },
-    { title: "Jabatan", dataIndex: "position_id", key: "position_id", editable: true },
+    { title: "Jabatan", dataIndex: "position_id", key: "position_id", editable: true,
+      render: (text: string) => getPositionName(text), options: positionOptions  },
     { title: "No KTP", dataIndex: "identity_no", key: "identity_no", editable: true },
     { title: "NPWP", dataIndex: "npwp_no", key: "npwp_no", editable: true },
     {
@@ -154,7 +233,10 @@ const PengurusPerusahaan: React.FC = () => {
         const editable = isEditing(record);
         return editable ? (
           <span>
-            <Typography.Link onClick={() => save(record.id)} style={{ marginRight: 8 }}>
+            <Typography.Link
+              onClick={() => save(record.id)}
+              style={{ marginRight: 8 }}
+            >
               Save
             </Typography.Link>
             <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
@@ -162,12 +244,18 @@ const PengurusPerusahaan: React.FC = () => {
             </Popconfirm>
           </span>
         ) : (
-          <span>
-            <Typography.Link disabled={editingKey !== ""} onClick={() => edit(record)} style={{ marginRight: 8 }}>
-              Edit
+          <span className="flex items-center gap-5 justify-center">
+            <Typography.Link
+              disabled={editingKey !== ""}
+              onClick={() => edit(record)}
+            >
+              <EditOutlined />
             </Typography.Link>
-            <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record.id)}>
-              <a>Delete</a>
+            <Popconfirm
+              title="Sure to delete?"
+              onConfirm={() => handleDelete(record.id)}
+            >
+              <DeleteOutlined className="text-red-500" />
             </Popconfirm>
           </span>
         );
@@ -184,7 +272,7 @@ const PengurusPerusahaan: React.FC = () => {
       onCell: (record: PengurusPerusahaan) => ({
         record,
         inputType:
-          col.dataIndex === "identity_no" || col.dataIndex === "npwp_no"
+          col.dataIndex === "identity_no" || col.dataIndex === "npwp_no" || col.dataIndex === "position_id"
             ? "number"
             : "text",
         dataIndex: col.dataIndex,
@@ -224,14 +312,23 @@ const PengurusPerusahaan: React.FC = () => {
       <Modal
         title="Tambah Pengurus Perusahaan"
         open={isModalVisible}
-        onOk={handleOk}
         onCancel={handleCancel}
+        footer={[
+          <>
+           <Button onClick={handleCancel}>
+            Batalkan
+          </Button>
+          <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
+            Simpan Data
+          </Button>
+          </>
+        ]}
       >
         <Form form={form} layout="vertical">
           <Form.Item
             name="name"
             label="Nama"
-          // rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
+            rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
           >
             <Input
               value={formik.values.name}
@@ -241,12 +338,19 @@ const PengurusPerusahaan: React.FC = () => {
           <Form.Item
             name="position_id"
             label="Jabatan"
-          // rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
+            rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
           >
-            <Input
+            <Select
+              onChange={(value) => formik.setFieldValue("position_id", value)}
+              onBlur={formik.handleBlur}
               value={formik.values.position_id}
-              onChange={formik.handleChange}
-            />
+            >
+              {positionOptions.map((option) => (
+                <Select.Option key={option.value} value={option.value}>
+                  {option.label}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
           <Form.Item
             name="identity_no"
@@ -256,19 +360,19 @@ const PengurusPerusahaan: React.FC = () => {
             <Input
               value={formik.values.identity_no}
               onChange={formik.handleChange}
-            // onChange={(value) => formik.setFieldValue("identity_no", value)}
+              // onChange={(value) => formik.setFieldValue("identity_no", value)}
             />
           </Form.Item>
           <Form.Item
             name="npwp_no"
             label="NPWP"
-          // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+            rules={[{ required: true, message: "NPWP harus berupa angka" }]}
           >
             <Input
               value={formik.values.npwp_no}
               onChange={formik.handleChange}
-            // on change dibawah untuk Input berupa number InputNumber
-            // onChange={(value) => formik.setFieldValue("npwp_no", value)}
+              // on change dibawah untuk Input berupa number InputNumber
+              // onChange={(value) => formik.setFieldValue("npwp_no", value)}
             />
           </Form.Item>
         </Form>
@@ -287,10 +391,8 @@ const PengurusPerusahaan: React.FC = () => {
           pagination={{
             onChange: cancel,
           }}
+          loading={isLoading}
         />
-        <Button type="primary" onClick={handleSubmit}>
-          Submit
-        </Button>
       </Form>
     </div>
   );

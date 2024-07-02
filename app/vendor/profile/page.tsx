@@ -91,7 +91,7 @@ const RegisteredVendorListPage = () => {
     ];
     return (
         <Layout>
-            <div className="container mx-auto flex flex-col content-center p-12">
+            <div className="container mx-auto flex flex-col content-center">
                 <Tabs
                     defaultActiveKey="1"
                     items={items}

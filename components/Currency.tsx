@@ -112,9 +112,9 @@ const CurrencyData: React.FC = () => {
             setLoading(true);
             try {
                 const response = await axios.post("https://vendorv2.delpis.online/api/master/currency", values, {
-                    headers: {
-                        "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
-                    }
+                    // headers: {
+                    //     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
+                    // }
                 });
                 console.log("Response from API:", response.data);
                 setFormSubmitted(true);

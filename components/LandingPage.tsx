@@ -53,7 +53,7 @@ const LandingPage = (props: Props) => {
             </>
           ]}
         >
-          <div className="h-screen overflow-y-scroll">
+          <div className="h-[30rem] overflow-y-scroll">
             <h3 className="font-bold">PENDAFTARAN ONLINE REKANAN E-PROCUREMENT</h3>
             <p className="my-4 font">
               Setiap Penyedia Barang dan Jasa pengguna aplikasi E-Procurement,

@@ -17,6 +17,7 @@ import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
 import axios from "axios";
 import { getCookie } from "cookies-next";
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 
 const { TextArea } = Input;
 
@@ -41,6 +42,7 @@ const IzinUsaha: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false)
 
   const formik = useFormik({
     initialValues: {
@@ -63,6 +65,7 @@ const IzinUsaha: React.FC = () => {
       }
 
       try {
+        setIsLoading(true)
         const response = await axios.post(
           "https://vendorv2.delpis.online/api/vendor/business-permit",
           values,
@@ -77,6 +80,8 @@ const IzinUsaha: React.FC = () => {
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
         message.success("Izin Usaha added successful");
+        addIzinUsaha({ ...formik.values, id: izinUsaha.length + 2 });
+    setIsModalVisible(false);
         formik.resetForm();
       } catch (error) {
         console.error("Error submitting data:", error);
@@ -97,6 +102,8 @@ const IzinUsaha: React.FC = () => {
         } else {
           message.error("An unexpected error occurred. Please try again later.");
         }
+      }finally {
+        setIsLoading(false);
       }
     },
   });
@@ -104,15 +111,16 @@ const IzinUsaha: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsLoading(true)
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-
+  
         if (!token || !userId || !vendorId) {
           message.error("Please login first.");
           return;
         }
-
+  
         const response = await axios.get(
           "https://vendorv2.delpis.online/api/vendor/business-permit",
           {
@@ -123,7 +131,7 @@ const IzinUsaha: React.FC = () => {
             },
           }
         );
-
+  
         // Check if response.data is an object containing an array
         if (response.data && Array.isArray(response.data.data)) {
           initializeIzinUsaha(response.data.data); // Initialize izinUsaha state with the array of IzinUsaha objects
@@ -134,9 +142,11 @@ const IzinUsaha: React.FC = () => {
       } catch (error) {
         console.error("Error fetching data:", error);
         message.error("Failed to fetch data. Please try again later.");
+      }finally {
+        setIsLoading(false);
       }
     };
-
+  
     fetchData();
   }, [initializeIzinUsaha]);
 
@@ -145,10 +155,10 @@ const IzinUsaha: React.FC = () => {
   const edit = (record: Partial<IzinUsaha> & { id: React.Key }) => {
     form.setFieldsValue({
       ...record,
-      tanggalIzin: record.start_date
+      start_date: record.start_date
         ? dayjs(record.start_date, "DD-MM-YYYY")
         : null,
-      tanggalBerakhir: record.end_date
+      end_date: record.end_date
         ? dayjs(record.end_date, "DD-MM-YYYY")
         : null,
     });
@@ -161,22 +171,72 @@ const IzinUsaha: React.FC = () => {
 
   const save = async (id: React.Key) => {
     try {
-      const row = (await form.validateFields()) as IzinUsaha;
+      const token = getCookie("token");
+      const userId = getCookie("user_id");
+      const vendorId = getCookie("vendor_id");
+  
+      if (!token || !userId || !vendorId) {
+        message.error("Token, User ID, or Vendor ID is missing.");
+        return;
+      }
+  
+      const row = await form.validateFields();
       const updatedRow = {
         ...row,
         id: Number(id),
-        tanggalIzin: dayjs(row.start_date).format("DD-MM-YYYY"),
-        tanggalBerakhir: dayjs(row.start_date).format("DD-MM-YYYY"),
+        start_date: dayjs(row.start_date).format("DD-MM-YYYY"),
+        end_date: dayjs(row.end_date).format("DD-MM-YYYY"),
       };
-      editIzinUsaha(updatedRow);
+  
+      await axios.put(
+        `https://vendorv2.delpis.online/api/vendor/business-permit/${id}`,
+        updatedRow,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "User-ID": userId,
+            "Vendor-ID": vendorId,
+          },
+        }
+      );
+  
+      editIzinUsaha(updatedRow); // Pastikan Anda memiliki fungsi editIzinUsaha yang sesuai
       setEditingKey("");
-    } catch (errInfo) {
-      console.log("Validate Failed:", errInfo);
+      message.success("Business permit updated successfully.");
+    } catch (error) {
+      console.error("Error updating business permit:", error);
+      message.error("Failed to update business permit. Please try again.");
     }
   };
 
-  const handleDelete = (id: React.Key) => {
-    removeIzinUsaha(Number(id));
+  const handleDelete = async (id: React.Key) => {
+    try {
+      const token = getCookie("token");
+      const userId = getCookie("user_id");
+      const vendorId = getCookie("vendor_id");
+  
+      if (!token || !userId || !vendorId) {
+        message.error("Token, User ID, or Vendor ID is missing.");
+        return;
+      }
+  
+      await axios.delete(
+        `https://vendorv2.delpis.online/api/vendor/business-permit/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "User-ID": userId,
+            "Vendor-ID": vendorId,
+          },
+        }
+      );
+  
+      removeIzinUsaha(Number(id)); // Menghapus item dari state setelah berhasil dihapus di backend
+      message.success("Business permit deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting business permit:", error);
+      message.error("Failed to delete business permit. Please try again.");
+    }
   };
 
   const columns = [
@@ -228,32 +288,31 @@ const IzinUsaha: React.FC = () => {
         const editable = isEditing(record);
         return editable ? (
           <span>
-            <Typography.Link
-              onClick={() => save(record.id)}
-              style={{ marginRight: 8 }}
-            >
-              Save
-            </Typography.Link>
-            <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-              <a>Cancel</a>
-            </Popconfirm>
-          </span>
-        ) : (
-          <span>
-            <Typography.Link
-              disabled={editingKey !== ""}
-              onClick={() => edit(record)}
-              style={{ marginRight: 8 }}
-            >
-              Edit
-            </Typography.Link>
-            <Popconfirm
-              title="Sure to delete?"
-              onConfirm={() => handleDelete(record.id)}
-            >
-              <a>Delete</a>
-            </Popconfirm>
-          </span>
+          <Typography.Link
+            onClick={() => save(record.id)}
+            style={{ marginRight: 8 }}
+          >
+            Save
+          </Typography.Link>
+          <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
+            <a>Cancel</a>
+          </Popconfirm>
+        </span>
+      ) : (
+        <span className="flex items-center gap-5 justify-center">
+          <Typography.Link
+            disabled={editingKey !== ""}
+            onClick={() => edit(record)}
+          >
+            <EditOutlined />
+          </Typography.Link>
+          <Popconfirm
+            title="Sure to delete?"
+            onConfirm={() => handleDelete(record.id)}
+          >
+            <DeleteOutlined className="text-red-500" />
+          </Popconfirm>
+        </span>
         );
       },
     },
@@ -268,10 +327,10 @@ const IzinUsaha: React.FC = () => {
       onCell: (record: IzinUsaha) => ({
         record,
         inputType:
-          col.dataIndex === "permit_number" || col.dataIndex.includes("permit_number") ? "text" :
-            col.dataIndex === "start_date" || col.dataIndex.includes("start_date") ? "date" :
-              col.dataIndex === "end_date" || col.dataIndex.includes("end_date") ? "date" :
-                "text",
+        col.dataIndex === "permit_number" || col.dataIndex.includes("permit_number") ? "text" :
+        col.dataIndex === "start_date" || col.dataIndex.includes("start_date") ? "date" :
+        col.dataIndex === "end_date" || col.dataIndex.includes("end_date") ? "date" :
+        "text",
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record),
@@ -313,7 +372,7 @@ const IzinUsaha: React.FC = () => {
         <Form>
           {/* jenis izin nanti berupa select */}
           {/* Izin Usaha 2 */}
-          <Form.Item
+        <Form.Item
             name="type"
             label="Jenis Izin"
             rules={[{ required: true }]}
@@ -400,10 +459,8 @@ const IzinUsaha: React.FC = () => {
           pagination={{
             onChange: cancel,
           }}
+          loading={isLoading}
         />
-        <Button type="primary" onClick={handleSubmit}>
-          Save
-        </Button>
       </Form>
     </div>
   );
