@@ -93,7 +93,7 @@ const VendorVerificationDoc = (props: Props) => {
     const getDocsVendor = async () => {
         setIsLoading(true)
         try {
-            const response = await axios.get(`https://vendorv2.delpis.online/api/verifikator/vendor-attachments/${props.vendorId}`, {
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/verifikator/vendor-attachments/${props.vendorId}`, {
                 // headers: {
                 //     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
                 // }
@@ -120,7 +120,7 @@ const VendorVerificationDoc = (props: Props) => {
             const body = {
                 _method: "PUT"
             }
-            const response = await axios.post(`https://vendorv2.delpis.online/api/verifikator/vendor-attachments/${props.vendorId}/${record.id}`, body, {
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/verifikator/vendor-attachments/${props.vendorId}/${record.id}`, body, {
                 headers: {
                     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
                 }

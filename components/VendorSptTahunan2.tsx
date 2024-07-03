@@ -59,7 +59,7 @@ const SPTTahunan: React.FC = () => {
       try {
         setIsLoading(true);
         const response = await axios.post(
-          "https://vendorv2.delpis.online/api/vendor/annual-spt",
+          `${process.env.NEXT_PUBLIC_API_URL}/vendor/annual-spt`,
           values,
           {
             headers: {
@@ -99,7 +99,7 @@ const SPTTahunan: React.FC = () => {
         }
 
         const response = await axios.get(
-          "https://vendorv2.delpis.online/api/vendor/annual-spt",
+          `${process.env.NEXT_PUBLIC_API_URL}/vendor/annual-spt`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -163,7 +163,7 @@ const SPTTahunan: React.FC = () => {
       };
 
       await axios.put(
-        `https://vendorv2.delpis.online/api/vendor/annual-spt/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/vendor/annual-spt/${id}`,
         updatedRow,
         {
           headers: {
@@ -195,7 +195,7 @@ const SPTTahunan: React.FC = () => {
       }
 
       await axios.delete(
-        `https://vendorv2.delpis.online/api/vendor/annual-spt/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/vendor/annual-spt/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

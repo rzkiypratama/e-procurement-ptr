@@ -81,7 +81,7 @@ const PengurusPerusahaan: React.FC = () => {
       try {
         setIsLoading(true);
         const response = await axios.post(
-          "https://vendorv2.delpis.online/api/vendor/informasi-umum",
+          `${process.env.NEXT_PUBLIC_API_URL}/vendor/informasi-umum`,
           values,
           {
             headers: {
@@ -146,7 +146,7 @@ const PengurusPerusahaan: React.FC = () => {
         }
 
         const response = await axios.get(
-          "https://vendorv2.delpis.online/api/vendor/informasi-umum",
+          `${process.env.NEXT_PUBLIC_API_URL}/vendor/informasi-umum`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

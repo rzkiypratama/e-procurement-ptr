@@ -58,7 +58,7 @@ const PengurusPerusahaan: React.FC = () => {
   setIsLoading(true);
 
         const response = await axios.post(
-          "https://vendorv2.delpis.online/api/vendor/experience",
+          `${process.env.NEXT_PUBLIC_API_URL}/vendor/experience`,
           values,
           {
             headers: {
@@ -97,7 +97,7 @@ const PengurusPerusahaan: React.FC = () => {
         }
   
         const response = await axios.get(
-          "https://vendorv2.delpis.online/api/vendor/experience",
+          `${process.env.NEXT_PUBLIC_API_URL}/vendor/experience`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -155,7 +155,7 @@ const PengurusPerusahaan: React.FC = () => {
       };
   
       await axios.put(
-        `https://vendorv2.delpis.online/api/vendor/experience/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/vendor/experience/${id}`,
         updatedRow,
         {
           headers: {
@@ -187,7 +187,7 @@ const PengurusPerusahaan: React.FC = () => {
       }
   
       await axios.delete(
-        `https://vendorv2.delpis.online/api/vendor/experience/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/vendor/experience/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

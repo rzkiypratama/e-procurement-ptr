@@ -59,7 +59,7 @@ const LandasanHukum: React.FC = () => {
       try {
         setIsLoading(true)
         const response = await axios.post(
-          "https://vendorv2.delpis.online/api/vendor/legal-foundation",
+          `${process.env.NEXT_PUBLIC_API_URL}/vendor/legal-foundation`,
           values,
           {
             headers: {
@@ -98,7 +98,7 @@ const LandasanHukum: React.FC = () => {
         }
   
         const response = await axios.get(
-          "https://vendorv2.delpis.online/api/vendor/legal-foundation",
+          `${process.env.NEXT_PUBLIC_API_URL}/vendor/legal-foundation`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -162,7 +162,7 @@ const LandasanHukum: React.FC = () => {
       };
   
       await axios.put(
-        `https://vendorv2.delpis.online/api/vendor/legal-foundation/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/vendor/legal-foundation/${id}`,
         updatedRow,
         {
           headers: {
@@ -194,7 +194,7 @@ const LandasanHukum: React.FC = () => {
       }
   
       await axios.delete(
-        `https://vendorv2.delpis.online/api/vendor/legal-foundation/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/vendor/legal-foundation/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

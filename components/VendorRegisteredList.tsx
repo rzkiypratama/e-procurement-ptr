@@ -104,7 +104,7 @@ const VendorRegisteredList: React.FC = () => {
     const getAllVendorList = async () => {
         setIsLoading(true)
         try {
-            const response = await axios.get("https://vendorv2.delpis.online/api/verifikator/vendor", {
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/verifikator/vendor`, {
                 headers: {
                     "Authorization": "Bearer 456|qufCPbuE8GsEN64j48YJjr4DZrLk2QTt8Fb3Txhx7bcab9de"
                 }

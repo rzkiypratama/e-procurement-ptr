@@ -104,7 +104,7 @@ const VendorPosition: React.FC = () => {
             console.log("Form Values: ", values);
             setLoading(true);
             try {
-                const response = await axios.post("https://vendorv2.delpis.online/api/master/vendor-position", values, {
+                const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/master/vendor-position`, values, {
                     headers: {
                         "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
                     }
@@ -178,7 +178,7 @@ const VendorPosition: React.FC = () => {
     const listVendorPosition = async () => {
         setLoading(true)
         try {
-            const response = await axios.get("https://vendorv2.delpis.online/api/master/vendor-position", {
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/master/vendor-position`, {
                 headers: {
                     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
                 }
@@ -226,7 +226,7 @@ const VendorPosition: React.FC = () => {
         }
         setLoading(true)
         try {
-            const response = await axios.post(`https://vendorv2.delpis.online/api/master/vendor-position/${selectedId}`, body, {
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/master/vendor-position/${selectedId}`, body, {
                 headers: {
                     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
                 }
@@ -250,7 +250,7 @@ const VendorPosition: React.FC = () => {
     const deleteVendorPosition = async () => {
         setLoading(true)
         try {
-            const response = await axios.delete(`https://vendorv2.delpis.online/api/master/vendor-position/${selectedId}`, {
+            const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/master/vendor-position/${selectedId}`, {
                 headers: {
                     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
                 }

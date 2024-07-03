@@ -68,7 +68,7 @@ const ContactInfo: React.FC = () => {
       try {
         setIsLoading(true)
         const response = await axios.post(
-          "https://vendorv2.delpis.online/api/vendor/contact-person",
+          `${process.env.NEXT_PUBLIC_API_URL}/vendor/contact-person`,
           values,
           {
             headers: {
@@ -123,7 +123,7 @@ const ContactInfo: React.FC = () => {
         }
   
         const response = await axios.get(
-          "https://vendorv2.delpis.online/api/vendor/contact-person",
+          `${process.env.NEXT_PUBLIC_API_URL}i/vendor/contact-person`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -187,7 +187,7 @@ const ContactInfo: React.FC = () => {
       }
   
       await axios.put(
-        `https://vendorv2.delpis.online/api/vendor/contact-person/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/vendor/contact-person/${id}`,
         row,
         {
           headers: {
@@ -197,6 +197,8 @@ const ContactInfo: React.FC = () => {
           },
         }
       );
+
+      console.log("row contact", row);
   
       editContactInfo({ ...row, id: Number(id) });
       setEditingKey("");
@@ -218,7 +220,7 @@ const ContactInfo: React.FC = () => {
       }
   
       await axios.delete(
-        `https://vendorv2.delpis.online/api/vendor/contact-person/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/vendor/contact-person/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

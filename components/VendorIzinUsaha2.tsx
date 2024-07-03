@@ -67,7 +67,7 @@ const IzinUsaha: React.FC = () => {
       try {
         setIsLoading(true)
         const response = await axios.post(
-          "https://vendorv2.delpis.online/api/vendor/business-permit",
+          `${process.env.NEXT_PUBLIC_API_URL}/vendor/business-permit`,
           values,
           {
             headers: {
@@ -122,7 +122,7 @@ const IzinUsaha: React.FC = () => {
         }
   
         const response = await axios.get(
-          "https://vendorv2.delpis.online/api/vendor/business-permit",
+          `${process.env.NEXT_PUBLIC_API_URL}/vendor/business-permit`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -189,7 +189,7 @@ const IzinUsaha: React.FC = () => {
       };
   
       await axios.put(
-        `https://vendorv2.delpis.online/api/vendor/business-permit/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/vendor/business-permit/${id}`,
         updatedRow,
         {
           headers: {
@@ -221,7 +221,7 @@ const IzinUsaha: React.FC = () => {
       }
   
       await axios.delete(
-        `https://vendorv2.delpis.online/api/vendor/business-permit/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/vendor/business-permit/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

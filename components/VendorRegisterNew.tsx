@@ -122,7 +122,7 @@ const ProfilePerusahaan: React.FC = () => {
       setLoading(true);
       try {
         const response = await axios.post(
-          "https://vendorv2.delpis.online/api/auth/register",
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
           values,
         );
         console.log("Response from API:", response.data);

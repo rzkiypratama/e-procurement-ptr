@@ -81,7 +81,7 @@ const AttachmentDocument: React.FC = () => {
         formData.append("expiration_date", values.expiration_date);
 
         const response = await axios.post(
-          "https://vendorv2.delpis.online/api/vendor/attachment",
+          `${process.env.NEXT_PUBLIC_API_URL}/vendor/attachment`,
           formData,
           {
             headers: {
@@ -122,7 +122,7 @@ const AttachmentDocument: React.FC = () => {
         }
 
         const response = await axios.get(
-          "https://vendorv2.delpis.online/api/vendor/attachment",
+          `${process.env.NEXT_PUBLIC_API_URL}/vendor/attachment`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -196,7 +196,7 @@ const AttachmentDocument: React.FC = () => {
       }
   
       await axios.delete(
-        `https://vendorv2.delpis.online/api/vendor/attachment/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/vendor/attachment/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
