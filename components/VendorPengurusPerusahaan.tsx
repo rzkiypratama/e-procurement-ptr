@@ -23,7 +23,7 @@ const { TextArea } = Input;
 interface PengurusPerusahaan {
   id: number;
   name: string;
-  position_id: number;
+  position_id: string;
   identity_no: string;
   npwp_no: string;
 }
@@ -44,7 +44,7 @@ const PengurusPerusahaan: React.FC = () => {
   const formik = useFormik({
     initialValues: {
       name: "",
-      position_id: 0,
+      position_id: "",
       identity_no: "",
       npwp_no: "",
     },
@@ -72,7 +72,7 @@ const PengurusPerusahaan: React.FC = () => {
         );
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
-        message.success("Bank Account added successful");
+        message.success("Data Pengurus Perusahaan added successful");
         addPengurusPerusahaan({ ...values, id: response.data.data.id });
         formik.resetForm();
       } catch (error) {
@@ -117,12 +117,12 @@ const PengurusPerusahaan: React.FC = () => {
           }));
           initializePengurusPerusahaan(mappedData); // Initialize bank account state with the array of bank account objects
         } else {
-          console.error("Bank account data fetched is not in expected format:", response.data);
-          message.error("Bank account data fetched is not in expected format.");
+          console.error("Pengurus Perusahaan data fetched is not in expected format:", response.data);
+          message.error("Pengurus Perusahaan data fetched is not in expected format.");
         }
       } catch (error) {
-        console.error("Error fetching bank account data:", error);
-        message.error("Failed to fetch bank account data. Please try again later.");
+        console.error("Error fetching Pengurus Perusahaan data:", error);
+        message.error("Failed to fetch Pengurus Perusahaan data. Please try again later.");
       }finally {
         setIsLoading(false);
       }
@@ -174,10 +174,10 @@ const PengurusPerusahaan: React.FC = () => {
   
       editPengurusPerusahaan(updatedRow);
       setEditingKey("");
-      message.success("Director's details updated successfully.");
+      message.success("Data details updated successfully.");
     } catch (error) {
-      console.error("Error updating director's details:", error);
-      message.error("Failed to update director's details. Please try again.");
+      console.error("Error updating data details:", error);
+      message.error("Failed to update data details. Please try again.");
     }
   };
 
@@ -204,10 +204,10 @@ const PengurusPerusahaan: React.FC = () => {
       );
   
       removePengurusPerusahaan(Number(id));
-      message.success("Director deleted successfully.");
+      message.success("Data deleted successfully.");
     } catch (error) {
       console.error("Error deleting director:", error);
-      message.error("Failed to delete director. Please try again.");
+      message.error("Failed to delete data. Please try again.");
     }
   };
 
@@ -269,11 +269,12 @@ const PengurusPerusahaan: React.FC = () => {
       onCell: (record: PengurusPerusahaan) => ({
         record,
         inputType:
-          col.dataIndex === "identity_no" || col.dataIndex === "npwp_no" || col.dataIndex === "position_id"
-            ? "number"
+           col.dataIndex === "position_id"
+            ? "select"
             : "text",
         dataIndex: col.dataIndex,
         title: col.title,
+        options: col.options,
         editing: isEditing(record),
       }),
     };

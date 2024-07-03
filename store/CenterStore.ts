@@ -52,7 +52,7 @@ interface BankAccount {
 interface PengurusPerusahaan {
   id: number;
   name: string;
-  position_id: number;
+  position_id: string;
   identity_no: string;
   npwp_no: string;
 }
