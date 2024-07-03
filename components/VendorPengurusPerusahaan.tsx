@@ -135,7 +135,10 @@ const PengurusPerusahaan: React.FC = () => {
     record.id.toString() === editingKey;
 
   const edit = (record: Partial<PengurusPerusahaan> & { id: React.Key }) => {
-    form.setFieldsValue({ ...record });
+    form.setFieldsValue({
+      ...record,
+      position_id: record.position_id && !isNaN(Number(record.position_id)) ? Number(record.position_id) : "",
+    });
     setEditingKey(record.id.toString());
   };
 

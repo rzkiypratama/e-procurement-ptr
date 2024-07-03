@@ -73,7 +73,7 @@ const LandasanHukum: React.FC = () => {
         setIsModalVisible(false);
         message.success("Dokumen Landasan Hukum added successful");
         addLandasanHukum({ ...values, id: response.data.data.id });
-    setIsModalVisible(false);
+        setIsModalVisible(false);
         formik.resetForm();
       } catch (error) {
         console.error("Failed to submit data", error);

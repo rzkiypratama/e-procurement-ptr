@@ -10,6 +10,7 @@ import {
   Popconfirm,
   Modal,
   message,
+  Select,
 } from "antd";
 import dayjs from "dayjs";
 import useIzinUsahaStore from "../store/CenterStore";
@@ -18,7 +19,9 @@ import { useFormik } from "formik";
 import axios from "axios";
 import { getCookie } from "cookies-next";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { bidangUsahaOptions } from "@/utils/bidangUsahaOptions";
 
+const { Option } = Select;
 const { TextArea } = Input;
 
 interface IzinUsaha {
@@ -81,7 +84,7 @@ const IzinUsaha: React.FC = () => {
         setIsModalVisible(false);
         message.success("Izin Usaha added successful");
         addIzinUsaha({ ...values, id: response.data.data.id });
-    setIsModalVisible(false);
+         setIsModalVisible(false);
         formik.resetForm();
       } catch (error) {
         console.error("Error submitting data:", error);
@@ -161,6 +164,7 @@ const IzinUsaha: React.FC = () => {
       end_date: record.end_date
         ? dayjs(record.end_date, "YYYY-MM-DD")
         : null,
+        vendor_business_field_id: record.vendor_business_field_id && !isNaN(Number(record.vendor_business_field_id)) ? Number(record.vendor_business_field_id) : "",
     });
     setEditingKey(record.id.toString());
   };
@@ -239,6 +243,11 @@ const IzinUsaha: React.FC = () => {
     }
   };
 
+  const getPositionName = (positionId: number) => {
+    const vendor_position = bidangUsahaOptions.find(option => option.value === positionId);
+    return vendor_position ? vendor_position.label : positionId;
+  };
+
   const columns = [
     { title: "No", dataIndex: "id", key: "id" },
     {
@@ -280,6 +289,8 @@ const IzinUsaha: React.FC = () => {
       dataIndex: "vendor_business_field_id",
       key: "vendor_business_field_id",
       editable: true,
+      options: bidangUsahaOptions,
+      render: (text: number) => getPositionName(text),
     },
     {
       title: "Operation",
@@ -330,9 +341,11 @@ const IzinUsaha: React.FC = () => {
         col.dataIndex === "permit_number" || col.dataIndex.includes("permit_number") ? "text" :
         col.dataIndex === "start_date" || col.dataIndex.includes("start_date") ? "date" :
         col.dataIndex === "end_date" || col.dataIndex.includes("end_date") ? "date" :
+        col.dataIndex === "vendor_business_field_id" || col.dataIndex.includes("vendor_business_field_id") ? "select" :
         "text",
         dataIndex: col.dataIndex,
         title: col.title,
+        options: col.options,
         editing: isEditing(record),
       }),
     };
@@ -366,8 +379,17 @@ const IzinUsaha: React.FC = () => {
       <Modal
         title="Tambah Izin Usaha"
         open={isModalVisible}
-        onOk={handleOk}
         onCancel={handleCancel}
+        footer={[
+          <>
+           <Button onClick={handleCancel}>
+            Batalkan
+          </Button>
+          <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
+            Simpan Data
+          </Button>
+          </>
+        ]}
       >
         <Form>
           {/* jenis izin nanti berupa select */}
@@ -400,7 +422,7 @@ const IzinUsaha: React.FC = () => {
             rules={[{ required: true }]}
           >
             <DatePicker
-              format="DD-MM-YYYY"
+              format="YYYY-MM-DD"
               name="start_date"
               onChange={(date, dateString) =>
                 formik.setFieldValue("start_date", dateString)
@@ -436,11 +458,19 @@ const IzinUsaha: React.FC = () => {
             label="Bidang Usaha"
             rules={[{ required: true }]}
           >
-            <Input
-              name="vendor_business_field_id"
+             <Select
+              id="vendor_business_field_id"
+              onChange={(value) => formik.setFieldValue("vendor_business_field_id", value)}
+              onBlur={formik.handleBlur}
               value={formik.values.vendor_business_field_id}
-              onChange={formik.handleChange}
-            />
+              placeholder="Select bidang usaha"
+            >
+              {bidangUsahaOptions.map((option) => (
+            <Option key={option.value} value={option.value}>
+              {option.label}
+            </Option>
+          ))}
+            </Select>
           </Form.Item>
         </Form>
       </Modal>

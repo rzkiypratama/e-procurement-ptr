@@ -20,6 +20,8 @@ import EditableCell from "./EditableCell";
 import NumericNumber from "@/lib/NumericString";
 import NumericInput from "@/lib/NumericInput";
 import axios from "axios";
+import { positionOptions } from "@/utils/positionOptions";
+import { cityOptions, provinceOptions } from "@/utils/cityOptions";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -187,6 +189,11 @@ const ProfilePerusahaan: React.FC = () => {
     removeContactInfo(Number(id));
   };
 
+  const getPositionName = (positionId: string) => {
+    const vendor_position = positionOptions.find(option => option.value === positionId);
+    return vendor_position ? vendor_position.label : positionId;
+  };
+
   const columns = [
     { title: "No", dataIndex: "id", key: "id" },
     {
@@ -212,6 +219,8 @@ const ProfilePerusahaan: React.FC = () => {
       dataIndex: "position_id",
       key: "position_id",
       editable: true,
+      options: positionOptions,
+      render: (text: string) => getPositionName(text),
     },
     {
       title: "No KTP",
@@ -465,15 +474,19 @@ const ProfilePerusahaan: React.FC = () => {
             }
             required
             hasFeedback
-          >
+            >
             <Select
               id="city_id"
               onChange={(value) => formik.setFieldValue("city_id", value)}
               onBlur={formik.handleBlur}
               value={formik.values.city_id}
+              placeholder="Select city"
             >
-              <Option value="268">Banjarbaru</Option>
-              <Option value="269">Bandung</Option>
+              {cityOptions.map((option) => (
+            <Option key={option.value} value={option.value}>
+              {option.label}
+            </Option>
+          ))}
             </Select>
           </Form.Item>
           <Form.Item
@@ -500,8 +513,11 @@ const ProfilePerusahaan: React.FC = () => {
               value={formik.values.province_id}
               placeholder="Select province"
             >
-              <Option value={16}>Kalimantan Selatan</Option>
-              <Option value={10}>Jawa Barat</Option>
+              {provinceOptions.map((option) => (
+            <Option key={option.value} value={option.value}>
+              {option.label}
+            </Option>
+          ))}
             </Select>
           </Form.Item>
           <Form.Item
@@ -832,8 +848,13 @@ const ProfilePerusahaan: React.FC = () => {
                   onBlur={formik.handleBlur}
                   value={formik.values.position_id}
                 >
-                  <Option value="1">Direktur</Option>
-                  <Option value="2">Manajer</Option>
+                  {columns
+                .find((col) => col.dataIndex === "position_id")
+                ?.options?.map((option) => (
+                  <Select.Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Select.Option>
+                ))}
                 </Select>
               </Form.Item>
               <Form.Item

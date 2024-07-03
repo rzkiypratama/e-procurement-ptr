@@ -9,6 +9,7 @@ import {
   Popconfirm,
   Modal,
   message,
+  Select,
 } from "antd";
 import usePengalamanStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
@@ -16,8 +17,10 @@ import { useFormik } from "formik";
 import { getCookie } from "cookies-next";
 import axios from "axios";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { bidangUsahaOptions } from "@/utils/bidangUsahaOptions";
 
 const { TextArea } = Input;
+const { Option } = Select;
 
 interface Pengalaman {
   id: number;
@@ -205,10 +208,18 @@ const PengurusPerusahaan: React.FC = () => {
     }
   };
 
+  const getPositionName = (positionId: number) => {
+    const vendor_position = bidangUsahaOptions.find(option => option.value === positionId);
+    return vendor_position ? vendor_position.label : positionId;
+  };
+
   const columns = [
     { title: "No", dataIndex: "id", key: "id" },
     { title: "Nama Pekerjaan", dataIndex: "job_name", key: "job_name", editable: true },
-    { title: "Bidang Pekerjaan", dataIndex: "business_field_id", key: "business_field_id", editable: true },
+    { title: "Bidang Pekerjaan", dataIndex: "business_field_id", key: "business_field_id", editable: true,
+    options: bidangUsahaOptions,
+    render: (text: number) => getPositionName(text),
+  },
     { title: "Lokasi Pekerjaan", dataIndex: "location", key: "location", editable: true },
     {
       title: "Operation",
@@ -256,11 +267,12 @@ const PengurusPerusahaan: React.FC = () => {
       onCell: (record: Pengalaman) => ({
         record,
         inputType:
-          col.dataIndex === "noKTP" || col.dataIndex === "npwp"
-            ? "number"
+          col.dataIndex === "business_field_id"
+            ? "select"
             : "text",
         dataIndex: col.dataIndex,
         title: col.title,
+        options: col.options,
         editing: isEditing(record),
       }),
     };
@@ -325,10 +337,19 @@ const PengurusPerusahaan: React.FC = () => {
             label="Bidang Pekerjaan"
             rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
           >
-            <Input
+            <Select
+              id="business_field_id"
+              onChange={(value) => formik.setFieldValue("business_field_id", value)}
+              onBlur={formik.handleBlur}
               value={formik.values.business_field_id}
-              onChange={formik.handleChange}
-            />
+              placeholder="Select bidang usaha"
+            >
+              {bidangUsahaOptions.map((option) => (
+            <Option key={option.value} value={option.value}>
+              {option.label}
+            </Option>
+          ))}
+            </Select>
           </Form.Item>
           <Form.Item
             name="location"
