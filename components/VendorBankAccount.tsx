@@ -23,42 +23,13 @@ const { TextArea } = Input;
 
 const { Option } = Select;
 
-interface ContactPerson {
-    id: number;
-    contact_name: string;
-    contact_email: string;
-    contact_identity_no: string;
-    contact_phone: string;
-    contact_npwp: string;
-    position_id: string;
-  }
-
-  interface BankAccount {
+interface BankAccount {
     id: number;
     bank_id: string;
     currency_id: string;
     account_number: string;
-    // bank: {
-    //   id: number;
-    //   bank_name: string;
-    // };
-    // currency: {
-    //   id: number;
-    //   name: string;
-    // };
   }
 
-  interface Bank {
-    id: number;
-    bank_name: string;
-  }
-  
-  interface CurrencyID {
-    id: string;
-    code: string;
-    name: string;
-  }
-  
 const ContactInfo: React.FC = () => {
   const {
     bankAccount,
@@ -105,10 +76,7 @@ const ContactInfo: React.FC = () => {
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
         message.success("Contact added successful");
-        addBankAccount({
-          ...formik.values,
-          id: bankAccount.length + 2,
-        });
+        addBankAccount({ ...values, id: response.data.data.id });
         setIsModalVisible(false);
         formik.resetForm();
       } catch (error) {
@@ -162,13 +130,19 @@ const ContactInfo: React.FC = () => {
   
         console.log("Response from API:", response.data);
         // Pastikan response.data adalah object dan memiliki properti yang berisi array
-        if (response.data && Array.isArray(response.data.data)) {
+        if (typeof response.data === "object" && Array.isArray(response.data.data)) {
           const mappedData = response.data.data.map(
-            (account: { id: any; bank_name: any }) => ({
-              ...account,
+            (data: {
+              bank_id: { bank: any };
+              bank: any;
+              currency_id: { name: any };
+              currency: any;
+            }) => ({
+              ...data,
+              bank_id: data.bank ? data.bank.bank_name : '',
+              currency_id: data.currency ? data.currency.name : '',
             }),
           );
-
           initializeBankAccount(mappedData);
         } else {
           console.error("Response data is not in expected format:", response.data);
@@ -265,20 +239,20 @@ const ContactInfo: React.FC = () => {
     }
   };
 
-  const getBankName = (positionId: string) => {
-    const vendor_position = bankOptions.find(option => option.value === positionId);
-    return vendor_position ? vendor_position.label : positionId;
+  const getPositionName = (positionId: string) => {
+    const bank_id = bankOptions.find(option => option.value === positionId);
+    return bank_id ? bank_id.label : positionId;
   };
 
   const getCurrencyName = (positionId: string) => {
-    const vendor_position = currencyOptions.find(option => option.value === positionId);
-    return vendor_position ? vendor_position.label : positionId;
+    const currency_id = currencyOptions.find(option => option.value === positionId);
+    return currency_id ? currency_id.label : positionId;
   };
 
   const columns = [
     { title: "No", dataIndex: "id", key: "id" },
     {
-      title: "No Rekening",
+      title: "Nomor Rekening",
       dataIndex: "account_number",
       key: "account_number",
       editable: true,
@@ -289,7 +263,7 @@ const ContactInfo: React.FC = () => {
       key: "bank_id",
       options: bankOptions,
       editable: true,
-      render: (text: string) => getBankName(text),
+      render: (text: string) => getPositionName(text),
     },
     {
       title: "Nama Currency",
@@ -359,6 +333,16 @@ const ContactInfo: React.FC = () => {
   const showModal = () => {
     setIsModalVisible(true);
     form.resetFields()
+        formik.resetForm()
+        let emptyData = {
+          contact_name: "",
+          contact_email: "",
+          account_number: "",
+          contact_identity_no: "",
+          contact_npwp: "",
+          position_id: "",
+        }
+        form.setFieldsValue({ ...emptyData })
   };
 
   const handleCancel = () => {
@@ -392,17 +376,23 @@ const ContactInfo: React.FC = () => {
         ]}
       >
         <Form form={form} layout="vertical">
-          <Form.Item
-            name="account_number"
-            label="No Rekening"
-            // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
-          >
-            <Input
-              value={formik.values.account_number}
-              onChange={formik.handleChange}
-            />
+        <Form.Item label="Bank Name" required hasFeedback>
+            <Select
+              id="bank_id"
+              onChange={(value) => formik.setFieldValue("bank_id", value)}
+              onBlur={formik.handleBlur}
+              value={formik.values.bank_id}
+            >
+             {columns
+                .find((col) => col.dataIndex === "bank_id")
+                ?.options?.map((option) => (
+                  <Select.Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Select.Option>
+                ))}
+            </Select>
           </Form.Item>
-          <Form.Item label="Nama Currency" required hasFeedback>
+          <Form.Item label="Currency" required hasFeedback>
             <Select
               id="currency_id"
               onChange={(value) => formik.setFieldValue("currency_id", value)}
@@ -418,21 +408,15 @@ const ContactInfo: React.FC = () => {
                 ))}
             </Select>
           </Form.Item>
-          <Form.Item label="Nama Bank" required hasFeedback>
-            <Select
-              id="bank_id"
-              onChange={(value) => formik.setFieldValue("bank_id", value)}
-              onBlur={formik.handleBlur}
-              value={formik.values.bank_id}
-            >
-             {columns
-                .find((col) => col.dataIndex === "bank_id")
-                ?.options?.map((option) => (
-                  <Select.Option key={option.value} value={option.value}>
-                    {option.label}
-                  </Select.Option>
-                ))}
-            </Select>
+          <Form.Item
+            name="account_number"
+            label="Nomor Rekening"
+            // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+          >
+            <Input
+              value={formik.values.account_number}
+              onChange={formik.handleChange}
+            />
           </Form.Item>
         </Form>
       </Modal>

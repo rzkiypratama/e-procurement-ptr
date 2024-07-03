@@ -9,7 +9,7 @@ import VendorTenagaAhli from "@/components/VendorTenagaAhli";
 import VendorPengalaman from "@/components/VendorPengalaman";
 import VendorAttachmenDoc from "@/components/VendorAttachmenDoc";
 import VendorContactPerson from "@/components/VendorContactPerson";
-import VendorBankAccount from "@/backup/VendorBankAccount";
+import VendorBankAccount from "@/components/VendorBankAccount";
 import Layout from '@/components/LayoutNew';
 import VendorRegisteredList from "@/components/VendorRegisteredList";
 

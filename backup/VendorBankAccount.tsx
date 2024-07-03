@@ -96,7 +96,7 @@ const PengurusPerusahaan: React.FC = () => {
           const bankAccount: BankAccount = {
             ...bankAccountData,
             bank_id: bank ? bank.bank_name : "",
-            currency_id: currency ? currency.name : "",
+            currency_id: currency.name ? currency.id : "",
           };
 
           console.log("Response from API:", response.data);
@@ -143,7 +143,7 @@ const PengurusPerusahaan: React.FC = () => {
           },
         );
 
-        if (response.data && Array.isArray(response.data.data)) {
+        if (typeof response.data === "object" && Array.isArray(response.data.data)) {
           const mappedData = response.data.data.map(
             (account: {
               bank: { bank_name: any };
@@ -303,20 +303,9 @@ const PengurusPerusahaan: React.FC = () => {
       return;
     }
 
-    // Convert bank_id and currency_id to their respective numbers
-    let requestData: { [key: string]: any } = { ...row };
-    if (typeof requestData.bank_id !== "number") {
-      const selectedBank = banks.find((bank) => bank.bank_name === requestData.bank_id);
-      requestData.bank_id = selectedBank ? selectedBank.id : null;
-    }
-    if (typeof requestData.currency_id !== "number") {
-      const selectedCurrency = getCurrency.find((currency) => currency.name === requestData.currency_id);
-      requestData.currency_id = selectedCurrency ? selectedCurrency.id : null;
-    }
-
     const response = await axios.put(
       `https://vendorv2.delpis.online/api/vendor/bank/${id}`,
-      requestData,
+      row,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -331,10 +320,13 @@ const PengurusPerusahaan: React.FC = () => {
 
       const bankAccount: BankAccount = {
         ...bankAccountData,
-        bank_id: bank ? bank.bank_name : "",
-        currency_id: currency ? currency.name : "",
+        bank_id: bank ? bank.bank_name : bank,
+        currency_id: currency ? currency.name : currency,
       };
 
+    console.log(bankAccount);
+
+      // editBankAccount({ ...bankAccount, id: Number(id) });
       editBankAccount({ ...bankAccount, id: Number(id) });
       setEditingKey("");
       message.success("Bank account edited successfully.");
@@ -347,38 +339,6 @@ const PengurusPerusahaan: React.FC = () => {
     message.error("Failed to save data. Please try again.");
   }
 };
-
-// const save = async (id: React.Key) => {
-//   try {
-//     const row = (await form.validateFields()) as BankAccount;
-//     const token = getCookie("token");
-//     const userId = getCookie("user_id");
-//     const vendorId = getCookie("vendor_id");
-
-//     if (!token || !userId || !vendorId) {
-//       message.error("Token, User ID, or Vendor ID is missing.");
-//       return;
-//     }
-
-//     await axios.put(
-//       `https://vendorv2.delpis.online/api/vendor/bank/${id}`,
-//       row,
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//           "User-ID": userId,
-//           "Vendor-ID": vendorId,
-//         },
-//       }
-//     );
-
-//     editBankAccount({ ...row, id: Number(id) });
-//     setEditingKey("");
-//   } catch (errInfo) {
-//     console.log("Validate Failed:", errInfo);
-//     message.error("Failed to save data. Please try again.");
-//   }
-// };
 
   const handleDelete = async (id: React.Key) => {
     try {
@@ -547,6 +507,9 @@ const PengurusPerusahaan: React.FC = () => {
 
   const handleSubmit = async () => {
     console.log("Submitting data:", bankAccount);
+    console.log("Options:", columns
+  .find((col) => col.dataIndex === "bank_id")
+  ?.options);
     formik.handleSubmit();
   };
 
@@ -577,10 +540,10 @@ const PengurusPerusahaan: React.FC = () => {
           <Form.Item label="Nama Bank" required hasFeedback>
             <Select
               id="bank_id"
-              onChange={(value) => {
-                formik.setFieldValue("bank_id", value);
-                // formik.setFieldValue("bank_name", (option as any)?.children || "");
-              }}
+              // onChange={(value) => {
+              //   formik.setFieldValue("bank_id", value);
+              // }}
+              onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               value={formik.values.bank_id}
             >
