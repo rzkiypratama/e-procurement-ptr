@@ -386,7 +386,7 @@ const PengurusPerusahaan: React.FC = () => {
 
   return (
     <div>
-      <Button type="primary" onClick={showModal} className="mb-4">
+      <Button type="primary" onClick={showModal} className="mb-4 hidden">
         Tambah Profile Perusahaan
       </Button>
       <Modal

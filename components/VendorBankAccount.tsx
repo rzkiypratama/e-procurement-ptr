@@ -281,11 +281,15 @@ const PengurusPerusahaan: React.FC = () => {
   const isEditing = (record: BankAccount) =>
     record.id.toString() === editingKey;
 
-  const edit = (record: Partial<BankAccount> & { id: React.Key }) => {
-    form.setFieldsValue({ ...record });
-    console.log(record);
-    setEditingKey(record.id.toString());
-  };
+    const edit = (record: Partial<BankAccount> & { id: React.Key }) => {
+      form.setFieldsValue({
+        ...record,
+        bank_id: record.bank_id && !isNaN(Number(record.bank_id)) ? Number(record.bank_id) : "",
+        currency_id: record.currency_id && !isNaN(Number(record.currency_id)) ? Number(record.currency_id) : "",
+      });
+      console.log(record);
+      setEditingKey(record.id.toString());
+    };
 
   const cancel = () => {
     setEditingKey("");
@@ -483,23 +487,6 @@ const PengurusPerusahaan: React.FC = () => {
     form.setFieldsValue({ ...emptyData });
   };
 
-  // const handleOk = () => {
-  //   addBankAccount({
-  //     ...formik.values,
-  //     id: bankAccount.length + 2,
-  //     bank: {
-  //       id: 0,
-  //       bank_name: "",
-  //     },
-  //     currency: {
-  //       id: 0,
-  //       name: "",
-  //     },
-  //   });
-  //   setIsModalVisible(false);
-  //   form.resetFields();
-  // };
-
   const handleCancel = () => {
     setIsModalVisible(false);
   };
@@ -530,7 +517,7 @@ const PengurusPerusahaan: React.FC = () => {
               onClick={handleSubmit}
               loading={isLoading}
             >
-              Simpan DataZ
+              Simpan Data
             </Button>
           </>,
         ]}
@@ -576,6 +563,8 @@ const PengurusPerusahaan: React.FC = () => {
           <Form.Item
             name="account_number"
             label="Nomor Rekening Perusahaan"
+            required
+            hasFeedback
           >
             <Input
               value={formik.values.account_number}
