@@ -72,7 +72,7 @@ const SPTTahunan: React.FC = () => {
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
         message.success("SPT added successful");
-        addSPTTahunan({ ...formik.values, id: sptTahunan.length + 2 });
+        addSPTTahunan({ ...values, id: response.data.data.id });
         formik.resetForm();
       } catch (error) {
         console.error("Failed to submit data", error);
@@ -135,7 +135,7 @@ const SPTTahunan: React.FC = () => {
   const edit = (record: Partial<SPTTahunan> & { id: React.Key }) => {
     form.setFieldsValue({
       ...record,
-      date: record.date ? dayjs(record.date, "DD-MM-YYYY") : null,
+      date: record.date ? dayjs(record.date, "YYYY-MM-DD") : null,
     });
     setEditingKey(record.id.toString());
   };
@@ -159,7 +159,7 @@ const SPTTahunan: React.FC = () => {
       const updatedRow = {
         ...row,
         id: Number(id),
-        date: dayjs(row.date).format("DD-MM-YYYY"),
+        date: dayjs(row.date).format("YYYY-MM-DD"),
       };
 
       await axios.put(
@@ -216,24 +216,24 @@ const SPTTahunan: React.FC = () => {
   const columns = [
     { title: "No", dataIndex: "id", key: "id" },
     {
-      title: "Tahun Izin",
+      title: "Tahun SPT",
       dataIndex: "year",
       key: "year",
       editable: true,
     },
     {
-      title: "Nomor Izin",
+      title: "Nomor SPT",
       dataIndex: "spt_number",
       key: "spt_number",
       editable: true,
     },
     {
-      title: "Tahun Dokumen",
+      title: "Tanggal Lapor SPT",
       dataIndex: "date",
       key: "date",
       editable: true,
       render: (text: string) =>
-        text ? dayjs(text, "DD-MM-YYYY").format("DD-MM-YYYY") : "",
+        text ? dayjs(text, "YYYY-MM-DD").format("DD-MM-YYYY") : "",
     },
     {
       title: "Operation",
@@ -364,10 +364,10 @@ const SPTTahunan: React.FC = () => {
             <DatePicker
               value={
                 formik.values.date
-                  ? dayjs(formik.values.date, "DD-MM-YYYY")
+                  ? dayjs(formik.values.date, "YYYY-MM-DD")
                   : null
               }
-              format="DD-MM-YYYY"
+              format="YYYY-MM-DD"
               // onchange yang benar untuk type date
               onChange={(date, dateString) =>
                 formik.setFieldValue("date", dateString)

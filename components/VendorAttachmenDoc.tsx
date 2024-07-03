@@ -96,10 +96,7 @@ const AttachmentDocument: React.FC = () => {
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
         message.success("Dokumen berhasil ditambahkan");
-        addAttachment({
-          ...formik.values,
-          id: attachmentDoc.length + 2,
-        });
+        addAttachment({ ...values, id: response.data.data.id });
         formik.resetForm();
       } catch (error) {
         console.error("Gagal menambahkan dokumen:", error);

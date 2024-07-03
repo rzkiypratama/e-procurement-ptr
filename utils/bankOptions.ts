@@ -11,6 +11,6 @@ export const bankOptions = [
   ];
 
 export const currencyOptions = [
-  { value: "5", label: "Rupiah" },
+  { value: "5", label: "Rupisah" },
   { value: "4", label: "Dollar" },
 ];

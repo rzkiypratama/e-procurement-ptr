@@ -79,7 +79,7 @@ const TenagaAhli: React.FC = () => {
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
         message.success("Tenaga Ahli added successful");
-    addTenagaAhli({ ...formik.values, id: tenagaAhli.length + 2 });
+        addTenagaAhli({ ...values, id: response.data.data.id });
         formik.resetForm();
       } catch (error) {
         console.error("Failed to submit data", error);
@@ -139,7 +139,7 @@ const TenagaAhli: React.FC = () => {
     form.setFieldsValue({
       ...record,
       birth_date: record.birth_date
-        ? dayjs(record.birth_date, "DD-MM-YYYY")
+        ? dayjs(record.birth_date, "YYYY-MM-DD")
         : null,
     });
     setEditingKey(record.id.toString());
@@ -164,7 +164,7 @@ const TenagaAhli: React.FC = () => {
       const updatedRow = {
         ...row,
         id: Number(id),
-        birth_date: dayjs(row.birth_date).format("DD-MM-YYYY"),
+        birth_date: dayjs(row.birth_date).format("YYYY-MM-DD"),
       };
   
       await axios.put(
@@ -232,7 +232,7 @@ const TenagaAhli: React.FC = () => {
       key: "birth_date",
       editable: true,
       render: (text: string) =>
-        text ? dayjs(text, "DD-MM-YYYY").format("DD-MM-YYYY") : "",
+        text ? dayjs(text, "YYYY-MM-DD").format("DD-MM-YYYY") : "",
     },
     {
       title: "Nomor KTP",
@@ -381,7 +381,7 @@ const TenagaAhli: React.FC = () => {
               format="DD-MM-YYYY"
               value={
                 formik.values.birth_date
-                  ? dayjs(formik.values.birth_date, "DD-MM-YYYY")
+                  ? dayjs(formik.values.birth_date, "YYYY-MM-DD")
                   : null
               }
               onChange={(date) =>

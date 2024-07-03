@@ -71,10 +71,7 @@ const PengurusPerusahaan: React.FC = () => {
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
         message.success("Data Pengalaman added successful");
-        addPengalaman({
-          ...formik.values,
-          id: pengalaman.length + 2,
-        });
+        addPengalaman({ ...values, id: response.data.data.id });
         formik.resetForm();
       } catch (error) {
         console.error("Failed to submit data", error);

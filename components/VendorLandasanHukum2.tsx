@@ -72,7 +72,7 @@ const LandasanHukum: React.FC = () => {
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
         message.success("Dokumen Landasan Hukum added successful");
-        addLandasanHukum({ ...formik.values, id: landasanHukum.length + 2 });
+        addLandasanHukum({ ...values, id: response.data.data.id });
     setIsModalVisible(false);
         formik.resetForm();
       } catch (error) {
@@ -133,7 +133,7 @@ const LandasanHukum: React.FC = () => {
     form.setFieldsValue({
       ...record,
       document_date: record.document_date
-        ? dayjs(record.document_date, "DD-MM-YYYY")
+        ? dayjs(record.document_date, "YYYY-MM-DD")
         : null,
     });
     setEditingKey(record.id.toString());
@@ -158,7 +158,7 @@ const LandasanHukum: React.FC = () => {
       const updatedRow = {
         ...row,
         id: Number(id),
-        document_date: dayjs(row.document_date).format("DD-MM-YYYY"),
+        document_date: dayjs(row.document_date).format("YYYY-MM-DD"),
       };
   
       await axios.put(
@@ -232,7 +232,7 @@ const LandasanHukum: React.FC = () => {
       key: "document_date",
       editable: true,
       render: (text: string) =>
-        text ? dayjs(text, "DD-MM-YYYY").format("DD-MM-YYYY") : "",
+        text ? dayjs(text, "YYYY-MM-DD").format("DD-MM-YYYY") : "",
     },
     {
       title: "Operation",
@@ -361,7 +361,7 @@ const LandasanHukum: React.FC = () => {
           >
             <DatePicker
               name="document_date"
-              format="DD-MM-YYYY"
+              format="YYYY-MM-DD"
               onChange={(date, dateString) =>
                 formik.setFieldValue("document_date", dateString)
               }

@@ -80,7 +80,7 @@ const IzinUsaha: React.FC = () => {
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
         message.success("Izin Usaha added successful");
-        addIzinUsaha({ ...formik.values, id: izinUsaha.length + 2 });
+        addIzinUsaha({ ...values, id: response.data.data.id });
     setIsModalVisible(false);
         formik.resetForm();
       } catch (error) {
@@ -156,10 +156,10 @@ const IzinUsaha: React.FC = () => {
     form.setFieldsValue({
       ...record,
       start_date: record.start_date
-        ? dayjs(record.start_date, "DD-MM-YYYY")
+        ? dayjs(record.start_date, "YYYY-MM-DD")
         : null,
       end_date: record.end_date
-        ? dayjs(record.end_date, "DD-MM-YYYY")
+        ? dayjs(record.end_date, "YYYY-MM-DD")
         : null,
     });
     setEditingKey(record.id.toString());
@@ -184,8 +184,8 @@ const IzinUsaha: React.FC = () => {
       const updatedRow = {
         ...row,
         id: Number(id),
-        start_date: dayjs(row.start_date).format("DD-MM-YYYY"),
-        end_date: dayjs(row.end_date).format("DD-MM-YYYY"),
+        start_date: dayjs(row.start_date).format("YYYY-MM-DD"),
+        end_date: dayjs(row.end_date).format("YYYY-MM-DD"),
       };
   
       await axios.put(
@@ -259,7 +259,7 @@ const IzinUsaha: React.FC = () => {
       key: "start_date",
       editable: true,
       render: (text: string) =>
-        text ? dayjs(text, "DD-MM-YYYY").format("DD-MM-YYYY") : "",
+        text ? dayjs(text, "YYYY-MM-DD").format("DD-MM-YYYY") : "",
     },
     {
       title: "Tanggal Berakhir",
@@ -267,7 +267,7 @@ const IzinUsaha: React.FC = () => {
       key: "end_date",
       editable: true,
       render: (text: string) =>
-        text ? dayjs(text, "DD-MM-YYYY").format("DD-MM-YYYY") : "",
+        text ? dayjs(text, "YYYY-MM-DD").format("DD-MM-YYYY") : "",
     },
     {
       title: "Instansi Pemberi Izin",

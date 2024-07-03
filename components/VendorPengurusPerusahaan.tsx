@@ -17,7 +17,7 @@ import { useFormik } from "formik";
 import { getCookie } from "cookies-next";
 import axios from "axios";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { positionOptions } from "@/utils/positionOptioins";
+import { positionOptions } from "@/utils/positionOptions";
 
 const { TextArea } = Input;
 interface PengurusPerusahaan {
@@ -73,10 +73,7 @@ const PengurusPerusahaan: React.FC = () => {
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
         message.success("Bank Account added successful");
-        addPengurusPerusahaan({
-          ...formik.values,
-          id: pengurusPerusahaan.length + 2,
-        });
+        addPengurusPerusahaan({ ...values, id: response.data.data.id });
         formik.resetForm();
       } catch (error) {
         console.error("Failed to submit data", error);

@@ -16,7 +16,7 @@ import { useFormik } from "formik";
 import axios from "axios";
 import { getCookie } from "cookies-next";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import { positionOptions } from "@/utils/positionOptioins";
+import { positionOptions } from "@/utils/positionOptions";
 
 const { TextArea } = Input;
 
@@ -81,10 +81,7 @@ const ContactInfo: React.FC = () => {
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
         message.success("Contact added successful");
-        addContactInfo({
-          ...formik.values,
-          id: contactInfo.length + 2,
-        });
+        addContactInfo({ ...values, id: response.data.data.id });
         setIsModalVisible(false);
         formik.resetForm();
       } catch (error) {
@@ -280,6 +277,7 @@ const ContactInfo: React.FC = () => {
       title: "Jabatan",
       dataIndex: "position_id",
       key: "position_id",
+      options: positionOptions,
       editable: true,
       render: (text: string) => getPositionName(text),
     },
@@ -329,13 +327,12 @@ const ContactInfo: React.FC = () => {
       onCell: (record: ContactPerson) => ({
         record,
         inputType:
-        col.dataIndex === "position_id" || col.dataIndex === "npwpPengurus"
-          ? "text"
-          : col.dataIndex === "position_id" || col.dataIndex === "province_id"
-          ? "select"
-          : "text",
+       col.dataIndex === "position_id" || col.dataIndex === "bank_id"
+              ? "select"
+              : "text",
         dataIndex: col.dataIndex,
         title: col.title,
+        options: col.options,
         editing: isEditing(record),
       }),
     };
@@ -343,6 +340,17 @@ const ContactInfo: React.FC = () => {
 
   const showModal = () => {
     setIsModalVisible(true);
+    form.resetFields()
+        formik.resetForm()
+        let emptyData = {
+          contact_name: "",
+          contact_email: "",
+          contact_phone: "",
+          contact_identity_no: "",
+          contact_npwp: "",
+          position_id: "",
+        }
+        form.setFieldsValue({ ...emptyData })
   };
 
   const handleOk = () => {
@@ -446,8 +454,13 @@ const ContactInfo: React.FC = () => {
               onBlur={formik.handleBlur}
               value={formik.values.position_id}
             >
-              <Option value="8">Direktur Utama</Option>
-              <Option value="9">Human Resource</Option>
+             {columns
+                .find((col) => col.dataIndex === "position_id")
+                ?.options?.map((option) => (
+                  <Select.Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Select.Option>
+                ))}
             </Select>
           </Form.Item>
         </Form>
