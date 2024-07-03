@@ -131,16 +131,9 @@ const ContactInfo: React.FC = () => {
         console.log("Response from API:", response.data);
         // Pastikan response.data adalah object dan memiliki properti yang berisi array
         if (typeof response.data === "object" && Array.isArray(response.data.data)) {
-          const mappedData = response.data.data.map(
-            (data: {
-              bank_id: { bank: any };
-              bank: any;
-              currency_id: { name: any };
-              currency: any;
-            }) => ({
+          const mappedData = response.data.data.map( (data: { bank: { bank_name: any }; bank_id: any;}) => ({
               ...data,
-              bank_id: data.bank ? data.bank.bank_name : '',
-              currency_id: data.currency ? data.currency.name : '',
+              bank_id: data.bank ? data.bank.bank_name : data.bank_id,
             }),
           );
           initializeBankAccount(mappedData);
@@ -199,7 +192,8 @@ const ContactInfo: React.FC = () => {
             "Vendor-ID": vendorId,
           },
         }
-      );
+        );
+        console.log("data row", row);
   
       editBankAccount({ ...row, id: Number(id) });
       setEditingKey("");

@@ -136,9 +136,9 @@ const ContactInfo: React.FC = () => {
         console.log("Response from API:", response.data);
         // Pastikan response.data adalah object dan memiliki properti yang berisi array
         if (typeof response.data === "object" && Array.isArray(response.data.data)) {
-          const mappedData = response.data.data.map((contact: { vendor_position: { name: any; }; position_id: any; }) => ({
-            ...contact,
-            position_id: contact.vendor_position ? contact.vendor_position.name : contact.position_id,
+          const mappedData = response.data.data.map((data: { vendor_position: { name: any; }; position_id: any; }) => ({
+            ...data,
+            position_id: data.vendor_position ? data.vendor_position.name : data.position_id,
           }));
           initializeContactInfo(mappedData);
         } else {
