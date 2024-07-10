@@ -8,8 +8,7 @@ import {
 import axios from "axios";
 import vendorStore from "@/store/vendorStore";
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'
-
+import { getCookie } from 'cookies-next' //change
 
 interface VendorRegisteredList {
     id: number;
@@ -24,33 +23,65 @@ interface VendorRegisteredList {
 }
 
 const VendorRegisteredList: React.FC = () => {
-    // console.log(localStorage.getItem('token'))
-    const router = useRouter()
+    const token = getCookie('token');
     const {
         vendorRegisteredList,
         initializeVendorRegisteredList,
     } = vendorStore.useVendorRegisteredStore();
 
-    const [isLoading, setIsLoading] = useState(false)
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        // Initialize data if needed
-        getAllVendorList()
+        getAllVendorList();
     }, []);
 
+    const getAllVendorList = async () => {
+        setIsLoading(true);
+        try {
+            const response = await axios.get("https://vendorv2.delpis.online/api/verifikator/vendor", {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            console.log("Response from API:", response.data.data);
+            let index = 0;
+            response.data.data.forEach((e: any) => {
+                index++;
+                e.status_vendor = "Active";
+                e.no = index;
+            });
+            const vendorList: VendorRegisteredList[] = await response.data.data;
+            initializeVendorRegisteredList(vendorList);
+        } catch (error) {
+            message.error(`Get Data Vendor Registered failed! ${error}`);
+            console.error("Error Get Data Vendor Registered:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const columns = [
-        { title: "No", dataIndex: "no", key: "no" },
+        {
+            title: "No",
+            dataIndex: "no",
+            key: "no",
+            sorter: (a: VendorRegisteredList, b: VendorRegisteredList) => a.id - b.id,
+        },
         {
             title: "Company Name",
             dataIndex: "company_name",
             key: "company_name",
-            render: (_: any, record: VendorRegisteredList) => {
-                return (
-                    <Link href={`/vendor/verification/${record.id}`} style={{ marginRight: 8, textDecoration: 'underline' }} className="text-blue-500">
-                        {record.company_name}
-                    </Link>
-                );
-            },
+            render: (_: any, record: VendorRegisteredList) => (
+                <Link href={`/vendor/detail/${record.id}`} style={{ marginRight: 8, textDecoration: 'underline' }} className="text-blue-500">
+                    <p>{record.company_name}</p>
+                </Link>
+            ),
+            filters: vendorRegisteredList.map(vendor => ({
+                text: vendor.company_name,
+                value: vendor.company_name,
+            })),
+            onFilter: (value: any, record: { company_name: string | any[]; }) => record.company_name.includes(value),
+            filterSearch: true,
         },
         {
             title: "Vendor Number",
@@ -61,6 +92,12 @@ const VendorRegisteredList: React.FC = () => {
             title: "PIC",
             dataIndex: "pic_name",
             key: "pic_name",
+            filters: vendorRegisteredList.map(vendor => ({
+                text: vendor.pic_name,
+                value: vendor.pic_name,
+            })),
+            onFilter: (value: any, record: { pic_name: string | any[]; }) => record.pic_name.includes(value),
+            filterSearch: true,
         },
         {
             title: "Email",
@@ -69,7 +106,7 @@ const VendorRegisteredList: React.FC = () => {
         },
         {
             title: "Phone Number",
-            dataIndex: "company_phone_umber",
+            dataIndex: "company_phone_number",
             key: "company_phone_number",
         },
         {
@@ -87,47 +124,14 @@ const VendorRegisteredList: React.FC = () => {
             dataIndex: "status_vendor",
             key: "status_vendor",
         },
-    ]
+    ];
 
-    const mergedColumns = columns.map((col) => {
-        return {
-            ...col,
-            onCell: (record: VendorRegisteredList) => ({
-                record,
-                dataindex: col.dataIndex,
-                title: col.title,
-                key: col.key,
-            }),
-        };
-    });
-
-    const getAllVendorList = async () => {
-        setIsLoading(true)
-        try {
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/verifikator/vendor`, {
-                headers: {
-                    "Authorization": "Bearer 456|qufCPbuE8GsEN64j48YJjr4DZrLk2QTt8Fb3Txhx7bcab9de"
-                }
-            });
-            console.log("Response from API:", response.data.data);
-            let index = 0;
-            response.data.data.map((e: any) => {
-                index++
-                e.status_vendor = "Active"
-                e.no = index
-            })
-            const vendorList: VendorRegisteredList[] = await response.data.data
-            initializeVendorRegisteredList(vendorList);
-        } catch (error) {
-            message.error(`Get Data Vendor Registered failed! ${error}`);
-            console.error("Error Get Data Vendor Registered:", error);
-        } finally {
-            setIsLoading(false)
-        }
-    }
+    const onChange = (pagination: any, filters: any, sorter: any) => {
+        console.log("params", pagination, filters, sorter);
+    };
 
     return (
-        <div className='container h-screen max-w-full mx-auto'>
+        <div className=''>
             <h1 className="font-bold text-start text-xl mb-5">Vendor List</h1>
             <Button type="primary" onClick={() => console.log("Download Report")} className="mb-5 float-end">
                 Download Report
@@ -138,11 +142,15 @@ const VendorRegisteredList: React.FC = () => {
                 loading={isLoading}
                 rowKey={(record) => record.id.toString()}
                 dataSource={vendorRegisteredList}
-                columns={mergedColumns}
+                columns={columns}
                 rowClassName="editable-row"
+                onChange={onChange}
+                scroll={{
+                    x: 1300,
+                }}
             />
         </div>
-    )
+    );
 }
 
-export default VendorRegisteredList
+export default VendorRegisteredList;

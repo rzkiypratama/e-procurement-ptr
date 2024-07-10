@@ -27,7 +27,12 @@ interface Pengalaman {
   job_name: string;
   business_field_id: string;
   location: string;
-  }
+}
+
+interface BusinessField {
+  id: number;
+  name: string;
+}
 
 const PengurusPerusahaan: React.FC = () => {
   const {
@@ -40,13 +45,14 @@ const PengurusPerusahaan: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
+  const [getBusinessField, setGetBusinessField] = useState<BusinessField[]>([]);
 
   const formik = useFormik({
     initialValues: {
-        job_name: "",
-        business_field_id: "",
-        location: "",
+      job_name: "",
+      business_field_id: "",
+      location: "",
     },
     onSubmit: async (values) => {
       const token = getCookie("token");
@@ -58,7 +64,7 @@ const PengurusPerusahaan: React.FC = () => {
         return;
       }
       try {
-  setIsLoading(true);
+        setIsLoading(true);
 
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}/vendor/experience`,
@@ -69,17 +75,30 @@ const PengurusPerusahaan: React.FC = () => {
               "User-ID": userId,
               "Vendor-ID": vendorId,
             },
-          }
+          },
         );
-        console.log("Response from API:", response.data);
-        setIsModalVisible(false);
-        message.success("Data Pengalaman added successful");
-        addPengalaman({ ...values, id: response.data.data.id });
-        formik.resetForm();
+
+        if (response.data && response.data.data) {
+          const { vendor_business_field, ...vendorData } = response.data.data;
+
+          const mappedData: Pengalaman = {
+            ...vendorData,
+            business_field_id: vendor_business_field ? vendor_business_field.name : vendor_business_field,
+          };
+
+          console.log("Response from API:", response.data);
+          setIsModalVisible(false);
+          message.success("Data Pengalaman added successful");
+          addPengalaman(mappedData);
+          formik.resetForm();
+        } else {
+          console.error("Failed to get valid data from API response");
+          message.error("Failed to get valid data from API response");
+        }
       } catch (error) {
         console.error("Failed to submit data", error);
-        message.error("Failed to submit data");
-      }finally {
+        message.error("Failed to submit data. Please try again later.");
+      } finally {
         setIsLoading(false);
       }
     },
@@ -89,16 +108,16 @@ const PengurusPerusahaan: React.FC = () => {
   useEffect(() => {
     const fetchBankAccounts = async () => {
       try {
-        setIsLoading(true)
+        setIsLoading(true);
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-  
+
         if (!token || !userId || !vendorId) {
           message.error("Please login first.");
           return;
         }
-  
+
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/vendor/experience`,
           {
@@ -107,32 +126,109 @@ const PengurusPerusahaan: React.FC = () => {
               "User-ID": userId,
               "Vendor-ID": vendorId,
             },
-          }
+          },
         );
-  
+
         // Check if response.data is an object containing an array
         if (response.data && Array.isArray(response.data.data)) {
-          initializePengalaman(response.data.data); // Initialize Data Pengalaman state with the array of Data Pengalaman objects
+          const mappedData = response.data.data.map(
+            (business_field: {
+              vendor_business_field: { name: any };
+              business_field_id: any;
+            }) => ({
+              ...business_field,
+              business_field_id: business_field.vendor_business_field
+                ? business_field.vendor_business_field.name
+                : business_field.vendor_business_field,
+            }),
+          );
+          initializePengalaman(mappedData);
         } else {
-          console.error("Data Pengalaman data fetched is not in expected format:", response.data);
-          message.error("Data Pengalaman data fetched is not in expected format.");
+          console.error(
+            "Data Pengalaman data fetched is not in expected format:",
+            response.data,
+          );
+          message.error(
+            "Data Pengalaman data fetched is not in expected format.",
+          );
         }
       } catch (error) {
         console.error("Error fetching Data Pengalaman data:", error);
-        message.error("Failed to fetch Data Pengalaman data. Please try again later.");
-      }finally {
+        message.error(
+          "Failed to fetch Data Pengalaman data. Please try again later.",
+        );
+      } finally {
         setIsLoading(false);
       }
     };
-  
+
     fetchBankAccounts();
   }, [initializePengalaman]);
 
-  const isEditing = (record: Pengalaman) =>
-    record.id.toString() === editingKey;
+  // get buseinss field
+  useEffect(() => {
+    const fetchBusinessField = async () => {
+      try {
+        setIsLoading(true);
+        const token = getCookie("token");
+        const userId = getCookie("user_id");
+        const vendorId = getCookie("vendor_id");
+
+        if (!token || !userId || !vendorId) {
+          message.error("Please login first.");
+          return;
+        }
+
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/master/vendor-business-field`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          },
+        );
+
+        if (response.data && Array.isArray(response.data.data)) {
+          const mappedData = response.data.data.map(
+            (business_field: { id: any; name: any }) => ({
+              ...business_field,
+            }),
+          );
+
+          setGetBusinessField(mappedData);
+        } else {
+          console.error(
+            "business field data fetched is not in expected format:",
+            response.data,
+          );
+          message.error(
+            "business field data fetched is not in expected format.",
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching business field data:", error);
+        message.error(
+          "Failed to fetch business field data. Please try again later.",
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBusinessField();
+  }, []);
+
+  const isEditing = (record: Pengalaman) => record.id.toString() === editingKey;
 
   const edit = (record: Partial<Pengalaman> & { id: React.Key }) => {
-    form.setFieldsValue({ ...record });
+    const business_field_name =
+      getBusinessField.find(
+        (business_field_id) =>
+          business_field_id.id === Number(record.business_field_id),
+      )?.name || record.business_field_id;
+    form.setFieldsValue({ ...record, business_field_id: business_field_name });
     setEditingKey(record.id.toString());
   };
 
@@ -142,39 +238,54 @@ const PengurusPerusahaan: React.FC = () => {
 
   const save = async (id: React.Key) => {
     try {
+      const row = (await form.validateFields()) as Pengalaman;
       const token = getCookie("token");
       const userId = getCookie("user_id");
       const vendorId = getCookie("vendor_id");
-  
+
       if (!token || !userId || !vendorId) {
         message.error("Token, User ID, or Vendor ID is missing.");
         return;
       }
-  
-      const row = await form.validateFields();
-      const updatedRow = {
-        ...row,
-        id: Number(id),
-      };
-  
-      await axios.put(
+
+      const business_field_get_id =
+        getBusinessField.find(
+          (business_field_id) =>
+            business_field_id.name === row.business_field_id,
+        )?.id || row.business_field_id;
+
+      const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/vendor/experience/${id}`,
-        updatedRow,
+        { ...row, business_field_id: business_field_get_id },
         {
           headers: {
             Authorization: `Bearer ${token}`,
             "User-ID": userId,
             "Vendor-ID": vendorId,
           },
-        }
+        },
       );
-  
-      editPengalaman(updatedRow);
-      setEditingKey("");
-      message.success("Pengalaman updated successfully.");
+
+      if (response.data && response.data.data) {
+        const { vendor_business_field, ...vendorData } = response.data.data;
+
+        const updatedVendorId: Pengalaman = {
+          ...vendorData,
+          business_field_id: vendor_business_field
+            ? vendor_business_field.name
+            : "", // Display bank_name if available
+        };
+
+        editPengalaman({ ...updatedVendorId, id: Number(id) });
+        setEditingKey("");
+        message.success("Pengalaman updated successfully.");
+      } else {
+        console.error("Failed to get valid data from API response");
+        message.error("Failed to get valid data from API response");
+      }
     } catch (error) {
-      console.error("Error updating Pengalaman:", error);
-      message.error("Failed to update Pengalaman. Please try again.");
+      console.error("Failed to save data", error);
+      message.error("Failed to save data. Please try again.");
     }
   };
 
@@ -183,12 +294,12 @@ const PengurusPerusahaan: React.FC = () => {
       const token = getCookie("token");
       const userId = getCookie("user_id");
       const vendorId = getCookie("vendor_id");
-  
+
       if (!token || !userId || !vendorId) {
         message.error("Token, User ID, or Vendor ID is missing.");
         return;
       }
-  
+
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_URL}/vendor/experience/${id}`,
         {
@@ -197,9 +308,9 @@ const PengurusPerusahaan: React.FC = () => {
             "User-ID": userId,
             "Vendor-ID": vendorId,
           },
-        }
+        },
       );
-  
+
       removePengalaman(Number(id));
       message.success("Pengalaman deleted successfully.");
     } catch (error) {
@@ -209,18 +320,37 @@ const PengurusPerusahaan: React.FC = () => {
   };
 
   const getPositionName = (positionId: number) => {
-    const vendor_position = bidangUsahaOptions.find(option => option.value === positionId);
+    const vendor_position = bidangUsahaOptions.find(
+      (option) => option.value === positionId,
+    );
     return vendor_position ? vendor_position.label : positionId;
   };
 
   const columns = [
     { title: "No", dataIndex: "id", key: "id" },
-    { title: "Nama Pekerjaan", dataIndex: "job_name", key: "job_name", editable: true },
-    { title: "Bidang Pekerjaan", dataIndex: "business_field_id", key: "business_field_id", editable: true,
-    options: bidangUsahaOptions,
-    render: (text: number) => getPositionName(text),
-  },
-    { title: "Lokasi Pekerjaan", dataIndex: "location", key: "location", editable: true },
+    {
+      title: "Nama Pekerjaan",
+      dataIndex: "job_name",
+      key: "job_name",
+      editable: true,
+    },
+    {
+      title: "Bidang Pekerjaan",
+      dataIndex: "business_field_id",
+      key: "business_field_id",
+      editable: true,
+      options: getBusinessField.map((businessField) => ({
+        key: businessField.id,
+        value: businessField.id,
+        label: businessField.name,
+      })),
+    },
+    {
+      title: "Lokasi Pekerjaan",
+      dataIndex: "location",
+      key: "location",
+      editable: true,
+    },
     {
       title: "Operation",
       dataIndex: "operation",
@@ -228,31 +358,31 @@ const PengurusPerusahaan: React.FC = () => {
         const editable = isEditing(record);
         return editable ? (
           <span>
-          <Typography.Link
-            onClick={() => save(record.id)}
-            style={{ marginRight: 8 }}
-          >
-            Save
-          </Typography.Link>
-          <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-            <a>Cancel</a>
-          </Popconfirm>
-        </span>
-      ) : (
-        <span className="flex items-center gap-5 justify-center">
-          <Typography.Link
-            disabled={editingKey !== ""}
-            onClick={() => edit(record)}
-          >
-            <EditOutlined />
-          </Typography.Link>
-          <Popconfirm
-            title="Sure to delete?"
-            onConfirm={() => handleDelete(record.id)}
-          >
-            <DeleteOutlined className="text-red-500" />
-          </Popconfirm>
-        </span>
+            <Typography.Link
+              onClick={() => save(record.id)}
+              style={{ marginRight: 8 }}
+            >
+              Save
+            </Typography.Link>
+            <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
+              <a>Cancel</a>
+            </Popconfirm>
+          </span>
+        ) : (
+          <span className="flex items-center justify-center gap-5">
+            <Typography.Link
+              disabled={editingKey !== ""}
+              onClick={() => edit(record)}
+            >
+              <EditOutlined />
+            </Typography.Link>
+            <Popconfirm
+              title="Sure to delete?"
+              onConfirm={() => handleDelete(record.id)}
+            >
+              <DeleteOutlined className="text-red-500" />
+            </Popconfirm>
+          </span>
         );
       },
     },
@@ -266,10 +396,7 @@ const PengurusPerusahaan: React.FC = () => {
       ...col,
       onCell: (record: Pengalaman) => ({
         record,
-        inputType:
-          col.dataIndex === "business_field_id"
-            ? "select"
-            : "text",
+        inputType: col.dataIndex === "business_field_id" ? "select" : "text",
         dataIndex: col.dataIndex,
         title: col.title,
         options: col.options,
@@ -280,6 +407,16 @@ const PengurusPerusahaan: React.FC = () => {
 
   const showModal = () => {
     setIsModalVisible(true);
+    form.resetFields();
+    formik.resetForm();
+    setIsModalVisible(true);
+    let emptyData = {
+      job_name: "",
+      business_field_id: "",
+      location: "",
+    };
+    form.setFieldsValue({ ...emptyData });
+    formik.setValues({ ...emptyData });
   };
 
   const handleOk = () => {
@@ -298,7 +435,10 @@ const PengurusPerusahaan: React.FC = () => {
   const handleSubmit = () => {
     console.log("Submitting data:", pengalaman);
     // Additional submission logic if needed
-    formik.handleSubmit();
+    form.validateFields().then((values) => {
+      // formik.values.name = values.name;
+      formik.handleSubmit()
+    });
   };
 
   return (
@@ -312,13 +452,16 @@ const PengurusPerusahaan: React.FC = () => {
         onCancel={handleCancel}
         footer={[
           <>
-           <Button onClick={handleCancel}>
-            Batalkan
-          </Button>
-          <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
-            Simpan Data
-          </Button>
-          </>
+            <Button onClick={handleCancel}>Batalkan</Button>
+            <Button
+              key="submit"
+              type="primary"
+              onClick={handleSubmit}
+              loading={isLoading}
+            >
+              Simpan Data
+            </Button>
+          </>,
         ]}
       >
         <Form form={form} layout="vertical">
@@ -335,26 +478,28 @@ const PengurusPerusahaan: React.FC = () => {
           <Form.Item
             name="business_field_id"
             label="Bidang Pekerjaan"
-            rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
+            rules={[{ required: true, message: "Harap pilih Bidang pekerjaan" }]}
           >
             <Select
               id="business_field_id"
-              onChange={(value) => formik.setFieldValue("business_field_id", value)}
+              onChange={(value) =>
+                formik.setFieldValue("business_field_id", value)
+              }
               onBlur={formik.handleBlur}
               value={formik.values.business_field_id}
               placeholder="Select bidang usaha"
             >
-              {bidangUsahaOptions.map((option) => (
-            <Option key={option.value} value={option.value}>
-              {option.label}
-            </Option>
-          ))}
+              {getBusinessField.map((business_field) => (
+                <Option key={business_field.id} value={business_field.id}>
+                  {business_field.name}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
           <Form.Item
             name="location"
             label="Lokasi Pekerjaan"
-            rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
+            rules={[{ required: true, message: "Lokasi pekerjaan tidak boleh kosong" }]}
           >
             <Input
               value={formik.values.location}
@@ -365,6 +510,7 @@ const PengurusPerusahaan: React.FC = () => {
       </Modal>
       <Form form={form} component={false}>
         <Table
+          rowKey={(record) => record.id.toString()}
           components={{
             body: {
               cell: EditableCell,
@@ -378,6 +524,9 @@ const PengurusPerusahaan: React.FC = () => {
             onChange: cancel,
           }}
           loading={isLoading}
+          scroll={{
+            x: 1300,
+          }}
         />
       </Form>
     </div>

@@ -10,6 +10,7 @@ import {
 import axios from "axios";
 import useAttachmentStore from "@/store/CenterStore";
 import Link from "next/link";
+import { getCookie } from "cookies-next";
 
 type Props = {
     vendorId: string
@@ -65,7 +66,7 @@ const VendorVerificationDoc = (props: Props) => {
             key: "expiration_date",
         },
         {
-            title: "",
+            title: "Is Verified",
             dataIndex: "action",
             key: "action",
             render: (_: any, record: AttachmentDoc) => {
@@ -93,10 +94,21 @@ const VendorVerificationDoc = (props: Props) => {
     const getDocsVendor = async () => {
         setIsLoading(true)
         try {
+            const token = getCookie("token");
+            const userId = getCookie("user_id");
+            const vendorId = getCookie("vendor_id");
+            const groupUserCode = getCookie('group_user_code')
+
+            if (!token || !userId || (groupUserCode == 'vendor' && !vendorId)) {
+                message.error("Please login first.");
+                return;
+            }
             const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/verifikator/vendor-attachments/${props.vendorId}`, {
-                // headers: {
-                //     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
-                // }
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "User-ID": userId,
+                    "Vendor-ID": vendorId,
+                },
             });
             console.log("Response from API:", response.data.data);
             let index = 0;
@@ -117,31 +129,38 @@ const VendorVerificationDoc = (props: Props) => {
     const verifiedDoc = async (record: AttachmentDoc) => {
         setIsLoading(true)
         try {
-            const body = {
-                _method: "PUT"
+            const token = getCookie("token");
+            const userId = getCookie("user_id");
+            const vendorId = getCookie("vendor_id");
+            const groupUserCode = getCookie('group_user_code')
+            const groupUserId = getCookie('group_user_id')
+
+            if (!token || !userId || (groupUserCode == 'vendor' && !vendorId)) {
+                message.error("Please login first.");
+                return;
             }
-            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/verifikator/vendor-attachments/${props.vendorId}/${record.id}`, body, {
+            // const body = {
+            //     _method: "PUT"
+            // }
+            const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/verifikator/vendor-attachments/${props.vendorId}/${record.id}`, {}, {
                 headers: {
-                    "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
-                }
+                    Authorization: `Bearer ${token}`,
+                },
             });
             console.log("Response from API:", response.data.data);
             var selectedIndex = attachmentDocVerify.findIndex(x => x.id == record.id)
             attachmentDocVerify[selectedIndex].is_verified = response.data.data.is_verified
         } catch (error) {
-            message.error(`Get Data Docs Vendor failed! ${error}`);
-            console.error("Error Get Docs Vendor Registered:", error);
+            message.error(`Verify Docs Vendor failed! ${error}`);
+            console.error("Error Verify Docs Vendor:", error);
         } finally {
             setIsLoading(false)
         }
     }
 
     return (
-        <div className='container h-screen max-w-full mx-auto'>
+        <div className="">
             <h1 className="font-bold text-start text-xl mb-5">Verification</h1>
-            <Button type="primary" onClick={() => console.log("Download Report")} className="mb-5 float-end">
-                Download Report
-            </Button>
             <Table
                 components={{}}
                 bordered

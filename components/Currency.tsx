@@ -14,6 +14,7 @@ import { useFormik } from "formik";
 import { ExclamationCircleFilled } from '@ant-design/icons';
 import axios from "axios";
 import useCurrencyStore from "@/store/currencyStore";
+import { getCookie } from "cookies-next";
 
 interface Currency {
     name: string;
@@ -111,10 +112,20 @@ const CurrencyData: React.FC = () => {
             console.log("Form Values: ", values);
             setLoading(true);
             try {
-                const response = await axios.post("https://vendorv2.delpis.online/api/master/currency", values, {
-                    // headers: {
-                    //     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
-                    // }
+                const token = getCookie("token");
+                const userId = getCookie("user_id");
+                const vendorId = getCookie("vendor_id");
+
+                if (!token || !userId || !vendorId) {
+                    message.error("Please login first.");
+                    return;
+                }
+                const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/master/currency`, values, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "User-ID": userId,
+                        "Vendor-ID": vendorId,
+                    },
                 });
                 console.log("Response from API:", response.data);
                 setFormSubmitted(true);
@@ -186,10 +197,21 @@ const CurrencyData: React.FC = () => {
 
     const listCurrency = async () => {
         try {
-            const response = await axios.get("https://vendorv2.delpis.online/api/master/currency", {
+            const token = getCookie("token");
+            const userId = getCookie("user_id");
+            const vendorId = getCookie("vendor_id");
+
+            if (!token || !userId || !vendorId) {
+                message.error("Please login first.");
+                return;
+            }
+
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/master/currency`, {
                 headers: {
-                    "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
-                }
+                    Authorization: `Bearer ${token}`,
+                    "User-ID": userId,
+                    "Vendor-ID": vendorId,
+                },
             });
             console.log("Response from API:", response.data.data);
             let index = 0;
@@ -235,10 +257,20 @@ const CurrencyData: React.FC = () => {
         }
         setLoading(true)
         try {
-            const response = await axios.post(`https://vendorv2.delpis.online/api/master/currency/${selectedId}`, body, {
+            const token = getCookie("token");
+            const userId = getCookie("user_id");
+            const vendorId = getCookie("vendor_id");
+
+            if (!token || !userId || !vendorId) {
+                message.error("Please login first.");
+                return;
+            }
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/master/currency/${selectedId}`, body, {
                 headers: {
-                    "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
-                }
+                    Authorization: `Bearer ${token}`,
+                    "User-ID": userId,
+                    "Vendor-ID": vendorId,
+                },
             })
             console.log("Response from API:", response.data)
             setFormSubmitted(true)
@@ -260,10 +292,20 @@ const CurrencyData: React.FC = () => {
     const deleteCurrency = async () => {
         setLoading(true)
         try {
-            const response = await axios.delete(`https://vendorv2.delpis.online/api/master/currency/${selectedId}`, {
+            const token = getCookie("token");
+            const userId = getCookie("user_id");
+            const vendorId = getCookie("vendor_id");
+
+            if (!token || !userId || !vendorId) {
+                message.error("Please login first.");
+                return;
+            }
+            const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/master/currency/${selectedId}`, {
                 headers: {
-                    "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
-                }
+                    Authorization: `Bearer ${token}`,
+                    "User-ID": userId,
+                    "Vendor-ID": vendorId,
+                },
             });
             console.log("Response from API:", response.data);
             setFormSubmitted(true);
@@ -282,7 +324,7 @@ const CurrencyData: React.FC = () => {
     }
 
     return (
-        <div className='container h-screen max-w-full mx-auto'>
+        <div>
             <Button type="primary" onClick={showModal} className="mb-5 float-end">
                 Tambah
             </Button>

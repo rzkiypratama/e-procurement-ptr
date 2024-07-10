@@ -40,7 +40,7 @@ interface Bank {
 }
 
 interface CurrencyID {
-  id: string;
+  id: number;
   code: string;
   name: string;
 }
@@ -96,7 +96,7 @@ const PengurusPerusahaan: React.FC = () => {
           const bankAccount: BankAccount = {
             ...bankAccountData,
             bank_id: bank ? bank.bank_name : "",
-            currency_id: currency.name ? currency.id : "",
+            currency_id: currency ? currency.name : "",
           };
 
           console.log("Response from API:", response.data);
@@ -143,7 +143,10 @@ const PengurusPerusahaan: React.FC = () => {
           },
         );
 
-        if (typeof response.data === "object" && Array.isArray(response.data.data)) {
+        if (
+          typeof response.data === "object" &&
+          Array.isArray(response.data.data)
+        ) {
           const mappedData = response.data.data.map(
             (account: {
               bank: { bank_name: any };
@@ -281,68 +284,80 @@ const PengurusPerusahaan: React.FC = () => {
   const isEditing = (record: BankAccount) =>
     record.id.toString() === editingKey;
 
-    const edit = (record: Partial<BankAccount> & { id: React.Key }) => {
-      form.setFieldsValue({
-        ...record,
-        bank_id: record.bank_id && !isNaN(Number(record.bank_id)) ? Number(record.bank_id) : "",
-        currency_id: record.currency_id && !isNaN(Number(record.currency_id)) ? Number(record.currency_id) : "",
-      });
-      console.log(record);
-      setEditingKey(record.id.toString());
-    };
+  const edit = (record: Partial<BankAccount> & { id: React.Key }) => {
+    // Transform bank_id to bank_name for display
+    const bankName =
+      banks.find((bank) => bank.id === Number(record.bank_id))?.bank_name ||
+      record.bank_id;
+    // const currencyName = getCurrency.find((currency) => currency.id === record.currency_id)?.name;
+    const currencyName =
+      getCurrency.find((currency) => currency.id === Number(record.currency_id))
+        ?.name || record.currency_id;
+
+    form.setFieldsValue({
+      ...record,
+      bank_id: bankName, // Display bank_name in the form
+      currency_id: currencyName, // Display currency_id as is
+    });
+    setEditingKey(record.id.toString());
+  };
 
   const cancel = () => {
     setEditingKey("");
   };
 
   const save = async (id: React.Key) => {
-  try {
-    const row = (await form.validateFields()) as BankAccount;
-    const token = getCookie("token");
-    const userId = getCookie("user_id");
-    const vendorId = getCookie("vendor_id");
+    try {
+      const row = (await form.validateFields()) as BankAccount;
+      const token = getCookie("token");
+      const userId = getCookie("user_id");
+      const vendorId = getCookie("vendor_id");
 
-    if (!token || !userId || !vendorId) {
-      message.error("Token, User ID, or Vendor ID is missing.");
-      return;
-    }
+      if (!token || !userId || !vendorId) {
+        message.error("Token, User ID, or Vendor ID is missing.");
+        return;
+      }
 
-    const response = await axios.put(
-      `${process.env.NEXT_PUBLIC_API_URL}/vendor/bank/${id}`,
-      row,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "User-ID": userId,
-          "Vendor-ID": vendorId,
+      // Transform bank_id back to its original id for submission
+      const bankId =
+        banks.find((bank) => bank.bank_name === row.bank_id)?.id || row.bank_id;
+      const currencyId =
+        getCurrency.find((currency) => currency.name === row.currency_id)?.id ||
+        row.currency_id;
+
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/vendor/bank/${id}`,
+        { ...row, bank_id: bankId, currency_id: currencyId }, // Ensure bank_id is sent as id, not bank_name
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "User-ID": userId,
+            "Vendor-ID": vendorId,
+          },
         },
-      },
-    );
+      );
 
-    if (response.data && response.data.data) {
-      const { bank, currency, ...bankAccountData } = response.data.data;
+      if (response.data && response.data.data) {
+        const { bank, currency, ...bankAccountData } = response.data.data;
 
-      const bankAccount: BankAccount = {
-        ...bankAccountData,
-        bank_id: bank ? bank.bank_name : bank,
-        currency_id: currency ? currency.name : currency,
-      };
+        const updatedBankAccount: BankAccount = {
+          ...bankAccountData,
+          bank_id: bank ? bank.bank_name : "", // Display bank_name if available
+          currency_id: currency ? currency.name : "", // Display currency name if available
+        };
 
-    console.log(bankAccount);
-
-      // editBankAccount({ ...bankAccount, id: Number(id) });
-      editBankAccount({ ...bankAccount, id: Number(id) });
-      setEditingKey("");
-      message.success("Bank account edited successfully.");
-    } else {
-      console.error("Failed to get valid data from API response");
-      message.error("Failed to get valid data from API response");
+        editBankAccount({ ...updatedBankAccount, id: Number(id) });
+        setEditingKey("");
+        message.success("Bank account edited successfully.");
+      } else {
+        console.error("Failed to get valid data from API response");
+        message.error("Failed to get valid data from API response");
+      }
+    } catch (error) {
+      console.error("Failed to save data", error);
+      message.error("Failed to save data. Please try again.");
     }
-  } catch (error) {
-    console.error("Failed to save data", error);
-    message.error("Failed to save data. Please try again.");
-  }
-};
+  };
 
   const handleDelete = async (id: React.Key) => {
     try {
@@ -375,7 +390,9 @@ const PengurusPerusahaan: React.FC = () => {
   };
 
   const getPositionName = (positionId: string) => {
-    const vendor_position = currencyOptions.find(option => option.value === positionId);
+    const vendor_position = currencyOptions.find(
+      (option) => option.value === positionId,
+    );
     return vendor_position ? vendor_position.label : positionId;
   };
 
@@ -402,7 +419,7 @@ const PengurusPerusahaan: React.FC = () => {
         value: currency.id,
         label: currency.name,
       })),
-      render: (text: string) => getPositionName(text),
+      // render: (text: string) => getPositionName(text),
     },
     {
       title: "Nomor Rekening",
@@ -493,9 +510,10 @@ const PengurusPerusahaan: React.FC = () => {
 
   const handleSubmit = async () => {
     console.log("Submitting data:", bankAccount);
-    console.log("Options:", columns
-  .find((col) => col.dataIndex === "bank_id")
-  ?.options);
+    console.log(
+      "Options:",
+      columns.find((col) => col.dataIndex === "bank_id")?.options,
+    );
     formik.handleSubmit();
   };
 
@@ -589,6 +607,9 @@ const PengurusPerusahaan: React.FC = () => {
             onChange: cancel,
           }}
           loading={isLoading}
+          scroll={{
+            x: 1300,
+          }}
         />
       </Form>
     </div>

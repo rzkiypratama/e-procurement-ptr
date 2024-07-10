@@ -28,6 +28,11 @@ interface PengurusPerusahaan {
   npwp_no: string;
 }
 
+interface PositionList {
+  id: number;
+  name: string;
+}
+
 const PengurusPerusahaan: React.FC = () => {
   const {
     pengurusPerusahaan,
@@ -39,7 +44,8 @@ const PengurusPerusahaan: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
+  const [getPositions, setGetpositions] = useState<PositionList[]>([]);
 
   const formik = useFormik({
     initialValues: {
@@ -70,19 +76,33 @@ const PengurusPerusahaan: React.FC = () => {
             },
           }
         );
-        console.log("Response from API:", response.data);
-        setIsModalVisible(false);
-        message.success("Data Pengurus Perusahaan added successful");
-        addPengurusPerusahaan({ ...values, id: response.data.data.id });
-        formik.resetForm();
+
+        if (response.data && response.data.data) {
+          const { vendor_position, ...vendorData } = response.data.data;
+
+          const mappedData: PengurusPerusahaan = {
+            ...vendorData,
+            position_id: vendor_position.id ? vendor_position.name : '',
+          };
+
+          console.log("Response from API:", response.data);
+          setIsModalVisible(false);
+          message.success("Data Pengurus Perusahaan added successful");
+          addPengurusPerusahaan(mappedData);
+          formik.resetForm();
+        } else {
+          console.error("Failed to get valid data from API response");
+          message.error("Failed to get valid data from API response");
+        }
       } catch (error) {
         console.error("Failed to submit data", error);
-        message.error("Failed to submit data");
-      }finally {
+        message.error("Failed to submit data. Please try again later.");
+      } finally {
         setIsLoading(false);
       }
     },
   });
+
 
   useEffect(() => {
     const fetchPengurusPerusahaan = async () => {
@@ -92,12 +112,12 @@ const PengurusPerusahaan: React.FC = () => {
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-  
+
         if (!token || !userId || !vendorId) {
           message.error("Please login first.");
           return;
         }
-  
+
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/vendor/director`,
           {
@@ -108,7 +128,7 @@ const PengurusPerusahaan: React.FC = () => {
             },
           }
         );
-  
+
         // Check if response.data is an object containing an array
         if (response.data && Array.isArray(response.data.data)) {
           const mappedData = response.data.data.map((contact: { vendor_position: { name: any; }; position_id: any; }) => ({
@@ -123,24 +143,91 @@ const PengurusPerusahaan: React.FC = () => {
       } catch (error) {
         console.error("Error fetching Pengurus Perusahaan data:", error);
         message.error("Failed to fetch Pengurus Perusahaan data. Please try again later.");
-      }finally {
+      } finally {
         setIsLoading(false);
       }
     };
-  
+
     fetchPengurusPerusahaan();
   }, [initializePengurusPerusahaan]);
+
+  useEffect(() => {
+    const fetchPositionList = async () => {
+      try {
+        setIsLoading(true);
+        const token = getCookie("token");
+        const userId = getCookie("user_id");
+        const vendorId = getCookie("vendor_id");
+
+        if (!token || !userId || !vendorId) {
+          message.error("Please login first.");
+          return;
+        }
+
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/master/vendor-position`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          },
+        );
+
+        if (response.data && Array.isArray(response.data.data)) {
+          const mappedData = response.data.data.map(
+            (vendor_position: { id: any; name: any }) => ({
+              ...vendor_position,
+            }),
+          );
+
+          setGetpositions(mappedData);
+        } else {
+          console.error(
+            "business field data fetched is not in expected format:",
+            response.data,
+          );
+          message.error(
+            "business field data fetched is not in expected format.",
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching business field data:", error);
+        message.error(
+          "Failed to fetch business field data. Please try again later.",
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPositionList();
+  }, []);
 
   const isEditing = (record: PengurusPerusahaan) =>
     record.id.toString() === editingKey;
 
   const edit = (record: Partial<PengurusPerusahaan> & { id: React.Key }) => {
+    const positionName =
+      getPositions.find(
+        (position_id) =>
+          position_id.id === Number(record.position_id),
+      )?.name || record.position_id;
     form.setFieldsValue({
       ...record,
-      position_id: record.position_id && !isNaN(Number(record.position_id)) ? Number(record.position_id) : "",
+      position_id: positionName, // Assign the position name for display in the form
     });
     setEditingKey(record.id.toString());
   };
+
+  // const edit = (record: Partial<PengurusPerusahaan> & { id: React.Key }) => {
+  //   form.setFieldsValue({
+  //     ...record,
+  //     // position_id: record.position_id && !isNaN(Number(record.position_id)) ? Number(record.position_id) : "",
+  //   });
+  //   setEditingKey(record.id.toString());
+  // };
 
   const cancel = () => {
     setEditingKey("");
@@ -148,22 +235,27 @@ const PengurusPerusahaan: React.FC = () => {
 
   const save = async (id: React.Key) => {
     try {
+      const row = await form.validateFields();
       const token = getCookie("token");
       const userId = getCookie("user_id");
       const vendorId = getCookie("vendor_id");
-  
+
       if (!token || !userId || !vendorId) {
         message.error("Token, User ID, or Vendor ID is missing.");
         return;
       }
-  
-      const row = await form.validateFields();
+
+      const positionValue =
+        getPositions.find((position) => position.name === row.position_id)?.id ||
+        row.position_id; // Mengambil nilai ID dari posisi
+
       const updatedRow = {
         ...row,
         id: Number(id),
+        position_id: positionValue, // Mengatur ID posisi bukan labelnya
       };
-  
-      await axios.put(
+
+      const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/vendor/director/${id}`,
         updatedRow,
         {
@@ -174,10 +266,22 @@ const PengurusPerusahaan: React.FC = () => {
           },
         }
       );
-  
-      editPengurusPerusahaan(updatedRow);
-      setEditingKey("");
-      message.success("Data details updated successfully.");
+
+      if (response.data && response.data.data) {
+        const { vendor_position, ...directorData } = response.data.data;
+
+        const updatedDirector: PengurusPerusahaan = {
+          ...directorData,
+          position_id: vendor_position ? vendor_position.name : "", // Menampilkan nama posisi jika tersedia
+        };
+
+        editPengurusPerusahaan(updatedDirector); // Memperbarui data pengurus perusahaan
+        setEditingKey("");
+        message.success("Data details updated successfully.");
+      } else {
+        console.error("Failed to get valid data from API response");
+        message.error("Failed to get valid data from API response");
+      }
     } catch (error) {
       console.error("Error updating data details:", error);
       message.error("Failed to update data details. Please try again.");
@@ -189,12 +293,12 @@ const PengurusPerusahaan: React.FC = () => {
       const token = getCookie("token");
       const userId = getCookie("user_id");
       const vendorId = getCookie("vendor_id");
-  
+
       if (!token || !userId || !vendorId) {
         message.error("Token, User ID, or Vendor ID is missing.");
         return;
       }
-  
+
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_URL}/vendor/director/${id}`,
         {
@@ -205,7 +309,7 @@ const PengurusPerusahaan: React.FC = () => {
           },
         }
       );
-  
+
       removePengurusPerusahaan(Number(id));
       message.success("Data deleted successfully.");
     } catch (error) {
@@ -214,16 +318,18 @@ const PengurusPerusahaan: React.FC = () => {
     }
   };
 
-  const getPositionName = (positionId: string) => {
-    const vendor_position = positionOptions.find(option => option.value === positionId);
-    return vendor_position ? vendor_position.label : positionId;
-  };
-
   const columns = [
     { title: "No", dataIndex: "id", key: "id" },
     { title: "Nama", dataIndex: "name", key: "name", editable: true },
-    { title: "Jabatan", dataIndex: "position_id", key: "position_id", editable: true,
-      render: (text: string) => getPositionName(text), options: positionOptions  },
+    {
+      title: "Jabatan", dataIndex: "position_id", key: "position_id", editable: true,
+      // render: (text: string) => getPositionsName(text),
+      options: getPositions.map((businessField) => ({
+        key: businessField.id,
+        value: businessField.id,
+        label: businessField.name,
+      })),
+    },
     { title: "No KTP", dataIndex: "identity_no", key: "identity_no", editable: true },
     { title: "NPWP", dataIndex: "npwp_no", key: "npwp_no", editable: true },
     {
@@ -272,7 +378,7 @@ const PengurusPerusahaan: React.FC = () => {
       onCell: (record: PengurusPerusahaan) => ({
         record,
         inputType:
-           col.dataIndex === "position_id"
+          col.dataIndex === "position_id"
             ? "select"
             : "text",
         dataIndex: col.dataIndex,
@@ -285,6 +391,17 @@ const PengurusPerusahaan: React.FC = () => {
 
   const showModal = () => {
     setIsModalVisible(true);
+    form.resetFields();
+    formik.resetForm();
+    setIsModalVisible(true);
+    let emptyData = {
+      name: "",
+      position_id: "",
+      identity_no: "",
+      npwp_no: "",
+    };
+    form.setFieldsValue({ ...emptyData });
+    formik.setValues({ ...emptyData })
   };
 
   const handleOk = () => {
@@ -302,7 +419,11 @@ const PengurusPerusahaan: React.FC = () => {
   const handleSubmit = () => {
     console.log("Submitting data:", pengurusPerusahaan);
     // Additional submission logic if needed
-    formik.handleSubmit()
+
+    form.validateFields().then((values) => {
+      // formik.values.name = values.name;
+      formik.handleSubmit()
+    });
   };
 
   return (
@@ -316,12 +437,12 @@ const PengurusPerusahaan: React.FC = () => {
         onCancel={handleCancel}
         footer={[
           <>
-           <Button onClick={handleCancel}>
-            Batalkan
-          </Button>
-          <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
-            Simpan Data
-          </Button>
+            <Button onClick={handleCancel}>
+              Batalkan
+            </Button>
+            <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
+              Simpan Data
+            </Button>
           </>
         ]}
       >
@@ -346,9 +467,9 @@ const PengurusPerusahaan: React.FC = () => {
               onBlur={formik.handleBlur}
               value={formik.values.position_id}
             >
-              {positionOptions.map((option) => (
-                <Select.Option key={option.value} value={option.value}>
-                  {option.label}
+              {getPositions.map((option) => (
+                <Select.Option key={option.id} value={option.id}>
+                  {option.name}
                 </Select.Option>
               ))}
             </Select>
@@ -356,24 +477,66 @@ const PengurusPerusahaan: React.FC = () => {
           <Form.Item
             name="identity_no"
             label="No KTP"
-            rules={[{ required: true, message: "KTP harus berupa angka" }]}
+            rules={[
+              { required: true, message: "KTP tidak boleh kosong" },
+              () => ({
+                validator(_, value) {
+                  if (!value) {
+                    return Promise.reject();
+                  }
+                  if (isNaN(value)) {
+                    return Promise.reject("KTP number has to be a number.");
+                  }
+                  if (value.length < 16) {
+                    return Promise.reject("KTP number be less than 16 digits");
+                  }
+                  if (value.length > 16) {
+                    return Promise.reject(
+                      "KTP number can't be more than 16 digits",
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
           >
             <Input
               value={formik.values.identity_no}
               onChange={formik.handleChange}
-              // onChange={(value) => formik.setFieldValue("identity_no", value)}
+            // onChange={(value) => formik.setFieldValue("identity_no", value)}
             />
           </Form.Item>
           <Form.Item
             name="npwp_no"
             label="NPWP"
-            rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+            rules={[
+              { required: true, message: "NPWP tidak boleh kosong" },
+              () => ({
+                validator(_, value) {
+                  if (!value) {
+                    return Promise.reject();
+                  }
+                  if (isNaN(value)) {
+                    return Promise.reject("NPWP code has to be a number.");
+                  }
+                  if (value.length < 16) {
+                    return Promise.reject("NPWP code can't be less than 16 digits");
+                  }
+                  if (value.length > 16) {
+                    return Promise.reject(
+                      "NPWP code can't be more than 16 digits",
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
           >
             <Input
               value={formik.values.npwp_no}
               onChange={formik.handleChange}
-              // on change dibawah untuk Input berupa number InputNumber
-              // onChange={(value) => formik.setFieldValue("npwp_no", value)}
+            // on change dibawah untuk Input berupa number InputNumber
+            // onChange={(value) => formik.setFieldValue("npwp_no", value)}
             />
           </Form.Item>
         </Form>
@@ -393,6 +556,9 @@ const PengurusPerusahaan: React.FC = () => {
             onChange: cancel,
           }}
           loading={isLoading}
+          scroll={{
+            x: 1300,
+          }}
         />
       </Form>
     </div>

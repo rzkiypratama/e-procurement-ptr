@@ -20,6 +20,7 @@ import axios from "axios";
 import { getCookie } from "cookies-next";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import { bidangUsahaOptions } from "@/utils/bidangUsahaOptions";
+import { izinUsahaOptions } from "@/utils/izinUsahaOptions";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -34,6 +35,16 @@ interface IzinUsaha {
   vendor_business_field_id: number;
 }
 
+interface BusinessField {
+  id: number;
+  name: string;
+}
+
+interface IzinUsahaList {
+  id: number;
+  name: string;
+}
+
 const IzinUsaha: React.FC = () => {
   const {
     izinUsaha,
@@ -45,7 +56,9 @@ const IzinUsaha: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
+  const [getBusinessField, setGetBusinessField] = useState<BusinessField[]>([]);
+  const [getIzinUsahaList, setGetIzinUsahaList] = useState<IzinUsahaList[]>([]);
 
   const formik = useFormik({
     initialValues: {
@@ -80,32 +93,31 @@ const IzinUsaha: React.FC = () => {
             },
           }
         );
-        console.log("Response from API:", response.data);
-        setIsModalVisible(false);
-        message.success("Izin Usaha added successful");
-        addIzinUsaha({ ...values, id: response.data.data.id });
-         setIsModalVisible(false);
-        formik.resetForm();
-      } catch (error) {
-        console.error("Error submitting data:", error);
-        if (axios.isAxiosError(error)) {
-          if (
-            error.response &&
-            error.response.data &&
-            error.response.data.errors
-          ) {
-            const backendErrors = error.response.data.errors;
-            setErrors(backendErrors);
-            Object.keys(backendErrors).forEach((key) => {
-              message.error(`${backendErrors[key]}`);
-            });
-          } else {
-            message.error("An error occurred. Please try again later.");
-          }
+
+        if (response.data && response.data.data) {
+          const { vendor_business_field, ...vendorData } = response.data.data;
+
+          const mappedData: IzinUsaha = {
+            ...vendorData,
+            vendor_business_field_id: vendor_business_field
+              ? vendor_business_field.name
+              : vendor_business_field,
+          };
+
+          console.log("Response from API:", response.data);
+          setIsModalVisible(false);
+          message.success("Izin Usaha added successful");
+          addIzinUsaha(mappedData);
+          setIsModalVisible(false);
+          formik.resetForm();
         } else {
-          message.error("An unexpected error occurred. Please try again later.");
+          console.error("Failed to get valid data from API response");
+          message.error("Failed to get valid data from API response");
         }
-      }finally {
+      } catch (error) {
+        console.error("Failed to submit data", error);
+        message.error("Failed to submit data. Please try again later.");
+      } finally {
         setIsLoading(false);
       }
     },
@@ -118,12 +130,12 @@ const IzinUsaha: React.FC = () => {
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-  
+
         if (!token || !userId || !vendorId) {
           message.error("Please login first.");
           return;
         }
-  
+
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/vendor/business-permit`,
           {
@@ -134,10 +146,21 @@ const IzinUsaha: React.FC = () => {
             },
           }
         );
-  
+
         // Check if response.data is an object containing an array
         if (response.data && Array.isArray(response.data.data)) {
-          initializeIzinUsaha(response.data.data); // Initialize izinUsaha state with the array of IzinUsaha objects
+          const mappedData = response.data.data.map(
+            (business_field: {
+              vendor_business_field: { name: any };
+              vendor_business_field_id: any;
+            }) => ({
+              ...business_field,
+              vendor_business_field_id: business_field.vendor_business_field
+                ? business_field.vendor_business_field.name
+                : business_field.vendor_business_field,
+            }),
+          );
+          initializeIzinUsaha(mappedData);
         } else {
           console.error("Data fetched is not in expected format:", response.data);
           message.error("Data fetched is not in expected format.");
@@ -145,17 +168,120 @@ const IzinUsaha: React.FC = () => {
       } catch (error) {
         console.error("Error fetching data:", error);
         message.error("Failed to fetch data. Please try again later.");
-      }finally {
+      } finally {
         setIsLoading(false);
       }
     };
-  
+
     fetchData();
   }, [initializeIzinUsaha]);
+
+  // get izin usaha
+  useEffect(() => {
+    const fetchIzinUsahaList = async () => {
+      try {
+        setIsLoading(true);
+        const token = getCookie("token");
+        const userId = getCookie("user_id");
+        const vendorId = getCookie("vendor_id");
+
+        if (!token || !userId || !vendorId) {
+          message.error("Please login first.");
+          return;
+        }
+
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/master/parameters?filter[category_slug]=izin-usaha`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          },
+        );
+
+        if (response.data && Array.isArray(response.data.data)) {
+          const mappedData = response.data.data.map(
+            (type: { id: any; name: any }) => ({
+              ...type,
+            }),
+          );
+
+          setGetIzinUsahaList(mappedData);
+        } else {
+          console.error(
+            "business field data fetched is not in expected format:",
+            response.data,
+          );
+          message.error("business field data fetched is not in expected format.");
+        }
+      } catch (error) {
+        console.error("Error fetching business field data:", error);
+        message.error("Failed to fetch business field data. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchIzinUsahaList();
+  }, []);
+
+  // get buseinss field
+  useEffect(() => {
+    const fetchBusinessField = async () => {
+      try {
+        setIsLoading(true);
+        const token = getCookie("token");
+        const userId = getCookie("user_id");
+        const vendorId = getCookie("vendor_id");
+
+        if (!token || !userId || !vendorId) {
+          message.error("Please login first.");
+          return;
+        }
+
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/master/vendor-business-field`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          },
+        );
+
+        if (response.data && Array.isArray(response.data.data)) {
+          const mappedData = response.data.data.map(
+            (vendor_business_field_id: { id: any; name: any }) => ({
+              ...vendor_business_field_id,
+            }),
+          );
+
+          setGetBusinessField(mappedData);
+        } else {
+          console.error(
+            "business field data fetched is not in expected format:",
+            response.data,
+          );
+          message.error("business field data fetched is not in expected format.");
+        }
+      } catch (error) {
+        console.error("Error fetching business field data:", error);
+        message.error("Failed to fetch business field data. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBusinessField();
+  }, []);
 
   const isEditing = (record: IzinUsaha) => record.id.toString() === editingKey;
 
   const edit = (record: Partial<IzinUsaha> & { id: React.Key }) => {
+    const business_field_name = getBusinessField.find((vendor_business_field_id) => vendor_business_field_id.id === Number(record.vendor_business_field_id))?.name || record.vendor_business_field_id;
     form.setFieldsValue({
       ...record,
       start_date: record.start_date
@@ -164,7 +290,7 @@ const IzinUsaha: React.FC = () => {
       end_date: record.end_date
         ? dayjs(record.end_date, "YYYY-MM-DD")
         : null,
-        vendor_business_field_id: record.vendor_business_field_id && !isNaN(Number(record.vendor_business_field_id)) ? Number(record.vendor_business_field_id) : "",
+      vendor_business_field_id: business_field_name
     });
     setEditingKey(record.id.toString());
   };
@@ -178,20 +304,25 @@ const IzinUsaha: React.FC = () => {
       const token = getCookie("token");
       const userId = getCookie("user_id");
       const vendorId = getCookie("vendor_id");
-  
+
       if (!token || !userId || !vendorId) {
         message.error("Token, User ID, or Vendor ID is missing.");
         return;
       }
-  
+
       const row = await form.validateFields();
+      const businessFieldId = getBusinessField.find(
+        (field) => field.name === row.vendor_business_field_id
+      )?.id || row.vendor_business_field_id;
+
       const updatedRow = {
         ...row,
         id: Number(id),
         start_date: dayjs(row.start_date).format("YYYY-MM-DD"),
         end_date: dayjs(row.end_date).format("YYYY-MM-DD"),
+        vendor_business_field_id: businessFieldId,
       };
-  
+
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/vendor/business-permit/${id}`,
         updatedRow,
@@ -203,8 +334,16 @@ const IzinUsaha: React.FC = () => {
           },
         }
       );
-  
-      editIzinUsaha(updatedRow); // Pastikan Anda memiliki fungsi editIzinUsaha yang sesuai
+
+      // Mengubah kembali business_field_id menjadi name untuk frontend
+      const updatedRowForFrontend = {
+        ...updatedRow,
+        vendor_business_field_id: getBusinessField.find(
+          (field) => field.id === updatedRow.vendor_business_field_id
+        )?.name || updatedRow.vendor_business_field_id,
+      };
+
+      editIzinUsaha(updatedRowForFrontend); // Pastikan Anda memiliki fungsi editIzinUsaha yang sesuai
       setEditingKey("");
       message.success("Business permit updated successfully.");
     } catch (error) {
@@ -218,12 +357,12 @@ const IzinUsaha: React.FC = () => {
       const token = getCookie("token");
       const userId = getCookie("user_id");
       const vendorId = getCookie("vendor_id");
-  
+
       if (!token || !userId || !vendorId) {
         message.error("Token, User ID, or Vendor ID is missing.");
         return;
       }
-  
+
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_URL}/vendor/business-permit/${id}`,
         {
@@ -234,7 +373,7 @@ const IzinUsaha: React.FC = () => {
           },
         }
       );
-  
+
       removeIzinUsaha(Number(id)); // Menghapus item dari state setelah berhasil dihapus di backend
       message.success("Business permit deleted successfully.");
     } catch (error) {
@@ -255,6 +394,11 @@ const IzinUsaha: React.FC = () => {
       dataIndex: "type",
       key: "type",
       editable: true,
+      options: getIzinUsahaList.map((izinUsahaList) => ({
+        key: izinUsahaList.id,
+        value: izinUsahaList.name,
+        label: izinUsahaList.name,
+      })),
     },
     {
       title: "Nomor Izin",
@@ -289,8 +433,12 @@ const IzinUsaha: React.FC = () => {
       dataIndex: "vendor_business_field_id",
       key: "vendor_business_field_id",
       editable: true,
-      options: bidangUsahaOptions,
-      render: (text: number) => getPositionName(text),
+      options: getBusinessField.map((businessField) => ({
+        key: businessField.id,
+        value: businessField.id,
+        label: businessField.name,
+      })),
+      // render: (text: number) => getPositionName(text),
     },
     {
       title: "Operation",
@@ -299,31 +447,31 @@ const IzinUsaha: React.FC = () => {
         const editable = isEditing(record);
         return editable ? (
           <span>
-          <Typography.Link
-            onClick={() => save(record.id)}
-            style={{ marginRight: 8 }}
-          >
-            Save
-          </Typography.Link>
-          <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-            <a>Cancel</a>
-          </Popconfirm>
-        </span>
-      ) : (
-        <span className="flex items-center gap-5 justify-center">
-          <Typography.Link
-            disabled={editingKey !== ""}
-            onClick={() => edit(record)}
-          >
-            <EditOutlined />
-          </Typography.Link>
-          <Popconfirm
-            title="Sure to delete?"
-            onConfirm={() => handleDelete(record.id)}
-          >
-            <DeleteOutlined className="text-red-500" />
-          </Popconfirm>
-        </span>
+            <Typography.Link
+              onClick={() => save(record.id)}
+              style={{ marginRight: 8 }}
+            >
+              Save
+            </Typography.Link>
+            <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
+              <a>Cancel</a>
+            </Popconfirm>
+          </span>
+        ) : (
+          <span className="flex items-center gap-5 justify-center">
+            <Typography.Link
+              disabled={editingKey !== ""}
+              onClick={() => edit(record)}
+            >
+              <EditOutlined />
+            </Typography.Link>
+            <Popconfirm
+              title="Sure to delete?"
+              onConfirm={() => handleDelete(record.id)}
+            >
+              <DeleteOutlined className="text-red-500" />
+            </Popconfirm>
+          </span>
         );
       },
     },
@@ -338,11 +486,12 @@ const IzinUsaha: React.FC = () => {
       onCell: (record: IzinUsaha) => ({
         record,
         inputType:
-        col.dataIndex === "permit_number" || col.dataIndex.includes("permit_number") ? "text" :
-        col.dataIndex === "start_date" || col.dataIndex.includes("start_date") ? "date" :
-        col.dataIndex === "end_date" || col.dataIndex.includes("end_date") ? "date" :
-        col.dataIndex === "vendor_business_field_id" || col.dataIndex.includes("vendor_business_field_id") ? "select" :
-        "text",
+          col.dataIndex === "permit_number" || col.dataIndex.includes("permit_number") ? "text" :
+            col.dataIndex === "start_date" || col.dataIndex.includes("start_date") ? "date" :
+              col.dataIndex === "end_date" || col.dataIndex.includes("end_date") ? "date" :
+                col.dataIndex === "vendor_business_field_id" || col.dataIndex.includes("vendor_business_field_id") ? "select" :
+                  col.dataIndex === "type" || col.dataIndex.includes("type") ? "select" :
+                    "text",
         dataIndex: col.dataIndex,
         title: col.title,
         options: col.options,
@@ -353,6 +502,19 @@ const IzinUsaha: React.FC = () => {
 
   const showModal = () => {
     setIsModalVisible(true);
+    form.resetFields();
+    formik.resetForm();
+    setIsModalVisible(true);
+    let emptyData = {
+      type: "",
+      permit_number: "",
+      start_date: "",
+      end_date: "",
+      licensing_agency: "",
+      vendor_business_field_id: 0,
+    };
+    form.setFieldsValue({ ...emptyData });
+    formik.setValues({ ...emptyData })
   };
 
   const handleOk = () => {
@@ -368,7 +530,9 @@ const IzinUsaha: React.FC = () => {
 
   const handleSubmit = () => {
     console.log("Submitting data:", izinUsaha);
-    formik.handleSubmit();
+    form.validateFields().then((values) => {
+      formik.handleSubmit()
+    });
   };
 
   return (
@@ -382,28 +546,41 @@ const IzinUsaha: React.FC = () => {
         onCancel={handleCancel}
         footer={[
           <>
-           <Button onClick={handleCancel}>
-            Batalkan
-          </Button>
-          <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
-            Simpan Data
-          </Button>
+            <Button onClick={handleCancel}>
+              Batalkan
+            </Button>
+            <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
+              Simpan Data
+            </Button>
           </>
         ]}
       >
-        <Form>
+        <Form form={form}>
           {/* jenis izin nanti berupa select */}
           {/* Izin Usaha 2 */}
-        <Form.Item
+          <Form.Item
             name="type"
             label="Jenis Izin"
             rules={[{ required: true }]}
           >
-            <Input
+            <Select
+              id="type"
+              onChange={(value) => formik.setFieldValue("type", value)}
+              onBlur={formik.handleBlur}
+              value={formik.values.type}
+              placeholder="Pilih jenis izin"
+            >
+              {getIzinUsahaList.map((option) => (
+                <Option key={option.id} value={option.name}>
+                  {option.name}
+                </Option>
+              ))}
+            </Select>
+            {/* <Input
               name="type"
               value={formik.values.type}
               onChange={formik.handleChange}
-            />
+            /> */}
           </Form.Item>
           <Form.Item
             name="permit_number"
@@ -422,11 +599,18 @@ const IzinUsaha: React.FC = () => {
             rules={[{ required: true }]}
           >
             <DatePicker
-              format="YYYY-MM-DD"
+              format="DD-MM-YYYY"
               name="start_date"
-              onChange={(date, dateString) =>
-                formik.setFieldValue("start_date", dateString)
+              onChange={(date) =>
+                formik.setFieldValue(
+                  "start_date",
+                  date ? date.format("YYYY-MM-DD") : "",
+                )
               }
+              // style={{
+              //   height: "auto",
+              //   width: "250px",
+              // }}
             />
           </Form.Item>
           <Form.Item
@@ -436,7 +620,7 @@ const IzinUsaha: React.FC = () => {
           >
             <DatePicker
               name="end_date"
-              format="DD-MM-YYYY"
+              format="YYYY-MM-DD"
               onChange={(date, dateString) =>
                 formik.setFieldValue("end_date", dateString)
               }
@@ -458,18 +642,18 @@ const IzinUsaha: React.FC = () => {
             label="Bidang Usaha"
             rules={[{ required: true }]}
           >
-             <Select
+            <Select
               id="vendor_business_field_id"
               onChange={(value) => formik.setFieldValue("vendor_business_field_id", value)}
               onBlur={formik.handleBlur}
               value={formik.values.vendor_business_field_id}
               placeholder="Select bidang usaha"
             >
-              {bidangUsahaOptions.map((option) => (
-            <Option key={option.value} value={option.value}>
-              {option.label}
-            </Option>
-          ))}
+              {getBusinessField.map((option) => (
+                <Option key={option.id} value={option.id}>
+                  {option.name}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
         </Form>
@@ -490,6 +674,9 @@ const IzinUsaha: React.FC = () => {
             onChange: cancel,
           }}
           loading={isLoading}
+          scroll={{
+            x: 1300,
+          }}
         />
       </Form>
     </div>

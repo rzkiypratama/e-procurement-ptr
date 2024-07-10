@@ -1,7 +1,75 @@
 import { create } from 'zustand';
 
-// Interfaces
+interface DashboardMasterBudget {
+  id: number;
+  tahun_anggaran: string;
+  department: string;
+  total_pengadaan: string;
+  total_anggaran_digunakan: string
+}
 
+interface DashboardStatistic {
+  anggaran: number;
+  pengadaan: number;
+}
+interface DashboardSummary {
+  user_request_pengadaan_barang: number;
+  user_request_pengadaan_pekerjaan_konstruksi: number;
+  user_request_pengadaan_jasa_konsultasi: number;
+}
+
+interface MasterBudgetInputAnggaran {
+  id: number;
+  tahun_anggaran: string;
+  department: string;
+  anggaran_digunakan: string;
+  updated_by: string;
+}
+interface PengadaanBarang {
+  id: number;
+  kode_rencana_umum_pengadaan: string;
+  kode_paket_pengadaan: string;
+  nama_paket: string;
+  metode_pengadaan: string;
+  jenis_pengadaan: string;
+  jenis_kontrak: string;
+  hps: string;
+  status_report: string;
+}
+
+interface GeneralInformation {
+  id: number;
+  nama_paket: string;
+  satuan_kerja: string;
+  tahun_anggaran: string;
+  produk_dalam_negeri: string;
+  sumber_dana: string;
+  total_pagu: string;
+  nilai_hps: string;
+  capex_opex: string;
+}
+
+interface DetailInformation {
+  id: number;
+  spesifikasi: string;
+  detail_spesifikasi: string;
+  unit: string;
+  quantity: string;
+  total: string;
+  lokasi_pekerjaan: string;
+}
+
+interface SyaratKualifikasi {
+  id: number;
+  kualifikasi: string;
+  detail_kualifikasi: string;
+}
+
+interface DokumenKualifikasi {
+  id: number;
+  nama_dokumen_tambahan: string;
+  dokumen: string;
+}
 interface ProfilePerusahaan {
   id: number;
   company_name: string;
@@ -14,15 +82,6 @@ interface ProfilePerusahaan {
   company_email: string;
   company_fax: string;
   province_id: string;
-  city: {
-    id: number;
-    province_id: number;
-    name: string;
-    province: {
-      id: number;
-      name: string;
-    };
-  };
 }
 
 interface ContactPerson {
@@ -40,14 +99,6 @@ interface BankAccount {
   bank_id: string;
   currency_id: string;
   account_number: string;
-  // bank: {
-  //   id: number;
-  //   bank_name: string;
-  // },
-  // currency: {
-  //   id: number;
-  //   name: string;
-  // }
 }
 interface PengurusPerusahaan {
   id: number;
@@ -102,6 +153,7 @@ interface AttachmentDoc {
   id: number;
   name: string;
   document: string;
+  document_path: string;
   category: string;
   expiration_date: string;
 }
@@ -118,6 +170,15 @@ interface AttachmentDocVerify {
 
 // State Interfaces
 interface CenterStoreState {
+  masterBudgetInputAnggaran: MasterBudgetInputAnggaran[];
+  dashboardStatistic: DashboardStatistic;
+  dashboardMasterBudget: DashboardMasterBudget[];
+  data: DashboardSummary;
+  syaratKualifikasi: SyaratKualifikasi[];
+  dokumenKualifikasi: DokumenKualifikasi[];
+  detailInformation: DetailInformation[];
+  generalInformation: GeneralInformation[];
+  pengadaanBarang: PengadaanBarang[];
   profilePerusahaan: ProfilePerusahaan[];
   contactInfo: ContactPerson[];
   bankAccount: BankAccount[];
@@ -131,6 +192,33 @@ interface CenterStoreState {
   attachmentDocVerify: AttachmentDocVerify[];
   isLoading: boolean;
   setLoading: (loading: boolean) => void;
+  setDashboardStatistic: (dashboardStatistic: DashboardStatistic) => void;
+  setDashboardMasterBudget: (dashboardMasterBudget: DashboardMasterBudget[]) => void;
+  setDashboardSummary: (data: DashboardSummary) => void;
+  addMasterBudgetInputAnggaran: (masterBudgetInputAnggaran: MasterBudgetInputAnggaran) => void;
+  editMasterBudgetInputAnggaran: (masterBudgetInputAnggaran: MasterBudgetInputAnggaran) => void;
+  removeMasterBudgetInputAnggaran: (id: number) => void;
+  initializeMasterBudgetInputAnggaran: (masterBudgetInputAnggaran: MasterBudgetInputAnggaran[]) => void;
+  addSyaratKualifikasi: (syaratKualifikasi: SyaratKualifikasi) => void;
+  editSyaratKualifikasi: (syaratKualifikasi: SyaratKualifikasi) => void;
+  removeSyaratKualifikasi: (id: number) => void;
+  initializeSyaratKualifikasi: (syaratKualifikasi: SyaratKualifikasi[]) => void;
+  addDokumenKualifikasi: (dokumenKualifikasi: DokumenKualifikasi) => void;
+  editDokumenKualifikasi: (dokumenKualifikasi: DokumenKualifikasi) => void;
+  removeDokumenKualifikasi: (id: number) => void;
+  initializeDokumenKualifikasi: (dokumenKualifikasi: DokumenKualifikasi[]) => void;
+  addDetailInformation: (detailInformation: DetailInformation) => void;
+  editDetailInformation: (detailInformation: DetailInformation) => void;
+  removeDetailInformation: (id: number) => void;
+  initializeDetailInformation: (detailInformation: DetailInformation[]) => void;
+  addGeneralInformation: (generalInformation: GeneralInformation) => void;
+  editGeneralInformation: (generalInformation: GeneralInformation) => void;
+  removeGeneralInformation: (id: number) => void;
+  initializeGeneralInformation: (generalInformation: GeneralInformation[]) => void;
+  addPengadaanBarang: (pengadaanBarang: PengadaanBarang) => void;
+  editPengadaanBarang: (pengadaanBarang: PengadaanBarang) => void;
+  removePengadaanBarang: (id: number) => void;
+  initializePengadaanBarang: (pengadaanBarang: PengadaanBarang[]) => void;
   addProfilePerusahaan: (profilePerusahaan: ProfilePerusahaan) => void;
   editProfilePerusahaan: (profilePerusahaan: ProfilePerusahaan) => void;
   removeProfilePerusahaan: (id: number) => void;
@@ -176,6 +264,22 @@ interface CenterStoreState {
 
 // Create Zustand Store
 const useCenterStore = create<CenterStoreState>((set) => ({
+  masterBudgetInputAnggaran: [],
+  dashboardStatistic: {
+    anggaran: 0,
+    pengadaan: 0,
+  },
+  dashboardMasterBudget: [],
+   data: {
+    user_request_pengadaan_barang: 0,
+    user_request_pengadaan_pekerjaan_konstruksi: 0,
+    user_request_pengadaan_jasa_konsultasi: 0,
+},
+  syaratKualifikasi: [],
+  dokumenKualifikasi: [],
+  detailInformation: [],
+  generalInformation: [],
+  pengadaanBarang: [],
   profilePerusahaan: [],
   contactInfo: [],
   bankAccount: [],
@@ -189,6 +293,90 @@ const useCenterStore = create<CenterStoreState>((set) => ({
   attachmentDocVerify: [],
   isLoading: false,
   setLoading: (loading) => set({ isLoading: loading }),
+
+  setDashboardStatistic: (data) => set({ dashboardStatistic: data }),
+
+  setDashboardMasterBudget: (dashboardMasterBudget) => set({ dashboardMasterBudget: dashboardMasterBudget }),
+
+  setDashboardSummary: (data) => set({ data: data }),
+
+  addMasterBudgetInputAnggaran: (masterBudgetInputAnggaran) => set((state) => ({
+    masterBudgetInputAnggaran: [...state.masterBudgetInputAnggaran, masterBudgetInputAnggaran],
+  })),
+  editMasterBudgetInputAnggaran: (masterBudgetInputAnggaran) => set((state) => ({
+    masterBudgetInputAnggaran: state.masterBudgetInputAnggaran.map((item) => item.id === masterBudgetInputAnggaran.id ? masterBudgetInputAnggaran : item),
+  })),
+  removeMasterBudgetInputAnggaran: (id) => set((state) => ({
+    masterBudgetInputAnggaran: state.masterBudgetInputAnggaran.filter((item) => item.id !== id),
+  })),
+  initializeMasterBudgetInputAnggaran: (masterBudgetInputAnggaran) => set(() => ({
+    masterBudgetInputAnggaran: masterBudgetInputAnggaran
+  })),
+
+  addDokumenKualifikasi: (dokumenKualifikasi) => set((state) => ({
+    dokumenKualifikasi: [...state.dokumenKualifikasi, dokumenKualifikasi],
+  })),
+  editDokumenKualifikasi: (dokumenKualifikasi) => set((state) => ({
+    dokumenKualifikasi: state.dokumenKualifikasi.map((item) => item.id === dokumenKualifikasi.id ? dokumenKualifikasi : item),
+  })),
+  removeDokumenKualifikasi: (id) => set((state) => ({
+    dokumenKualifikasi: state.dokumenKualifikasi.filter((item) => item.id !== id),
+  })),
+  initializeDokumenKualifikasi: (dokumenKualifikasi) => set(() => ({
+    dokumenKualifikasi: dokumenKualifikasi
+  })),
+
+  addSyaratKualifikasi: (syaratKualifikasi) => set((state) => ({
+    syaratKualifikasi: [...state.syaratKualifikasi, syaratKualifikasi],
+  })),
+  editSyaratKualifikasi: (syaratKualifikasi) => set((state) => ({
+    syaratKualifikasi: state.syaratKualifikasi.map((item) => item.id === syaratKualifikasi.id ? syaratKualifikasi : item),
+  })),
+  removeSyaratKualifikasi: (id) => set((state) => ({
+    syaratKualifikasi: state.syaratKualifikasi.filter((item) => item.id !== id),
+  })),
+  initializeSyaratKualifikasi: (syaratKualifikasi) => set(() => ({
+    syaratKualifikasi: syaratKualifikasi
+  })),
+
+  addDetailInformation: (detailInformation) => set((state) => ({
+    detailInformation: [...state.detailInformation, detailInformation],
+  })),
+  editDetailInformation: (detailInformation) => set((state) => ({
+    detailInformation: state.detailInformation.map((item) => item.id === detailInformation.id ? detailInformation : item),
+  })),
+  removeDetailInformation: (id) => set((state) => ({
+    detailInformation: state.detailInformation.filter((item) => item.id !== id),
+  })),
+  initializeDetailInformation: (detailInformation) => set(() => ({
+    detailInformation: detailInformation
+  })),
+
+  addGeneralInformation: (generalInformation) => set((state) => ({
+    generalInformation: [...state.generalInformation, generalInformation],
+  })),
+  editGeneralInformation: (generalInformation) => set((state) => ({
+    generalInformation: state.generalInformation.map((item) => item.id === generalInformation.id ? generalInformation : item),
+  })),
+  removeGeneralInformation: (id) => set((state) => ({
+    generalInformation: state.generalInformation.filter((item) => item.id !== id),
+  })),
+  initializeGeneralInformation: (generalInformation) => set(() => ({
+    generalInformation: generalInformation
+  })),
+
+  addPengadaanBarang: (pengadaanBarang) => set((state) => ({
+    pengadaanBarang: [...state.pengadaanBarang, pengadaanBarang],
+  })),
+  editPengadaanBarang: (pengadaanBarang) => set((state) => ({
+    pengadaanBarang: state.pengadaanBarang.map((item) => item.id === pengadaanBarang.id ? pengadaanBarang : item),
+  })),
+  removePengadaanBarang: (id) => set((state) => ({
+    pengadaanBarang: state.pengadaanBarang.filter((item) => item.id !== id),
+  })),
+  initializePengadaanBarang: (pengadaanBarang) => set(() => ({
+    pengadaanBarang: pengadaanBarang
+  })),
 
   addProfilePerusahaan: (profilePerusahaan) => set((state) => ({
     profilePerusahaan: [...state.profilePerusahaan, profilePerusahaan],

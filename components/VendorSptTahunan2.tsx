@@ -156,6 +156,7 @@ const SPTTahunan: React.FC = () => {
       }
 
       const row = await form.validateFields();
+      console.log(row.date);
       const updatedRow = {
         ...row,
         id: Number(id),
@@ -297,10 +298,20 @@ const SPTTahunan: React.FC = () => {
 
   const showModal = () => {
     setIsModalVisible(true);
+    form.resetFields();
+    formik.resetForm();
+    setIsModalVisible(true);
+    let emptyData = {
+      year: "",
+      spt_number: "",
+      date: "",
+    };
+    form.setFieldsValue({ ...emptyData });
+    formik.setValues({ ...emptyData })
   };
 
-  const handleOk = () => {
-    addSPTTahunan({ ...formik.values, id: sptTahunan.length + 2 });
+  const handleOk = (response: { data: { data: { id: any; }; }; }) => {
+    addSPTTahunan({ ...formik.values, id: response.data.data.id });
     setIsModalVisible(false);
   };
 
@@ -311,8 +322,9 @@ const SPTTahunan: React.FC = () => {
 
   const handleSubmit = () => {
     console.log("Submitting data:", sptTahunan);
-    // Additional submission logic if needed
-    formik.handleSubmit();
+    form.validateFields().then((values) => {
+      formik.handleSubmit()
+    });
   };
 
   return (
@@ -326,12 +338,12 @@ const SPTTahunan: React.FC = () => {
         onCancel={handleCancel}
         footer={[
           <>
-           <Button onClick={handleCancel}>
-            Batalkan
-          </Button>
-          <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
-            Simpan Data
-          </Button>
+            <Button onClick={handleCancel}>
+              Batalkan
+            </Button>
+            <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
+              Simpan Data
+            </Button>
           </>
         ]}
       >
@@ -339,7 +351,7 @@ const SPTTahunan: React.FC = () => {
           <Form.Item
             name="year"
             label="Tahun Izin"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: "Tahun izin harus diisi" }]}
           >
             <Input
               value={formik.values.year}
@@ -349,7 +361,7 @@ const SPTTahunan: React.FC = () => {
           <Form.Item
             name="spt_number"
             label="Nomor Izin"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: "Nomor Izin harus diisi" }]}
           >
             <Input
               value={formik.values.spt_number}
@@ -358,8 +370,8 @@ const SPTTahunan: React.FC = () => {
           </Form.Item>
           <Form.Item
             name="date"
-            label="Tanggal Dokumen"
-            rules={[{ required: true }]}
+            label="Tanggal Lapor SPT"
+            rules={[{ required: true, message: "Tanggal Laport SPT harus diisi" }]}
           >
             <DatePicker
               value={
@@ -367,10 +379,12 @@ const SPTTahunan: React.FC = () => {
                   ? dayjs(formik.values.date, "YYYY-MM-DD")
                   : null
               }
-              format="YYYY-MM-DD"
-              // onchange yang benar untuk type date
-              onChange={(date, dateString) =>
-                formik.setFieldValue("date", dateString)
+              format="DD-MM-YYYY"
+              onChange={(date) =>
+                formik.setFieldValue(
+                  "date",
+                  date ? date.format("YYYY-MM-DD") : "",
+                )
               }
             />
           </Form.Item>
@@ -391,6 +405,9 @@ const SPTTahunan: React.FC = () => {
             onChange: cancel,
           }}
           loading={isLoading}
+          scroll={{
+            x: 1300,
+          }}
         />
       </Form>
     </div>

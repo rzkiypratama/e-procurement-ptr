@@ -14,6 +14,7 @@ import { ExclamationCircleFilled } from '@ant-design/icons';
 import { useFormik } from "formik";
 import useMasterDataStore from "@/store/masterData";
 import axios from "axios";
+import { getCookie } from "cookies-next";
 
 interface VendorBusinessField {
     name: string;
@@ -104,10 +105,20 @@ const VendorBusinessField = () => {
             console.log("Form Values:", values);
             setLoading(true);
             try {
+                const token = getCookie("token");
+                const userId = getCookie("user_id");
+                const vendorId = getCookie("vendor_id");
+
+                if (!token || !userId || !vendorId) {
+                    message.error("Please login first.");
+                    return;
+                }
                 const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/master/vendor-business-field`, values, {
                     headers: {
-                        "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
-                    }
+                        Authorization: `Bearer ${token}`,
+                        "User-ID": userId,
+                        "Vendor-ID": vendorId,
+                    },
                 });
                 console.log("Response from API:", response.data);
                 setFormSubmitted(true);
@@ -172,10 +183,22 @@ const VendorBusinessField = () => {
     const listVendorBusinessField = async () => {
         setLoading(true)
         try {
+
+            const token = getCookie("token");
+            const userId = getCookie("user_id");
+            const vendorId = getCookie("vendor_id");
+
+            if (!token || !userId || !vendorId) {
+                message.error("Please login first.");
+                return;
+            }
+
             const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/master/vendor-business-field`, {
                 headers: {
-                    "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
-                }
+                    Authorization: `Bearer ${token}`,
+                    "User-ID": userId,
+                    "Vendor-ID": vendorId,
+                },
             });
             console.log("Response from API:", response.data.data);
             let index = 0;
@@ -221,10 +244,21 @@ const VendorBusinessField = () => {
         console.log(body)
         setLoading(true)
         try {
+
+            const token = getCookie("token");
+            const userId = getCookie("user_id");
+            const vendorId = getCookie("vendor_id");
+
+            if (!token || !userId || !vendorId) {
+                message.error("Please login first.");
+                return;
+            }
             const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/master/vendor-business-field/${selectedId}`, body, {
                 headers: {
-                    "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
-                }
+                    Authorization: `Bearer ${token}`,
+                    "User-ID": userId,
+                    "Vendor-ID": vendorId,
+                },
             });
             console.log("Response from API:", response.data);
             setFormSubmitted(true);
@@ -245,10 +279,20 @@ const VendorBusinessField = () => {
     const deleteVendorBusinessField = async () => {
         setLoading(true)
         try {
+            const token = getCookie("token");
+            const userId = getCookie("user_id");
+            const vendorId = getCookie("vendor_id");
+
+            if (!token || !userId || !vendorId) {
+                message.error("Please login first.");
+                return;
+            }
             const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/master/vendor-business-field/${selectedId}`, {
-                // headers: {
-                //     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
-                // }
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "User-ID": userId,
+                    "Vendor-ID": vendorId,
+                },
             });
             console.log("Response from API:", response.data);
             setFormSubmitted(true);
@@ -270,7 +314,7 @@ const VendorBusinessField = () => {
     }
 
     return (
-        <div className='container h-screen max-w-full mx-auto'>
+        <div className=''>
             <Button type="primary" onClick={showModal} className="mb-5 float-end">
                 Tambah
             </Button>

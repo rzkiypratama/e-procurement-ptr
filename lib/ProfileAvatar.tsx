@@ -1,6 +1,6 @@
 import React from 'react';
 import { Dropdown, message, Space, Avatar } from 'antd';
-import { LogoutOutlined } from '@ant-design/icons';
+import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import Link from 'next/link';
 import axios from 'axios';
@@ -28,6 +28,7 @@ const ProfileAvatar: React.FC = () => {
         deleteCookie('token');
         deleteCookie('user_id');
         deleteCookie('vendor_id');
+        deleteCookie('group_user_code');
         message.success('Logout successful!');
         router.push('/');
       } else {
@@ -61,7 +62,7 @@ const ProfileAvatar: React.FC = () => {
     >
       <a onClick={(e) => e.preventDefault()}>
         <Space>
-          <Avatar />
+          <Avatar icon={<UserOutlined />} />
         </Space>
       </a>
     </Dropdown>

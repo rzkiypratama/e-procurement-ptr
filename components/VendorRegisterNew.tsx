@@ -17,11 +17,9 @@ import {
 import useRegisterStore from "../store/indexcopy";
 import { useFormik } from "formik";
 import EditableCell from "./EditableCell";
-import NumericNumber from "@/lib/NumericString";
-import NumericInput from "@/lib/NumericInput";
 import axios from "axios";
-import { positionOptions } from "@/utils/positionOptions";
-import { cityOptions, provinceOptions } from "@/utils/cityOptions";
+import { useRouter } from "next/navigation";
+import { getCookie } from "cookies-next";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -36,6 +34,26 @@ interface RegisterContactInfo {
   contact_npwp: string;
 }
 
+interface GetCityList {
+  id: number;
+  province_id: number;
+  name: string;
+  province: {
+    id: number;
+    name: string;
+  };
+}
+
+interface GetProvinceList {
+  id: number;
+  name: string;
+}
+
+interface PositionList {
+  id: number;
+  name: string;
+}
+
 const ProfilePerusahaan: React.FC = () => {
   const {
     registerProfilePerusahaan,
@@ -46,15 +64,18 @@ const ProfilePerusahaan: React.FC = () => {
     removeContactInfo,
     initializeContactInfo,
     initializeAuthorization,
-    isLoading,
-    setLoading,
   } = useRegisterStore();
 
+  const router = useRouter();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState<string>("");
   const [activeTab, setActiveTab] = useState("1");
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [getCity, setGetCityList] = useState<GetCityList[]>([]);
+  const [getProvince, setGetProvinceList] = useState<GetProvinceList[]>([]);
+  const [getPositions, setGetpositions] = useState<PositionList[]>([]);
 
   const formik = useFormik({
     initialValues: {
@@ -121,8 +142,9 @@ const ProfilePerusahaan: React.FC = () => {
       return errors;
     },
     onSubmit: async (values, { setErrors }) => {
-      setLoading(true);
+      setIsLoading(true);
       try {
+        values.position_id = values.position_id.toString();
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
           values,
@@ -134,7 +156,11 @@ const ProfilePerusahaan: React.FC = () => {
       } catch (error) {
         console.error("Error submitting data:", error);
         if (axios.isAxiosError(error)) {
-          if (error.response && error.response.data && error.response.data.errors) {
+          if (
+            error.response &&
+            error.response.data &&
+            error.response.data.errors
+          ) {
             const backendErrors = error.response.data.errors;
             setErrors(backendErrors);
             Object.keys(backendErrors).forEach((key) => {
@@ -144,10 +170,12 @@ const ProfilePerusahaan: React.FC = () => {
             message.error("An error occurred. Please try again later.");
           }
         } else {
-          message.error("An unexpected error occurred. Please try again later.");
+          message.error(
+            "An unexpected error occurred. Please try again later.",
+          );
         }
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     },
   });
@@ -163,11 +191,122 @@ const ProfilePerusahaan: React.FC = () => {
       : 1;
   };
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+
+        // Fetch City Data
+        const cityResponse = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/master/city`,
+        );
+
+        if (
+          typeof cityResponse.data === "object" &&
+          Array.isArray(cityResponse.data.data)
+        ) {
+          const mappedCities = cityResponse.data.data.map(
+            (city: { city: { name: any }; city_id: any }) => ({
+              ...city,
+              city_id: city.city ? city.city.name : city.city_id,
+            }),
+          );
+
+          setGetCityList(mappedCities);
+        } else {
+          console.error(
+            "City data fetched is not in expected format:",
+            cityResponse.data,
+          );
+          message.error("City data fetched is not in expected format.");
+        }
+
+        // Fetch Province Data
+        const provinceResponse = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/master/province`,
+        );
+
+        if (
+          typeof provinceResponse.data === "object" &&
+          Array.isArray(provinceResponse.data.data)
+        ) {
+          const mappedProvinces = provinceResponse.data.data.map(
+            (province: { province: { name: any }; province_id: any }) => ({
+              ...province,
+              province_id: province.province
+                ? province.province.name
+                : province.province_id,
+            }),
+          );
+
+          setGetProvinceList(mappedProvinces);
+        } else {
+          console.error(
+            "Province data fetched is not in expected format:",
+            provinceResponse.data,
+          );
+          message.error("Province data fetched is not in expected format.");
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        message.error("Failed to fetch data. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchPositionList = async () => {
+      try {
+        setIsLoading(true);
+
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/master/vendor-position`,
+        );
+
+        if (response.data && Array.isArray(response.data.data)) {
+          const mappedData = response.data.data.map(
+            (vendor_position: { id: any; name: any }) => ({
+              ...vendor_position,
+            }),
+          );
+
+          setGetpositions(mappedData);
+        } else {
+          console.error(
+            "Business field data fetched is not in expected format:",
+            response.data,
+          );
+          message.error(
+            "Business field data fetched is not in expected format.",
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching business field data:", error);
+        message.error(
+          "Failed to fetch business field data. Please try again later.",
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPositionList();
+  }, []);
+
   const isEditing = (record: RegisterContactInfo) =>
     record.id.toString() === editingKey;
 
   const edit = (record: Partial<RegisterContactInfo> & { id: React.Key }) => {
-    form.setFieldsValue({ ...record });
+    const positionName =
+      getPositions.find(
+        (position_id) => position_id.id === Number(record.position_id),
+      )?.name || record.position_id?.toString();
+    console.log(positionName);
+    form.setFieldsValue({ ...record, position_id: positionName });
     setEditingKey(record.id.toString());
   };
 
@@ -178,7 +317,15 @@ const ProfilePerusahaan: React.FC = () => {
   const save = async (id: React.Key) => {
     try {
       const row = (await form.validateFields()) as RegisterContactInfo;
-      editContactInfo({ ...row, id: Number(id) });
+      const positionId =
+        getPositions.find((position) => position.name === row.position_id)
+          ?.id || row.position_id;
+
+      editContactInfo({
+        ...row,
+        id: Number(id),
+        position_id: String(positionId),
+      });
       setEditingKey("");
     } catch (errInfo) {
       console.log("Validate Failed:", errInfo);
@@ -190,8 +337,10 @@ const ProfilePerusahaan: React.FC = () => {
   };
 
   const getPositionName = (positionId: string) => {
-    const vendor_position = positionOptions.find(option => option.value === positionId);
-    return vendor_position ? vendor_position.label : positionId;
+    const vendor_position = getPositions.find(
+      (position) => String(position.id) === positionId,
+    );
+    return vendor_position ? vendor_position.name : positionId;
   };
 
   const columns = [
@@ -219,7 +368,11 @@ const ProfilePerusahaan: React.FC = () => {
       dataIndex: "position_id",
       key: "position_id",
       editable: true,
-      options: positionOptions,
+      options: getPositions.map((businessField) => ({
+        key: businessField.id,
+        value: businessField.id,
+        label: businessField.name,
+      })),
       render: (text: string) => getPositionName(text),
     },
     {
@@ -273,18 +426,35 @@ const ProfilePerusahaan: React.FC = () => {
   ];
 
   const showModal = () => {
+    let emptyData = {
+      contact_name: "",
+      contact_phone: "",
+      contact_email: "",
+      position_id: "",
+      contact_identity_no: "",
+      contact_npwp: "",
+    };
+    form.setFieldsValue({ ...emptyData });
     setIsModalVisible(true);
   };
 
-  const handleOk = () => {
-    form.validateFields().then((values) => {
+  const handleOk = async () => {
+    try {
+      const values = (await form.validateFields()) as RegisterContactInfo;
+      const positionId =
+        getPositions.find((position) => position.name === values.position_id)
+          ?.id || values.position_id;
+
       addContactInfo({
         ...values,
         id: getNextId(),
+        position_id: String(positionId),
       });
+
       setIsModalVisible(false);
-      form.resetFields();
-    });
+    } catch (error) {
+      console.log("Validate Failed:", error);
+    }
   };
 
   const handleCancel = () => {
@@ -305,18 +475,13 @@ const ProfilePerusahaan: React.FC = () => {
       onCell: (record: RegisterContactInfo) => ({
         record,
         inputType:
-          col.dataIndex === "contact_identity_no" ||
-          col.dataIndex.includes("contact_identity_no")
-            ? "number"
-            : col.dataIndex === "contact_npwp" ||
-                col.dataIndex.includes("contact_npwp")
-              ? "number"
-              : col.dataIndex === "tanggalBerakhir" ||
-                  col.dataIndex.includes("tanggalBerakhir")
-                ? "date"
-                : "text",
+          col.dataIndex === "position_id" ||
+            col.dataIndex.includes("position_id")
+            ? "select"
+            : "text",
         dataIndex: col.dataIndex,
         title: col.title,
+        options: col.options,
         editing: isEditing(record),
       }),
     };
@@ -375,44 +540,43 @@ const ProfilePerusahaan: React.FC = () => {
               onChange={(value) => formik.setFieldValue("company_npwp", value)}
             />
           </Form.Item> */}
-           <Form.Item
-                name="company_npwp"
-                label="NPWP Perusahaan"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please enter NPWP number",
-                  },
-                  () => ({
-                    validator(_, value) {
-                      if (!value) {
-                        return Promise.reject();
-                      }
-                      if (isNaN(value)) {
-                        return Promise.reject("NPWP code has to be a number.");
-                      }
-                      if (value.length < 16) {
-                        return Promise.reject(
-                          "NPWP can't be less than 16 digits",
-                        );
-                      }
-                      if (value.length > 16) {
-                        return Promise.reject(
-                          "NPWP code can't be more than 16 digits",
-                        );
-                      }
-                      return Promise.resolve();
-                    },
-                  }),
-                ]}
-                hasFeedback
-              >
-                <Input
-                  value={formik.values.company_npwp}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                />
-              </Form.Item>
+          <Form.Item
+            name="company_npwp"
+            label="NPWP Perusahaan"
+            rules={[
+              {
+                required: true,
+                message: "Please enter NPWP number",
+              },
+              () => ({
+                validator(_, value) {
+                  if (!value) {
+                    return Promise.reject();
+                  }
+                  if (isNaN(value)) {
+                    return Promise.reject("NPWP code has to be a number.");
+                  }
+                  if (value.length < 16) {
+                    return Promise.reject("NPWP can't be less than 16 digits");
+                  }
+                  if (value.length > 16) {
+                    return Promise.reject(
+                      "NPWP code can't be more than 16 digits",
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
+            hasFeedback
+          >
+            <Input
+              value={formik.values.company_npwp}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              placeholder="Input NPWP Company Number"
+            />
+          </Form.Item>
           <Form.Item
             label="Status"
             validateStatus={
@@ -462,62 +626,53 @@ const ProfilePerusahaan: React.FC = () => {
               placeholder="Input company address"
             />
           </Form.Item>
-          <Form.Item
-            label="Kota"
-            validateStatus={
-              formik.errors.city_id && formik.touched.city_id ? "error" : ""
-            }
-            help={
-              formik.errors.city_id && formik.touched.city_id
-                ? formik.errors.city_id
-                : ""
-            }
-            required
-            hasFeedback
+          <Form.Item label="Provinsi" required hasFeedback>
+            <Select
+              id="province_id"
+              onChange={(value) => {
+                const provinceId = parseInt(value, 10);
+                formik.setFieldValue("province_id", provinceId);
+
+                // Find the first city that matches the selected province_id
+                const firstCity = getCity.find(
+                  (city) => city.province_id === provinceId,
+                );
+                if (firstCity) {
+                  // Set city_id value in Formik to the first city's ID
+                  formik.setFieldValue("city_id", firstCity.id);
+                } else {
+                  // If no city matches, reset city_id
+                  formik.setFieldValue("city_id", "");
+                }
+              }}
+              onBlur={formik.handleBlur}
+              value={formik.values.province_id}
             >
+              {getProvince.map((province) => (
+                <Select.Option key={province.id} value={province.id}>
+                  {province.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item label="Kota" required hasFeedback>
             <Select
               id="city_id"
               onChange={(value) => formik.setFieldValue("city_id", value)}
               onBlur={formik.handleBlur}
               value={formik.values.city_id}
-              placeholder="Select city"
+              disabled={!formik.values.province_id} // Disable city selection until province is selected
             >
-              {cityOptions.map((option) => (
-            <Option key={option.value} value={option.value}>
-              {option.label}
-            </Option>
-          ))}
-            </Select>
-          </Form.Item>
-          <Form.Item
-            id="province_id"
-            label="Provinsi"
-            name="province_id"
-            validateStatus={
-              formik.errors.province_id && formik.touched.province_id
-                ? "error"
-                : ""
-            }
-            help={
-              formik.errors.province_id && formik.touched.province_id
-                ? formik.errors.province_id
-                : ""
-            }
-            required
-            hasFeedback
-          >
-            <Select
-              id="province_id"
-              onChange={(value) => formik.setFieldValue("province_id", value)}
-              onBlur={formik.handleBlur}
-              value={formik.values.province_id}
-              placeholder="Select province"
-            >
-              {provinceOptions.map((option) => (
-            <Option key={option.value} value={option.value}>
-              {option.label}
-            </Option>
-          ))}
+              {getCity
+                .filter(
+                  (city) =>
+                    city.province_id === Number(formik.values.province_id),
+                )
+                .map((city) => (
+                  <Select.Option key={city.id} value={city.id}>
+                    {city.name}
+                  </Select.Option>
+                ))}
             </Select>
           </Form.Item>
           <Form.Item
@@ -823,6 +978,7 @@ const ProfilePerusahaan: React.FC = () => {
                 label="Email"
                 rules={[
                   { required: true, message: "Email tidak boleh kosong" },
+                  { type: 'email', message: "Email is not valid" }
                 ]}
                 hasFeedback
               >
@@ -848,13 +1004,11 @@ const ProfilePerusahaan: React.FC = () => {
                   onBlur={formik.handleBlur}
                   value={formik.values.position_id}
                 >
-                  {columns
-                .find((col) => col.dataIndex === "position_id")
-                ?.options?.map((option) => (
-                  <Select.Option key={option.value} value={option.value}>
-                    {option.label}
-                  </Select.Option>
-                ))}
+                  {getPositions.map((option) => (
+                    <Select.Option key={option.id} value={option.id}>
+                      {option.name}
+                    </Select.Option>
+                  ))}
                 </Select>
               </Form.Item>
               <Form.Item
@@ -901,6 +1055,7 @@ const ProfilePerusahaan: React.FC = () => {
                 rules={[
                   {
                     required: true,
+                    message: "Please enter KTP number",
                   },
                   () => ({
                     validator(_, value) {
@@ -910,8 +1065,14 @@ const ProfilePerusahaan: React.FC = () => {
                       if (isNaN(value)) {
                         return Promise.reject("KTP number has to be a number.");
                       }
-                      if (value.length < 10) {
+                      if (value.length < 6) {
                         return Promise.reject("Your KTP Number is too sort");
+                      }
+
+                      if (value.length > 16) {
+                        return Promise.reject(
+                          "KTP number can't be more than 16 digits",
+                        );
                       }
                       // if (value.length > 16) {
                       //   return Promise.reject("NPWP code can't be more than 16 digits");
@@ -939,6 +1100,12 @@ const ProfilePerusahaan: React.FC = () => {
               berhasil!
             </p>
             <p>Silahkan cek email untuk konfirmasi pendaftaran.</p>
+            <Button
+              onClick={() => router.push("/login")}
+              className="mt-4 bg-transparent font-semibold text-blue-700 hover:bg-blue-500"
+            >
+              Back to Login
+            </Button>
           </div>
         </div>
       )}

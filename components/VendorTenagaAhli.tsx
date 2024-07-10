@@ -63,7 +63,7 @@ const TenagaAhli: React.FC = () => {
         return;
       }
       try {
-  setIsLoading(true);
+        setIsLoading(true);
 
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}/vendor/expert`,
@@ -79,6 +79,8 @@ const TenagaAhli: React.FC = () => {
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
         message.success("Tenaga Ahli added successful");
+        console.log(values)
+        values.birth_date = dayjs(values.birth_date).format("YYYY-DD-MM")
         addTenagaAhli({ ...values, id: response.data.data.id });
         formik.resetForm();
       } catch (error) {
@@ -98,12 +100,12 @@ const TenagaAhli: React.FC = () => {
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-  
+
         if (!token || !userId || !vendorId) {
           message.error("Please login first.");
           return;
         }
-  
+
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/vendor/expert`,
           {
@@ -114,7 +116,7 @@ const TenagaAhli: React.FC = () => {
             },
           }
         );
-  
+
         // Check if response.data is an object containing an array
         if (response.data && Array.isArray(response.data.data)) {
           initializeTenagaAhli(response.data.data); // Initialize Tenaga Ahli state with the array of Tenaga Ahli objects
@@ -129,7 +131,7 @@ const TenagaAhli: React.FC = () => {
         setIsLoading(false);
       }
     };
-  
+
     fetchBankAccounts();
   }, [initializeTenagaAhli]);
 
@@ -154,19 +156,19 @@ const TenagaAhli: React.FC = () => {
       const token = getCookie("token");
       const userId = getCookie("user_id");
       const vendorId = getCookie("vendor_id");
-  
+
       if (!token || !userId || !vendorId) {
         message.error("Token, User ID, or Vendor ID is missing.");
         return;
       }
-  
+
       const row = await form.validateFields();
       const updatedRow = {
         ...row,
         id: Number(id),
         birth_date: dayjs(row.birth_date).format("YYYY-MM-DD"),
       };
-  
+
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/vendor/expert/${id}`,
         updatedRow,
@@ -178,7 +180,7 @@ const TenagaAhli: React.FC = () => {
           },
         }
       );
-  
+
       editTenagaAhli(updatedRow);
       setEditingKey("");
       message.success("Tenaga Ahli updated successfully.");
@@ -193,12 +195,12 @@ const TenagaAhli: React.FC = () => {
       const token = getCookie("token");
       const userId = getCookie("user_id");
       const vendorId = getCookie("vendor_id");
-  
+
       if (!token || !userId || !vendorId) {
         message.error("Token, User ID, or Vendor ID is missing.");
         return;
       }
-  
+
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_URL}/vendor/expert/${id}`,
         {
@@ -209,7 +211,7 @@ const TenagaAhli: React.FC = () => {
           },
         }
       );
-  
+
       removeTenagaAhli(Number(id));
       message.success("Tenaga Ahli deleted successfully.");
     } catch (error) {
@@ -319,6 +321,19 @@ const TenagaAhli: React.FC = () => {
 
   const showModal = () => {
     setIsModalVisible(true);
+    form.resetFields();
+    formik.resetForm();
+    setIsModalVisible(true);
+    let emptyData = {
+      name: "",
+      birth_date: "",
+      identity_no: "",
+      npwp_no: "",
+      last_education: "",
+      last_experience: "",
+    };
+    form.setFieldsValue({ ...emptyData });
+    formik.setValues({ ...emptyData })
   };
 
   const handleOk = () => {
@@ -335,7 +350,10 @@ const TenagaAhli: React.FC = () => {
   const handleSubmit = () => {
     console.log("Submitting data:", tenagaAhli);
     // Additional submission logic if needed
-    formik.handleSubmit();
+    form.validateFields().then((values) => {
+      // formik.values.name = values.name;
+      formik.handleSubmit()
+    });
   };
 
   return (
@@ -349,12 +367,12 @@ const TenagaAhli: React.FC = () => {
         onCancel={handleCancel}
         footer={[
           <>
-           <Button onClick={handleCancel}>
-            Batalkan
-          </Button>
-          <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
-            Simpan Data
-          </Button>
+            <Button onClick={handleCancel}>
+              Batalkan
+            </Button>
+            <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
+              Simpan Data
+            </Button>
           </>
         ]}
       >
@@ -362,7 +380,7 @@ const TenagaAhli: React.FC = () => {
           <Form.Item
             name="name"
             label="Nama"
-            rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
+            rules={[{ required: true, message: "Nama harus diisi" }]}
           >
             <Input
               name="name"
@@ -374,7 +392,7 @@ const TenagaAhli: React.FC = () => {
             name="birth_date"
             label="Tanggal Lahir"
             rules={[
-              { required: true, message: "Tanggal Lahir tidak boleh kosong" },
+              { required: true, message: "Harap pilih tanggal lahir" },
             ]}
           >
             <DatePicker
@@ -387,7 +405,7 @@ const TenagaAhli: React.FC = () => {
               onChange={(date) =>
                 formik.setFieldValue(
                   "birth_date",
-                  date ? date.format("DD-MM-YYYY") : "",
+                  date ? date.format("YYYY-MM-DD") : "",
                 )
               }
             />
@@ -396,8 +414,31 @@ const TenagaAhli: React.FC = () => {
             name="identity_no"
             label="Nomor KTP"
             rules={[
-              { required: true, message: "Nomor KTP harus berupa angka" },
+              {
+                required: true,
+                message: "Nomor KTP harus diisi",
+              },
+              () => ({
+                validator(_, value) {
+                  if (!value) {
+                    return Promise.reject();
+                  }
+                  if (isNaN(value)) {
+                    return Promise.reject("Nomor KTP harus berupa angka");
+                  }
+                  if (value.length < 16) {
+                    return Promise.reject("Nomor KTP tidak boleh kurang dari 16 karakter");
+                  }
+                  if (value.length > 16) {
+                    return Promise.reject(
+                      "Nomor KTP tidak boleh lebih dari 16 karakter",
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              }),
             ]}
+            hasFeedback
           >
             <Input
               name="identity_no"
@@ -409,8 +450,31 @@ const TenagaAhli: React.FC = () => {
             name="npwp_no"
             label="Nomor NPWP"
             rules={[
-              { required: true, message: "Nomor NPWP harus berupa angka" },
+              {
+                required: true,
+                message: "NPWP harus disii",
+              },
+              () => ({
+                validator(_, value) {
+                  if (!value) {
+                    return Promise.reject();
+                  }
+                  if (isNaN(value)) {
+                    return Promise.reject("NPWP harus berupa angka.");
+                  }
+                  if (value.length < 16) {
+                    return Promise.reject("NPWP tidak boleh kurang dari 16 karakter");
+                  }
+                  if (value.length > 16) {
+                    return Promise.reject(
+                      "NPWP tidak boleh lebih dari 16 karakter",
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              }),
             ]}
+            hasFeedback
           >
             <Input
               name="npwp_no"
@@ -457,6 +521,9 @@ const TenagaAhli: React.FC = () => {
             onChange: cancel,
           }}
           loading={isLoading}
+          scroll={{
+            x: 1300,
+          }}
         />
       </Form>
     </div>

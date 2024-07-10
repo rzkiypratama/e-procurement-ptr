@@ -8,6 +8,7 @@ import {
     Table,
     message,
 } from "antd";
+import { getCookie } from 'cookies-next';
 
 const { Meta } = Card;
 
@@ -87,10 +88,20 @@ const DashboardVendor: React.FC = () => {
     const getDashboardVendorSummary = async () => {
         setIsLoading(true)
         try {
+            const token = getCookie("token");
+            const userId = getCookie("user_id");
+            const vendorId = getCookie("vendor_id");
+
+            if (!token || !userId || !vendorId) {
+            message.error("Please login first.");
+            return;
+            }
             const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/verifikator/stats`, {
-                // headers: {
-                //     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
-                // }
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "User-ID": userId,
+                    "Vendor-ID": vendorId,
+                  },
             });
             console.log("Response from API:", response.data.data);
             const data: DashboardSummary = {

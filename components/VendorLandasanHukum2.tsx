@@ -78,7 +78,7 @@ const LandasanHukum: React.FC = () => {
       } catch (error) {
         console.error("Failed to submit data", error);
         message.error("Failed to submit data");
-      }finally {
+      } finally {
         setIsLoading(false);
       }
     },
@@ -91,12 +91,12 @@ const LandasanHukum: React.FC = () => {
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-  
+
         if (!token || !userId || !vendorId) {
           message.error("Please login first.");
           return;
         }
-  
+
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/vendor/legal-foundation`,
           {
@@ -107,7 +107,7 @@ const LandasanHukum: React.FC = () => {
             },
           }
         );
-  
+
         // Check if response.data is an object containing an array
         if (response.data && Array.isArray(response.data.data)) {
           initializeLandasanHukum(response.data.data); // Initialize bank account state with the array of bank account objects
@@ -118,11 +118,11 @@ const LandasanHukum: React.FC = () => {
       } catch (error) {
         console.error("Error fetching bank account data:", error);
         message.error("Failed to fetch bank account data. Please try again later.");
-      }finally {
+      } finally {
         setIsLoading(false);
       }
     };
-  
+
     fetchBankAccounts();
   }, [initializeLandasanHukum]);
 
@@ -148,19 +148,21 @@ const LandasanHukum: React.FC = () => {
       const token = getCookie("token");
       const userId = getCookie("user_id");
       const vendorId = getCookie("vendor_id");
-  
+
       if (!token || !userId || !vendorId) {
         message.error("Token, User ID, or Vendor ID is missing.");
         return;
       }
-  
+
       const row = await form.validateFields();
       const updatedRow = {
         ...row,
         id: Number(id),
+        document_no: `${row.document_no}`,
         document_date: dayjs(row.document_date).format("YYYY-MM-DD"),
       };
-  
+      console.log(updatedRow);
+
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/vendor/legal-foundation/${id}`,
         updatedRow,
@@ -172,7 +174,7 @@ const LandasanHukum: React.FC = () => {
           },
         }
       );
-  
+
       editLandasanHukum(updatedRow); // Pastikan Anda memiliki fungsi editIzinUsaha yang sesuai
       setEditingKey("");
       message.success("Landasan Hukum updated successfully.");
@@ -187,12 +189,12 @@ const LandasanHukum: React.FC = () => {
       const token = getCookie("token");
       const userId = getCookie("user_id");
       const vendorId = getCookie("vendor_id");
-  
+
       if (!token || !userId || !vendorId) {
         message.error("Token, User ID, or Vendor ID is missing.");
         return;
       }
-  
+
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_URL}/vendor/legal-foundation/${id}`,
         {
@@ -203,7 +205,7 @@ const LandasanHukum: React.FC = () => {
           },
         }
       );
-  
+
       removeLandasanHukum(Number(id)); // Menghapus item dari state setelah berhasil dihapus di backend
       message.success("Landasan Hukum deleted successfully.");
     } catch (error) {
@@ -241,31 +243,31 @@ const LandasanHukum: React.FC = () => {
         const editable = isEditing(record);
         return editable ? (
           <span>
-          <Typography.Link
-            onClick={() => save(record.id)}
-            style={{ marginRight: 8 }}
-          >
-            Save
-          </Typography.Link>
-          <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-            <a>Cancel</a>
-          </Popconfirm>
-        </span>
-      ) : (
-        <span className="flex items-center gap-5 justify-center">
-          <Typography.Link
-            disabled={editingKey !== ""}
-            onClick={() => edit(record)}
-          >
-            <EditOutlined />
-          </Typography.Link>
-          <Popconfirm
-            title="Sure to delete?"
-            onConfirm={() => handleDelete(record.id)}
-          >
-            <DeleteOutlined className="text-red-500" />
-          </Popconfirm>
-        </span>
+            <Typography.Link
+              onClick={() => save(record.id)}
+              style={{ marginRight: 8 }}
+            >
+              Save
+            </Typography.Link>
+            <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
+              <a>Cancel</a>
+            </Popconfirm>
+          </span>
+        ) : (
+          <span className="flex items-center gap-5 justify-center">
+            <Typography.Link
+              disabled={editingKey !== ""}
+              onClick={() => edit(record)}
+            >
+              <EditOutlined />
+            </Typography.Link>
+            <Popconfirm
+              title="Sure to delete?"
+              onConfirm={() => handleDelete(record.id)}
+            >
+              <DeleteOutlined className="text-red-500" />
+            </Popconfirm>
+          </span>
         );
       },
     },
@@ -280,9 +282,9 @@ const LandasanHukum: React.FC = () => {
       onCell: (record: LandasanHukum) => ({
         record,
         inputType:
-                col.dataIndex === "document_date" || col.dataIndex.includes("document_date") ? "date" :
-                col.dataIndex === "document_no" || col.dataIndex.includes("document_no") ? "number" :
-                "text",
+          col.dataIndex === "document_date" || col.dataIndex.includes("document_date") ? "date" :
+            col.dataIndex === "document_no" || col.dataIndex.includes("document_no") ? "number" :
+              "text",
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record),
@@ -292,6 +294,16 @@ const LandasanHukum: React.FC = () => {
 
   const showModal = () => {
     setIsModalVisible(true);
+    form.resetFields();
+    formik.resetForm();
+    setIsModalVisible(true);
+    let emptyData = {
+      document_no: "",
+      document_date: "",
+      notaris_name: "",
+    };
+    form.setFieldsValue({ ...emptyData });
+    formik.setValues({ ...emptyData })
   };
 
   const handleOk = () => {
@@ -308,7 +320,9 @@ const LandasanHukum: React.FC = () => {
   const handleSubmit = () => {
     console.log("Submitting data:", landasanHukum);
     // Additional submission logic if needed
-    formik.handleSubmit()
+    form.validateFields().then((values) => {
+      formik.handleSubmit()
+    });
   };
 
   return (
@@ -322,20 +336,20 @@ const LandasanHukum: React.FC = () => {
         onCancel={handleCancel}
         footer={[
           <>
-           <Button onClick={handleCancel}>
-            Batalkan
-          </Button>
-          <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
-            Simpan Data
-          </Button>
+            <Button onClick={handleCancel}>
+              Batalkan
+            </Button>
+            <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
+              Simpan Data
+            </Button>
           </>
         ]}
       >
-        <Form>
+        <Form form={form}>
           <Form.Item
             name="notaris_name"
             label="Nama Notaris"
-            // rules={[{ required: true }]}
+            rules={[{ required: true, message: "Nama Notaris harus diisi" }]}
           >
             <Input
               name="notaris_name"
@@ -346,7 +360,7 @@ const LandasanHukum: React.FC = () => {
           <Form.Item
             name="document_no"
             label="Nomor Dokumen"
-            // rules={[{ required: true }]}
+            rules={[{ required: true, message: "Nomor Dokumen harus diisi" }]}
           >
             <Input
               name="document_no"
@@ -357,13 +371,16 @@ const LandasanHukum: React.FC = () => {
           <Form.Item
             name="document_date"
             label="Tahun Dokumen"
-            // rules={[{ required: true }]}
+            rules={[{ required: true, message: "Tahun Dokumen harus diisi" }]}
           >
             <DatePicker
               name="document_date"
-              format="YYYY-MM-DD"
-              onChange={(date, dateString) =>
-                formik.setFieldValue("document_date", dateString)
+              format="DD-MM-YYYY"
+              onChange={(date) =>
+                formik.setFieldValue(
+                  "document_date",
+                  date ? date.format("YYYY-MM-DD") : "",
+                )
               }
             />
           </Form.Item>
@@ -384,6 +401,9 @@ const LandasanHukum: React.FC = () => {
             onChange: cancel,
           }}
           loading={isLoading}
+          scroll={{
+            x: 1300,
+          }}
         />
       </Form>
     </div>

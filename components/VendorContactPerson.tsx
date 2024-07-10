@@ -23,14 +23,19 @@ const { TextArea } = Input;
 const { Option } = Select;
 
 interface ContactPerson {
-    id: number;
-    contact_name: string;
-    contact_email: string;
-    contact_identity_no: string;
-    contact_phone: string;
-    contact_npwp: string;
-    position_id: string;
-  }
+  id: number;
+  contact_name: string;
+  contact_email: string;
+  contact_identity_no: string;
+  contact_phone: string;
+  contact_npwp: string;
+  position_id: string;
+}
+
+interface PositionList {
+  id: number;
+  name: string;
+}
 
 const ContactInfo: React.FC = () => {
   const {
@@ -43,7 +48,8 @@ const ContactInfo: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
+  const [getPositions, setGetpositions] = useState<PositionList[]>([]);
 
   const formik = useFormik({
     initialValues: {
@@ -66,7 +72,7 @@ const ContactInfo: React.FC = () => {
       }
 
       try {
-        setIsLoading(true)
+        setIsLoading(true);
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}/vendor/contact-person`,
           values,
@@ -76,34 +82,31 @@ const ContactInfo: React.FC = () => {
               "User-ID": userId,
               "Vendor-ID": vendorId,
             },
-          }
+          },
         );
-        console.log("Response from API:", response.data);
-        setIsModalVisible(false);
-        message.success("Contact added successful");
-        addContactInfo({ ...values, id: response.data.data.id });
-        setIsModalVisible(false);
-        formik.resetForm();
-      } catch (error) {
-        console.error("Error submitting data:", error);
-        if (axios.isAxiosError(error)) {
-          if (
-            error.response &&
-            error.response.data &&
-            error.response.data.errors
-          ) {
-            const backendErrors = error.response.data.errors;
-            setErrors(backendErrors);
-            Object.keys(backendErrors).forEach((key) => {
-              message.error(`${backendErrors[key]}`);
-            });
-          } else {
-            message.error("An error occurred. Please try again later.");
-          }
+        if (response.data && response.data.data) {
+          const { vendor_position, ...vendorData } = response.data.data;
+
+          const mappedData: ContactPerson = {
+            ...vendorData,
+            position_id: vendor_position
+              ? vendor_position.name
+              : vendor_position,
+          };
+
+          console.log("Response from API:", response.data);
+          setIsModalVisible(false);
+          message.success("Data Contact Perusahaan added successful");
+          addContactInfo(mappedData);
+          formik.resetForm();
         } else {
-          message.error("An unexpected error occurred. Please try again later.");
+          console.error("Failed to get valid data from API response");
+          message.error("Failed to get valid data from API response");
         }
-      }finally {
+      } catch (error) {
+        console.error("Failed to submit data", error);
+        message.error("Failed to submit data. Please try again later.");
+      } finally {
         setIsLoading(false);
       }
     },
@@ -112,61 +115,122 @@ const ContactInfo: React.FC = () => {
   useEffect(() => {
     const fetchContactInfo = async () => {
       try {
-        setIsLoading(true)
+        setIsLoading(true);
         const token = getCookie("token");
         const userId = getCookie("user_id");
         const vendorId = getCookie("vendor_id");
-  
+
         if (!token || !userId || !vendorId) {
           message.error("Token, User ID, or Vendor ID is missing.");
           return;
         }
-  
+
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}i/vendor/contact-person`,
+          `${process.env.NEXT_PUBLIC_API_URL}/vendor/contact-person`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
               "User-ID": userId,
               "Vendor-ID": vendorId,
             },
-          }
+          },
         );
-  
+
         console.log("Response from API:", response.data);
         // Pastikan response.data adalah object dan memiliki properti yang berisi array
-        if (typeof response.data === "object" && Array.isArray(response.data.data)) {
-          const mappedData = response.data.data.map((data: { vendor_position: { name: any; }; position_id: any; }) => ({
-            ...data,
-            position_id: data.vendor_position ? data.vendor_position.name : data.position_id,
-          }));
+        if (
+          typeof response.data === "object" &&
+          Array.isArray(response.data.data)
+        ) {
+          const mappedData = response.data.data.map(
+            (data: { vendor_position: { name: any }; position_id: any }) => ({
+              ...data,
+              position_id: data.vendor_position
+                ? data.vendor_position.name
+                : data.position_id,
+            }),
+          );
           initializeContactInfo(mappedData);
         } else {
-          console.error("Response data is not in expected format:", response.data);
+          console.error(
+            "Response data is not in expected format:",
+            response.data,
+          );
           message.error("Failed to fetch contact information.");
         }
       } catch (error) {
         console.error("Error fetching data:", error);
         message.error("Failed to fetch contact information.");
-      }finally {
+      } finally {
         setIsLoading(false);
       }
     };
-  
+
     fetchContactInfo();
   }, [initializeContactInfo]);
 
   useEffect(() => {
-    // Initialize data if needed
-    const initialData: ContactPerson[] = []; // Load your initial data here
-    initializeContactInfo(initialData);
-  }, [initializeContactInfo]);
+    const fetchPositionList = async () => {
+      try {
+        setIsLoading(true);
+        const token = getCookie("token");
+        const userId = getCookie("user_id");
+        const vendorId = getCookie("vendor_id");
+
+        if (!token || !userId || !vendorId) {
+          message.error("Please login first.");
+          return;
+        }
+
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/master/vendor-position`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "User-ID": userId,
+              "Vendor-ID": vendorId,
+            },
+          },
+        );
+
+        if (response.data && Array.isArray(response.data.data)) {
+          const mappedData = response.data.data.map(
+            (vendor_position: { id: any; name: any }) => ({
+              ...vendor_position,
+            }),
+          );
+          setGetpositions(mappedData);
+        } else {
+          console.error(
+            "business field data fetched is not in expected format:",
+            response.data,
+          );
+          message.error(
+            "business field data fetched is not in expected format.",
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching business field data:", error);
+        message.error(
+          "Failed to fetch business field data. Please try again later.",
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPositionList();
+  }, []);
 
   const isEditing = (record: ContactPerson) =>
     record.id.toString() === editingKey;
 
   const edit = (record: Partial<ContactPerson> & { id: React.Key }) => {
-    form.setFieldsValue({ ...record });
+    const positionName =
+      getPositions.find(
+        (position_id) => position_id.id === Number(record.position_id),
+      )?.name || record.position_id;
+    form.setFieldsValue({ ...record, position_id: positionName });
     setEditingKey(record.id.toString());
   };
 
@@ -176,35 +240,57 @@ const ContactInfo: React.FC = () => {
 
   const save = async (id: React.Key) => {
     try {
-      const row = (await form.validateFields()) as ContactPerson;
+      const row = await form.validateFields();
       const token = getCookie("token");
       const userId = getCookie("user_id");
       const vendorId = getCookie("vendor_id");
-  
+
       if (!token || !userId || !vendorId) {
         message.error("Token, User ID, or Vendor ID is missing.");
         return;
       }
-  
-      await axios.put(
+
+      const positionValue =
+        getPositions.find((position) => position.name === row.position_id)?.id ||
+        row.position_id; // Mengambil nilai ID dari posisi
+
+      const updatedRow = {
+        ...row,
+        id: Number(id),
+        position_id: positionValue, // Mengatur ID posisi bukan labelnya
+      };
+
+      const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_URL}/vendor/contact-person/${id}`,
-        row,
+        updatedRow,
         {
           headers: {
             Authorization: `Bearer ${token}`,
             "User-ID": userId,
             "Vendor-ID": vendorId,
           },
-        }
+        },
       );
 
-      console.log("row contact", row);
-  
-      editContactInfo({ ...row, id: Number(id) });
-      setEditingKey("");
-    } catch (errInfo) {
-      console.log("Validate Failed:", errInfo);
-      message.error("Failed to save data. Please try again.");
+      if (response.data && response.data.data) {
+        const { vendor_position, ...directorData } = response.data.data;
+
+        const updatedDirector: ContactPerson = {
+          ...directorData,
+          position_id: vendor_position ? vendor_position.name : "", // Menampilkan nama posisi jika tersedia
+        };
+
+        console.log("row contact", row);
+        editContactInfo(updatedDirector);
+        setEditingKey("");
+        message.success("Data contact updated successfully.");
+      } else {
+        console.error("Failed to get valid data from API response");
+        message.error("Failed to get valid data from API response");
+      }
+    } catch (error) {
+      console.error("Error updating data details:", error);
+      message.error("Failed to update data details. Please try again.");
     }
   };
 
@@ -213,12 +299,12 @@ const ContactInfo: React.FC = () => {
       const token = getCookie("token");
       const userId = getCookie("user_id");
       const vendorId = getCookie("vendor_id");
-  
+
       if (!token || !userId || !vendorId) {
         message.error("Token, User ID, or Vendor ID is missing.");
         return;
       }
-  
+
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_URL}/vendor/contact-person/${id}`,
         {
@@ -227,20 +313,15 @@ const ContactInfo: React.FC = () => {
             "User-ID": userId,
             "Vendor-ID": vendorId,
           },
-        }
+        },
       );
-  
+
       removeContactInfo(Number(id)); // Pastikan Anda memiliki fungsi removeContactInfo yang sesuai
       message.success("Contact information deleted successfully.");
     } catch (error) {
       console.error("Error deleting contact information:", error);
       message.error("Failed to delete contact information. Please try again.");
     }
-  };
-
-  const getPositionName = (positionId: string) => {
-    const vendor_position = positionOptions.find(option => option.value === positionId);
-    return vendor_position ? vendor_position.label : positionId;
   };
 
   const columns = [
@@ -279,9 +360,12 @@ const ContactInfo: React.FC = () => {
       title: "Jabatan",
       dataIndex: "position_id",
       key: "position_id",
-      options: positionOptions,
       editable: true,
-      render: (text: string) => getPositionName(text),
+      options: getPositions.map((businessField) => ({
+        key: businessField.id,
+        value: businessField.id,
+        label: businessField.name,
+      })),
     },
     {
       title: "Operation",
@@ -290,31 +374,31 @@ const ContactInfo: React.FC = () => {
         const editable = isEditing(record);
         return editable ? (
           <span>
-          <Typography.Link
-            onClick={() => save(record.id)}
-            style={{ marginRight: 8 }}
-          >
-            Save
-          </Typography.Link>
-          <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-            <a>Cancel</a>
-          </Popconfirm>
-        </span>
-      ) : (
-        <span className="flex items-center gap-5 justify-center">
-          <Typography.Link
-            disabled={editingKey !== ""}
-            onClick={() => edit(record)}
-          >
-            <EditOutlined />
-          </Typography.Link>
-          <Popconfirm
-            title="Sure to delete?"
-            onConfirm={() => handleDelete(record.id)}
-          >
-            <DeleteOutlined className="text-red-500" />
-          </Popconfirm>
-        </span>
+            <Typography.Link
+              onClick={() => save(record.id)}
+              style={{ marginRight: 8 }}
+            >
+              Save
+            </Typography.Link>
+            <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
+              <a>Cancel</a>
+            </Popconfirm>
+          </span>
+        ) : (
+          <span className="flex items-center justify-center gap-5">
+            <Typography.Link
+              disabled={editingKey !== ""}
+              onClick={() => edit(record)}
+            >
+              <EditOutlined />
+            </Typography.Link>
+            <Popconfirm
+              title="Sure to delete?"
+              onConfirm={() => handleDelete(record.id)}
+            >
+              <DeleteOutlined className="text-red-500" />
+            </Popconfirm>
+          </span>
         );
       },
     },
@@ -329,9 +413,9 @@ const ContactInfo: React.FC = () => {
       onCell: (record: ContactPerson) => ({
         record,
         inputType:
-       col.dataIndex === "position_id" || col.dataIndex === "bank_id"
-              ? "select"
-              : "text",
+          col.dataIndex === "position_id" || col.dataIndex === "bank_id"
+            ? "select"
+            : "text",
         dataIndex: col.dataIndex,
         title: col.title,
         options: col.options,
@@ -342,17 +426,17 @@ const ContactInfo: React.FC = () => {
 
   const showModal = () => {
     setIsModalVisible(true);
-    form.resetFields()
-        formik.resetForm()
-        let emptyData = {
-          contact_name: "",
-          contact_email: "",
-          contact_phone: "",
-          contact_identity_no: "",
-          contact_npwp: "",
-          position_id: "",
-        }
-        form.setFieldsValue({ ...emptyData })
+    form.resetFields();
+    formik.resetForm();
+    let emptyData = {
+      contact_name: "",
+      contact_email: "",
+      contact_phone: "",
+      contact_identity_no: "",
+      contact_npwp: "",
+      position_id: "",
+    };
+    form.setFieldsValue({ ...emptyData });
   };
 
   const handleOk = () => {
@@ -371,7 +455,10 @@ const ContactInfo: React.FC = () => {
   const handleSubmit = () => {
     console.log("Submitting data:", contactInfo);
     // Additional submission logic if needed
-    formik.handleSubmit(); // Trigger Formik's submit function
+    // formik.handleSubmit(); // Trigger Formik's submit function
+    form.validateFields().then((values) => {
+      formik.handleSubmit() // Trigger Formik's submit function
+    });
   };
 
   return (
@@ -385,20 +472,23 @@ const ContactInfo: React.FC = () => {
         onCancel={handleCancel}
         footer={[
           <>
-           <Button onClick={handleCancel}>
-            Batalkan
-          </Button>
-          <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
-            Simpan Data
-          </Button>
-          </>
+            <Button onClick={handleCancel}>Batalkan</Button>
+            <Button
+              key="submit"
+              type="primary"
+              onClick={handleSubmit}
+              loading={isLoading}
+            >
+              Simpan Data
+            </Button>
+          </>,
         ]}
       >
         <Form form={form} layout="vertical">
           <Form.Item
             name="contact_name"
             label="Nama"
-            // rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
+            rules={[{ required: true, message: "Nama tidak boleh kosong" }]}
           >
             <Input
               value={formik.values.contact_name}
@@ -408,7 +498,7 @@ const ContactInfo: React.FC = () => {
           <Form.Item
             name="contact_email"
             label="Email"
-            // rules={[{ required: true, message: "Jabatan tidak boleh kosong" }]}
+            rules={[{ required: true, message: "Email tidak boleh kosong" }]}
           >
             <Input
               value={formik.values.contact_email}
@@ -418,7 +508,31 @@ const ContactInfo: React.FC = () => {
           <Form.Item
             name="contact_identity_no"
             label="No KTP"
-            rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+            rules={[
+              {
+                required: true,
+                message: "Please enter KTP number",
+              },
+              () => ({
+                validator(_, value) {
+                  if (!value) {
+                    return Promise.reject();
+                  }
+                  if (isNaN(value)) {
+                    return Promise.reject("KTP Number has to be a number.");
+                  }
+                  if (value.length < 16) {
+                    return Promise.reject("KTP Number can't be less than 16 digits");
+                  }
+                  if (value.length > 16) {
+                    return Promise.reject(
+                      "KTP Number can't be more than 16 digits",
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
             hasFeedback
           >
             <Input
@@ -430,7 +544,9 @@ const ContactInfo: React.FC = () => {
           <Form.Item
             name="contact_phone"
             label="No Telepon"
-            // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+            rules={[{ required: true, message: "Nomor Telepon harus berupa angka" }]}
+            required
+            hasFeedback
           >
             <Input
               value={formik.values.contact_phone}
@@ -442,27 +558,56 @@ const ContactInfo: React.FC = () => {
           <Form.Item
             name="contact_npwp"
             label="NPWP"
-            // rules={[{ required: true, message: "NPWP harus berupa angka" }]}
+            rules={[
+              {
+                required: true,
+                message: "Please enter NPWP number",
+              },
+              () => ({
+                validator(_, value) {
+                  if (!value) {
+                    return Promise.reject();
+                  }
+                  if (isNaN(value)) {
+                    return Promise.reject("NPWP code has to be a number.");
+                  }
+                  if (value.length < 16) {
+                    return Promise.reject("NPWP can't be less than 16 digits");
+                  }
+                  if (value.length > 16) {
+                    return Promise.reject(
+                      "NPWP code can't be more than 16 digits",
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
+            hasFeedback
           >
             <Input
               value={formik.values.contact_npwp}
               onChange={formik.handleChange}
             />
           </Form.Item>
-          <Form.Item label="Jabatan" required hasFeedback>
+          <Form.Item label="Jabatan" rules={[
+            {
+              required: true,
+              message: "Silahkan pilih jabatan",
+            },
+          ]} required hasFeedback>
             <Select
               id="position_id"
               onChange={(value) => formik.setFieldValue("position_id", value)}
               onBlur={formik.handleBlur}
               value={formik.values.position_id}
+              defaultValue={getPositions.at(0)?.id.toString()}
             >
-             {columns
-                .find((col) => col.dataIndex === "position_id")
-                ?.options?.map((option) => (
-                  <Select.Option key={option.value} value={option.value}>
-                    {option.label}
-                  </Select.Option>
-                ))}
+              {getPositions.map((option) => (
+                <Select.Option key={option.id} value={option.id}>
+                  {option.name}
+                </Select.Option>
+              ))}
             </Select>
           </Form.Item>
         </Form>
@@ -483,9 +628,12 @@ const ContactInfo: React.FC = () => {
             onChange: cancel,
           }}
           loading={isLoading}
+          scroll={{
+            x: 1300,
+          }}
         />
       </Form>
-    </div>
+    </div >
   );
 };
 

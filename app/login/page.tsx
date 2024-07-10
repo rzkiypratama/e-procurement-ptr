@@ -25,25 +25,43 @@ const LoginForm: React.FC = () => {
       try {
         setIsLoading(true);
         const response = await axios.post(
-          "https://vendorv2.delpis.online/api/auth/login",
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
           {
             username: values.username,
             password: values.password,
           }
         );
-    
+
         console.log("Response from server:", response); // Debugging response from server
-    
+
         if (response.data && response.data.data && response.data.data.token) {
-          const { token, vendor_id, user_id } = response.data.data;
-    
+          const { token, vendor_id, user_id, group_user_code, group_users_id } = response.data.data;
+
           // Set cookies here
           setCookie('token', token.toString(), { secure: true, sameSite: 'none' });
           setCookie('user_id', user_id.toString(), { secure: true, sameSite: 'none' });
-          setCookie('vendor_id', vendor_id.toString(), { secure: true, sameSite: 'none' });
-    
+          setCookie('vendor_id', vendor_id == null ? "" : vendor_id.toString(), { secure: true, sameSite: 'none' });
+          setCookie('group_user_code', group_user_code.toString(), { secure: true, sameSite: 'none' });
+          setCookie('group_user_id', group_users_id.toString(), { secure: true, sameSite: 'none' });
           message.success("Login successful!");
-          router.push("/vendor/registration-list");
+
+          switch (group_user_code) {
+            case 'admin':
+              router.push('/vendor/registration-list');
+              break;
+            case 'verifikator':
+              router.push('/vendor/verification');
+              break;
+            case 'ppk':
+              router.push('/vendor/registration-list');
+              break;
+            case 'vendor':
+              router.push('/vendor/profile');
+              break;
+            default:
+              router.push('/');
+              break;
+          }
         } else {
           console.error("Unexpected response from server:", response);
           message.error("An unexpected error occurred. Please try again later.");
@@ -57,7 +75,8 @@ const LoginForm: React.FC = () => {
               message.error(`${backendErrors[key]}`);
             });
           } else {
-            message.error("An error occurred. Please try again later.");
+            message.error(`${error.response?.data.message}`);
+            // message.error("An error occurred. Please try again later.");
           }
         } else {
           message.error("An unexpected error occurred. Please try again later.");
@@ -133,8 +152,8 @@ const LoginForm: React.FC = () => {
             </Form.Item>
 
             <Form.Item>
-            <Button type="primary" htmlType="submit" loading={isLoading}>
-               Login
+              <Button type="primary" htmlType="submit" loading={isLoading}>
+                Login
               </Button>
             </Form.Item>
           </Form>

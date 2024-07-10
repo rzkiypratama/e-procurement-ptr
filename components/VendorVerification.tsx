@@ -9,6 +9,7 @@ import {
 import axios from "axios";
 import vendorStore from "@/store/vendorStore";
 import { useRouter } from 'next/navigation'
+import { getCookie } from "cookies-next";
 
 
 interface VendorVerificationList {
@@ -38,11 +39,11 @@ const VendorVerificationList: React.FC = () => {
     }, []);
 
     const columns = [
-        { title: "No", dataIndex: "no", key: "no" },
         {
-            title: "Company Name",
-            dataIndex: "company_name",
-            key: "company_name",
+            title: "No",
+            dataIndex: "no",
+            key: "no",
+            sorter: (a: VendorVerificationList, b: VendorVerificationList) => a.id - b.id,
         },
         {
             title: "Vendor Number",
@@ -50,14 +51,26 @@ const VendorVerificationList: React.FC = () => {
             key: "vendor_number",
         },
         {
+            title: "Company Name",
+            dataIndex: "company_name",
+            key: "company_name",
+            filters: vendorVerificationList.map(vendor => ({
+                text: vendor.company_name,
+                value: vendor.company_name,
+            })),
+            onFilter: (value: any, record: { company_name: string | any[]; }) => record.company_name.includes(value),
+            filterSearch: true,
+        },
+        {
             title: "PIC",
             dataIndex: "pic_name",
             key: "pic_name",
-        },
-        {
-            title: "Status",
-            dataIndex: "status",
-            key: "status",
+            filters: vendorVerificationList.map(vendor => ({
+                text: vendor.pic_name,
+                value: vendor.pic_name,
+            })),
+            onFilter: (value: any, record: { pic_name: string | any[]; }) => record.pic_name.includes(value),
+            filterSearch: true,
         },
         {
             title: "Type",
@@ -66,6 +79,11 @@ const VendorVerificationList: React.FC = () => {
         },
         {
             title: "Status Vendor",
+            dataIndex: "status",
+            key: "status",
+        },
+        {
+            title: "Verification Status",
             dataIndex: "status_vendor",
             key: "status_vendor",
         },
@@ -78,6 +96,7 @@ const VendorVerificationList: React.FC = () => {
             title: "Progress Verification",
             dataIndex: "progress_verification",
             key: "progress_verification",
+            sorter: (a: VendorVerificationList, b: VendorVerificationList) => a.id - b.id,
         },
         {
             title: "",
@@ -110,11 +129,24 @@ const VendorVerificationList: React.FC = () => {
     const getAllVendorList = async () => {
         setIsLoading(true)
         try {
+
+            const token = getCookie("token");
+            const userId = getCookie("user_id");
+            const vendorId = getCookie("vendor_id");
+            const groupUserCode = getCookie('group_user_code')
+
+            if (!token || !userId || (groupUserCode == 'vendor' && !vendorId)) {
+                message.error("Please login first.");
+                return;
+            }
             const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/verifikator/vendor`, {
-                // headers: {
-                //     "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
-                // }
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "User-ID": userId,
+                    "Vendor-ID": vendorId,
+                },
             });
+
             console.log("Response from API:", response.data.data);
             let index = 0;
             response.data.data.map((e: any) => {
@@ -132,8 +164,12 @@ const VendorVerificationList: React.FC = () => {
         }
     }
 
+    const onChange = (pagination: any, filters: any, sorter: any) => {
+        console.log("params", pagination, filters, sorter);
+    };
+
     return (
-        <div className='container h-screen max-w-full mx-auto'>
+        <div className=''>
             <h1 className="font-bold text-start text-xl mb-5">Verification</h1>
             <Button type="primary" onClick={() => console.log("Download Report")} className="mb-5 float-end">
                 Download Report
@@ -145,7 +181,10 @@ const VendorVerificationList: React.FC = () => {
                 rowKey={(record) => record.id.toString()}
                 dataSource={vendorVerificationList}
                 columns={mergedColumns}
-                rowClassName="editable-row"
+                onChange={onChange}
+                scroll={{
+                    x: 1300,
+                }}
             />
         </div>
     )

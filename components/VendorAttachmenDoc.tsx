@@ -16,8 +16,7 @@ import {
 import useAttachmentStore from "../store/CenterStore";
 import EditableCell from "./EditableCell";
 import { useFormik } from "formik";
-import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
-import LandasanHukum from "./VendorLandasanHukum2";
+import { DeleteOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { getCookie } from "cookies-next";
 import axios from "axios";
@@ -30,17 +29,12 @@ interface AttachmentDoc {
   document: string;
   category: string;
   expiration_date: string;
+  document_path: string;
 }
 
 const AttachmentDocument: React.FC = () => {
   const {
     attachmentDoc,
-    pengurusPerusahaan,
-    landasanHukum,
-    izinUsaha,
-    pengalaman,
-    sptTahunan,
-    tenagaAhli,
     addAttachment,
     editAttachment,
     removeAttachment,
@@ -61,25 +55,26 @@ const AttachmentDocument: React.FC = () => {
       document: "",
       category: "",
       expiration_date: "",
+      document_path: "",
     },
-    onSubmit: async (values) => {
+    onSubmit: async (values, { setSubmitting }) => {
       const token = getCookie("token");
       const userId = getCookie("user_id");
       const vendorId = getCookie("vendor_id");
-
+    
       if (!token || !userId || !vendorId) {
         message.error("Token, User ID, or Vendor ID is missing.");
         return;
       }
-
+    
       try {
-        setIsLoading(true)
+        setIsLoading(true);
         const formData = new FormData();
         formData.append("document", values.document); // Menggunakan originFileObj untuk file asli
         formData.append("name", values.name);
         formData.append("category", values.category);
         formData.append("expiration_date", values.expiration_date);
-
+    
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}/vendor/attachment`,
           formData,
@@ -92,17 +87,26 @@ const AttachmentDocument: React.FC = () => {
             },
           }
         );
-
+    
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
         message.success("Dokumen berhasil ditambahkan");
-        addAttachment({ ...values, id: response.data.data.id });
+    
+        // Memperbarui objek data attachment dengan tambahan document_path
+        const attachmentData = {
+          ...values,
+          id: response.data.data.id,
+          document_path: response.data.data.document_path,
+        };
+    
+        addAttachment(attachmentData);
         formik.resetForm();
       } catch (error) {
         console.error("Gagal menambahkan dokumen:", error);
         message.error("Gagal menambahkan dokumen. Silakan coba lagi.");
       } finally {
         setIsLoading(false);
+        setSubmitting(false); // Pastikan setSubmitting disetel ke false untuk menghentikan proses loading
       }
     },
   });
@@ -157,7 +161,7 @@ const AttachmentDocument: React.FC = () => {
       form.setFieldsValue({
         ...record,
         expiration_date: record.expiration_date
-          ? dayjs(record.expiration_date, "DD-MM-YYYY")
+          ? dayjs(record.expiration_date, "YYYY-MM-DD")
           : null,
       });
       setEditingKey(record.id.toString());
@@ -174,7 +178,7 @@ const AttachmentDocument: React.FC = () => {
         ...row,
         id: Number(id),
         expiration_date: dayjs(row.expiration_date).format(
-          "DD-MM-YYYY",
+          "YYYY-MM-DD",
         ),
       };
       editAttachment({ ...row, id: Number(id) });
@@ -217,12 +221,13 @@ const AttachmentDocument: React.FC = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0];
     if (file) {
-      if (file.type !== "image/jpeg" && file.type !== "image/png") {
-        message.error("Hanya file JPEG atau PNG yang diizinkan!");
+      const isJpgOrPngOrPdf = file.type === "image/jpeg" || file.type === "image/png" || file.type === "application/pdf";
+      if (!isJpgOrPngOrPdf) {
+        message.error("Hanya file JPEG, PNG, atau PDF yang diizinkan!");
         return;
       }
       if (file.size / 1024 / 1024 >= 2) {
-        message.error("File must smaller than 2MB!");
+        message.error("File must be smaller than 2MB!");
         return;
       }
       // Set field value with the whole file object
@@ -236,17 +241,17 @@ const AttachmentDocument: React.FC = () => {
     multiple: false,
     onChange: handleFileChange,
     beforeUpload: (file: File) => {
-      const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
-      if (!isJpgOrPng) {
-        message.error("Hanya file JPEG atau PNG yang diizinkan!");
+      const isJpgOrPngOrPdf = file.type === "image/jpeg" || file.type === "image/png" || file.type === "application/pdf";
+      if (!isJpgOrPngOrPdf) {
+        message.error("Hanya file JPEG, PNG, atau PDF yang diizinkan!");
         return Upload.LIST_IGNORE;
       }
       const isLt2M = file.size / 1024 / 1024 < 2;
       if (!isLt2M) {
-        message.error("File must smaller than 2MB!");
+        message.error("File must be smaller than 2MB!");
         return Upload.LIST_IGNORE;
       }
-      return isJpgOrPng && isLt2M;
+      return isJpgOrPngOrPdf && isLt2M;
     },
   };
 
@@ -266,10 +271,10 @@ const AttachmentDocument: React.FC = () => {
     },
     {
       title: "Dokumen",
-      dataIndex: "document",
+      dataIndex: "document_path",
       key: "document",
       editable: true,
-      render: () => "document",
+      render: (text: any, record: { document_path: string; }) => <a href={record.document_path} target="_blank">{text}</a>
     },
     {
       title: "Masa Berlaku Dokumen",
@@ -277,7 +282,7 @@ const AttachmentDocument: React.FC = () => {
       key: "expiration_date",
       editable: true,
       render: (text: string) =>
-        text ? dayjs(text, "DD-MM-YYYY").format("DD-MM-YYYY") : "",
+        text ? dayjs(text, "YYYY-MM-DD").format("DD-MM-YYYY") : "",
     },
     {
       title: "Operation",
@@ -333,6 +338,16 @@ const AttachmentDocument: React.FC = () => {
   });
 
   const showModal = () => {
+    form.resetFields();
+    formik.resetForm();
+    let emptyData = {
+      name: "",
+      document: "",
+      category: "",
+      expiration_date: "",
+      document_path: "",
+    };
+    form.setFieldsValue({ ...emptyData });
     setIsModalVisible(true);
   };
 
@@ -461,13 +476,13 @@ const AttachmentDocument: React.FC = () => {
               format="DD-MM-YYYY"
               value={
                 formik.values.expiration_date
-                  ? dayjs(formik.values.expiration_date, "DD-MM-YYYY")
+                  ? dayjs(formik.values.expiration_date, "YYYY-MM-DD")
                   : null
               }
               onChange={(date) =>
                 formik.setFieldValue(
                   "expiration_date",
-                  date ? date.format("DD-MM-YYYY") : "",
+                  date ? date.format("YYYY-MM-DD") : "",
                 )
               }
             />
@@ -490,6 +505,9 @@ const AttachmentDocument: React.FC = () => {
             onChange: cancel,
           }}
           loading={isLoading}
+          scroll={{
+            x: 1300,
+          }}
         />
       </Form>
       <div className="flex flex-col justify-center items-center mt-10">

@@ -52,7 +52,30 @@ const EditableCell: React.FC<EditableCellProps> = ({
         <Form.Item
           name={dataIndex}
           style={{ margin: 0 }}
-          rules={[{ required: true, message: `Please Input ${title}!` }]}
+          rules={[
+            {
+              required: true, message: `Please Input ${title}!`,
+            },
+            (dataIndex === 'contact_identity_no' || dataIndex === 'contact_npwp' || dataIndex === 'company_npwp'
+              || dataIndex === 'npwp_no' || dataIndex === 'identity_no' ? () => ({
+                validator(_, value) {
+
+                  if (isNaN(value)) {
+                    return Promise.reject(`${title} has to be a number.`);
+                  }
+                  if (value.length < 16) {
+                    return Promise.reject(`${title} must be 16 digits`);
+                  }
+                  if (value.length > 16) {
+                    return Promise.reject(
+                      `${title} must be 16 digits`,
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              }) : () => ({ validator(_, value) { return Promise.resolve() } }))
+
+          ]}
           initialValue={inputType === "date" ? (record[dataIndex] ? dayjs(record[dataIndex], "DD-MM-YYYY") : null) : record[dataIndex]}
         >
           {inputNode}

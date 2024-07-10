@@ -14,6 +14,7 @@ import { useFormik } from "formik";
 import { ExclamationCircleFilled } from '@ant-design/icons';
 import useMasterDataStore from "@/store/masterData";
 import axios from "axios";
+import { getCookie } from 'cookies-next'
 
 interface VendorPosition {
     name: string;
@@ -36,6 +37,7 @@ const VendorPosition: React.FC = () => {
         removeItem
     } = useMasterDataStore();
 
+    const token = getCookie("token")
     const { loading, setLoading } = useMasterDataStore()
     const [isModalVisible, setIsModalVisible] = useState(false)
     const [isModalConfirmVisible, setIsModalConfirmVisible] = useState(false)
@@ -106,7 +108,7 @@ const VendorPosition: React.FC = () => {
             try {
                 const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/master/vendor-position`, values, {
                     headers: {
-                        "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
+                        "Authorization": `Bearer ${token}`
                     }
                 });
                 console.log("Response from API:", response.data);
@@ -180,7 +182,7 @@ const VendorPosition: React.FC = () => {
         try {
             const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/master/vendor-position`, {
                 headers: {
-                    "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
+                    "Authorization": `Bearer ${token}`
                 }
             });
             console.log("Response from API:", response.data.data);
@@ -228,7 +230,7 @@ const VendorPosition: React.FC = () => {
         try {
             const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/master/vendor-position/${selectedId}`, body, {
                 headers: {
-                    "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
+                    "Authorization": `Bearer ${token}`
                 }
             })
             console.log("Response from API:", response.data)
@@ -252,7 +254,7 @@ const VendorPosition: React.FC = () => {
         try {
             const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/master/vendor-position/${selectedId}`, {
                 headers: {
-                    "Authorization": "Bearer 366|RSq8PgJAx7JEGhAK5tayWacrkWMtEMtmyDc8hrDwc61803d5"
+                    "Authorization": `Bearer ${token}`
                 }
             });
             console.log("Response from API:", response.data);
@@ -272,7 +274,7 @@ const VendorPosition: React.FC = () => {
     }
 
     return (
-        <div className='container h-screen max-w-full mx-auto'>
+        <div>
             <Button type="primary" onClick={showModal} className="mb-5 float-end">
                 Tambah
             </Button>
