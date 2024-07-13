@@ -159,13 +159,13 @@ const PengadaanBarang: React.FC = () => {
 
   return (
     <LayoutNew>
-        <Link href="/user-requisition/pengadaan-barang/edit">
+        <Link href="/user-requisition/pengadaan/edit">
       <Button type="primary" className="mb-4">
         Add
       </Button>
         </Link>
       <Modal
-        title={isEditMode ? "Edit SPT" : "Tambah SPT"}
+        title={isEditMode ? "Edit Pengadaan" : "Tambah Pengadaan"}
         open={isModalVisible}
         onCancel={handleCancel}
         footer={[

@@ -86,7 +86,7 @@ const RegisteredVendorListPage = () => {
     ];
     return (
         <Layout>
-            <Link href="/user-requisition/pengadaan-barang">
+            <Link href="/user-requisition/pengadaan">
             <ArrowLeftOutlined className="mb-4" /> go back
             </Link>
             <div className="container mx-auto flex flex-col content-center">
