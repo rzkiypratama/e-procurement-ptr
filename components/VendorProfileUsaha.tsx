@@ -30,6 +30,8 @@ interface ProfilePerusahaan {
   company_email: string;
   company_fax: string;
   province_id: string;
+  province: string;
+  city: string;
 }
 
 interface GetCityList {
@@ -74,6 +76,8 @@ const PengurusPerusahaan: React.FC = () => {
       company_phone_number: "",
       company_email: "",
       company_fax: "",
+      province: "",
+      city: "",
     },
     onSubmit: async (values, { setErrors }) => {
       const token = getCookie("token");
@@ -87,8 +91,11 @@ const PengurusPerusahaan: React.FC = () => {
 
       try {
         setIsLoading(true);
-        values.city_id = getCity.find((item) => item.name == values.city_id)?.id.toString() ?? ""
-        values.province_id = getProvince.find((item) => item.name == values.province_id)?.id.toString() ?? ""
+        console.log(getCity.find(item => item.name === values.city_id));
+        // values.city_id = getCity.find((item) => item.id === parseInt(values.city_id))?.id.toString() ?? ""
+        // values.province_id = getProvince.find((item) => item.id === parseInt(values.province_id))?.id.toString() ?? ""
+
+        // console.log(values);
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}/vendor/informasi-umum`,
           values,
@@ -104,8 +111,10 @@ const PengurusPerusahaan: React.FC = () => {
         if (response.data && response.data.data) {
           const profileData: ProfilePerusahaan = {
             ...response.data.data,
-            city_id: response.data.data.city.name,
-            province_id: response.data.data.city.province.name,
+            city_id: response.data.data.city.id,
+            province_id: response.data.data.city.province.id,
+            province: response.data.data.city.province.name,
+            city: response.data.data.city.name,
           };
           editProfilePerusahaan(profileData);
           setIsModalVisible(false);
@@ -169,8 +178,10 @@ const PengurusPerusahaan: React.FC = () => {
         if (response.data && response.data.data) {
           const profileData: ProfilePerusahaan = {
             ...response.data.data,
-            city_id: response.data.data.city.name,
-            province_id: response.data.data.city.province.name,
+            city_id: response.data.data.city.id,
+            province_id: response.data.data.city.province.id,
+            province: response.data.data.city.province.name,
+            city: response.data.data.city.name,
           };
 
           initializeProfilePerusahaan([profileData]);
@@ -322,8 +333,8 @@ const PengurusPerusahaan: React.FC = () => {
     },
     {
       title: "Kota",
-      dataIndex: "city_id",
-      key: "city_id",
+      dataIndex: "city",
+      key: "city",
       editable: true,
       options: getCity.map((city) => ({
         key: city.id,
@@ -334,8 +345,8 @@ const PengurusPerusahaan: React.FC = () => {
     },
     {
       title: "Provinsi",
-      dataIndex: "province_id",
-      key: "province_id",
+      dataIndex: "province",
+      key: "province",
       editable: true,
       options: getProvince.map((province) => ({
         key: province.id,
@@ -411,6 +422,7 @@ const PengurusPerusahaan: React.FC = () => {
   const showModal = (record: ProfilePerusahaan) => {
     console.log(record.province_id)
     console.log(record.city_id)
+    console.log(formik.values.province_id);
     let saveData = {
       company_name: record.company_name,
       company_npwp: record.company_npwp,
@@ -422,6 +434,8 @@ const PengurusPerusahaan: React.FC = () => {
       company_email: record.company_email,
       company_fax: record.company_fax,
       province_id: record.province_id,
+      province: record.province,
+      city: record.city
     };
     form.setFieldsValue({ ...saveData });
     formik.setValues({ ...saveData })
@@ -443,6 +457,7 @@ const PengurusPerusahaan: React.FC = () => {
 
   const handleSubmit = () => {
     console.log("Submitting data:", profilePerusahaan);
+    console.log("Submitting data:", formik.values);
     // Additional submission logic if needed
     formik.handleSubmit(); // Trigger Formik's submit function
   };
@@ -538,13 +553,12 @@ const PengurusPerusahaan: React.FC = () => {
               onChange={formik.handleChange}
             />
           </Form.Item>
-          <Form.Item label="Provinsi" required hasFeedback>
+          <Form.Item label="Provinsi" name={"province_id"} id="province_id" required hasFeedback>
             <Select
               id="province_id"
               onChange={(value) => {
                 const provinceId = parseInt(value, 10);
                 formik.setFieldValue("province_id", provinceId);
-
                 // Find the first city that matches the selected province_id
                 const firstCity = getCity.find(
                   (city) => city.province_id === provinceId,
@@ -552,9 +566,11 @@ const PengurusPerusahaan: React.FC = () => {
                 if (firstCity) {
                   // Set city_id value in Formik to the first city's ID
                   formik.setFieldValue("city_id", firstCity.id);
+                  form.setFieldValue("city_id", firstCity.id);
                 } else {
                   // If no city matches, reset city_id
                   formik.setFieldValue("city_id", "");
+                  form.setFieldValue("city_id", "");
                 }
               }}
               onBlur={formik.handleBlur}
@@ -567,7 +583,7 @@ const PengurusPerusahaan: React.FC = () => {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item label="Kota" required hasFeedback>
+          <Form.Item label="Kota" name={"city_id"} id={"city_id"} required hasFeedback>
             <Select
               id="city_id"
               onChange={(value) => formik.setFieldValue("city_id", value)}

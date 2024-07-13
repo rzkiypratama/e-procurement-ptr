@@ -20,11 +20,20 @@ interface DashboardSummary {
 
 interface MasterBudgetInputAnggaran {
   id: number;
-  tahun_anggaran: string;
-  department: string;
-  anggaran_digunakan: string;
+  year: string;
+  department: Department,
+  total: string;
+  department_id: number,
   updated_by: string;
 }
+
+interface Department {
+  id: number,
+  department_name: string,
+  department_code: string,
+}
+
+
 interface PengadaanBarang {
   id: number;
   kode_rencana_umum_pengadaan: string;
@@ -82,6 +91,8 @@ interface ProfilePerusahaan {
   company_email: string;
   company_fax: string;
   province_id: string;
+  province: string;
+  city: string;
 }
 
 interface ContactPerson {
@@ -259,7 +270,6 @@ interface CenterStoreState {
   editAttachment: (attachmentDoc: AttachmentDoc) => void;
   removeAttachment: (id: number) => void;
   initializeAttachment: (attachmentDoc: AttachmentDoc[]) => void;
-  initializeAttachmentVerify: (attachmentDoc: AttachmentDocVerify[]) => void;
 }
 
 // Create Zustand Store
@@ -270,11 +280,11 @@ const useCenterStore = create<CenterStoreState>((set) => ({
     pengadaan: 0,
   },
   dashboardMasterBudget: [],
-   data: {
+  data: {
     user_request_pengadaan_barang: 0,
     user_request_pengadaan_pekerjaan_konstruksi: 0,
     user_request_pengadaan_jasa_konsultasi: 0,
-},
+  },
   syaratKualifikasi: [],
   dokumenKualifikasi: [],
   detailInformation: [],
@@ -506,9 +516,6 @@ const useCenterStore = create<CenterStoreState>((set) => ({
   })),
   initializeAttachment: (attachmentDoc) => set(() => ({
     attachmentDoc,
-  })),
-  initializeAttachmentVerify: (attachmentDocVerify) => set(() => ({
-    attachmentDocVerify,
   })),
 }));
 

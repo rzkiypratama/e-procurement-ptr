@@ -5,10 +5,11 @@ import {
     Table,
     message,
     Typography,
-    Checkbox
+    Checkbox,
 } from "antd";
+import dayjs from "dayjs";
 import axios from "axios";
-import useAttachmentStore from "@/store/CenterStore";
+import useVendorStore from "@/store/vendorStore";
 import Link from "next/link";
 import { getCookie } from "cookies-next";
 
@@ -24,13 +25,15 @@ interface AttachmentDoc {
     expiration_date: string;
     is_verified: boolean;
     document_path: string;
+    verified_by: String;
+    verified_at: String;
 }
 
 const VendorVerificationDoc = (props: Props) => {
     const {
-        attachmentDocVerify,
-        initializeAttachmentVerify,
-    } = useAttachmentStore();
+        attachmentDocsVerify,
+        initializeAttachmentDocVerify,
+    } = useVendorStore.useAttachmentDocVerifyStore();
 
     const [isLoading, setIsLoading] = useState(false)
 
@@ -64,6 +67,16 @@ const VendorVerificationDoc = (props: Props) => {
             title: "Exp Date",
             dataIndex: "expiration_date",
             key: "expiration_date",
+        },
+        {
+            title: "Verified By",
+            dataIndex: "verified_by",
+            key: "verified_by",
+        },
+        {
+            title: "Verified At",
+            dataIndex: "verified_at",
+            key: "verified_at",
         },
         {
             title: "Is Verified",
@@ -115,9 +128,11 @@ const VendorVerificationDoc = (props: Props) => {
             response.data.data.map((e: any) => {
                 index++
                 e.no = index
+                e.expiration_date = e.expiration_date != null ? dayjs(e.expiration_date).format("DD MMM YYYY") : null
+                e.verified_at = e.verified_at != null ? dayjs(e.verified_at).format("DD MMM YYYY HH:mm:ss") : null
             })
             const attachmentDocs: AttachmentDoc[] = await response.data.data
-            initializeAttachmentVerify(attachmentDocs);
+            initializeAttachmentDocVerify(attachmentDocs);
         } catch (error) {
             message.error(`Get Data Docs Vendor failed! ${error}`);
             console.error("Error Get Docs Vendor Registered:", error);
@@ -148,8 +163,8 @@ const VendorVerificationDoc = (props: Props) => {
                 },
             });
             console.log("Response from API:", response.data.data);
-            var selectedIndex = attachmentDocVerify.findIndex(x => x.id == record.id)
-            attachmentDocVerify[selectedIndex].is_verified = response.data.data.is_verified
+            var selectedIndex = attachmentDocsVerify.findIndex(x => x.id == record.id)
+            attachmentDocsVerify[selectedIndex].is_verified = response.data.data.is_verified
         } catch (error) {
             message.error(`Verify Docs Vendor failed! ${error}`);
             console.error("Error Verify Docs Vendor:", error);
@@ -166,7 +181,7 @@ const VendorVerificationDoc = (props: Props) => {
                 bordered
                 loading={isLoading}
                 rowKey={(record) => record.id.toString()}
-                dataSource={attachmentDocVerify}
+                dataSource={attachmentDocsVerify}
                 columns={mergedColumns}
                 rowClassName="editable-row"
             />

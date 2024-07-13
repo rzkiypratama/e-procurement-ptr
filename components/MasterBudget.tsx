@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Table, message } from 'antd';
 import useDashboardSummaryStore from '@/store/CenterStore';
+import { symbol } from 'zod';
+import axios from "axios";
+import { getCookie } from 'cookies-next';
 
 const { Meta } = Card;
 
@@ -11,14 +14,14 @@ interface DashboardMasterBudget {
     department: string;
     total_pengadaan: string;
     total_anggaran_digunakan: string
-  }
-  
-  interface DashboardStatistic {
+}
+
+interface DashboardStatistic {
     anggaran: number;
     pengadaan: number;
-  }
+}
 
-const DashboardVendor: React.FC = () => {
+const DashboardAnggaran: React.FC = () => {
     const {
         dashboardStatistic,
         dashboardMasterBudget,
@@ -31,8 +34,8 @@ const DashboardVendor: React.FC = () => {
 
     useEffect(() => {
         // Initialize data if needed
-        getDashboardVendorSummary();
-        getListVendor();
+        getDashboardAnggaranSummary();
+        getListAnggaran();
     }, []);
 
     const columns = [
@@ -71,7 +74,7 @@ const DashboardVendor: React.FC = () => {
         };
     });
 
-    const getDashboardVendorSummary = () => {
+    const getDashboardAnggaranSummary = () => {
         setIsLoading(true);
         try {
             const data: DashboardStatistic = {
@@ -88,17 +91,30 @@ const DashboardVendor: React.FC = () => {
         }
     };
 
-    const getListVendor = () => {
+    const getListAnggaran = async () => {
         setIsLoadingVendor(true);
         try {
-            const vendorList: DashboardMasterBudget[] = [
-                { id: 1, tahun_anggaran: "PT Jaya Abadi", department: "User 1", total_pengadaan: "ptjayaabadi@gmail.com", total_anggaran_digunakan: "0811112222"},
-                { id: 2, tahun_anggaran: "PT Jaya Abadi", department: "User 1", total_pengadaan: "ptjayaabadi@gmail.com", total_anggaran_digunakan: "0811112222"},
-                { id: 3, tahun_anggaran: "PT Jaya Abadi", department: "User 1", total_pengadaan: "ptjayaabadi@gmail.com", total_anggaran_digunakan: "0811112222"},
-                { id: 4, tahun_anggaran: "PT Jaya Abadi", department: "User 1", total_pengadaan: "ptjayaabadi@gmail.com", total_anggaran_digunakan: "0811112222"},
-                { id: 5, tahun_anggaran: "PT Jaya Abadi", department: "User 1", total_pengadaan: "ptjayaabadi@gmail.com", total_anggaran_digunakan: "0811112222"},
-            ];
-            setDashboardMasterBudget(vendorList);
+            const token = getCookie("token");
+            const userId = getCookie("user_id");
+            if (!token || !userId) {
+                message.error("Please login first.");
+                return;
+            }
+            //${process.env.NEXT_PUBLIC_API_URL}
+            const response = await axios.get(`https://requisition.eproc.latansa.sch.id/api/master/budget`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "User-ID": userId,
+                },
+            });
+            let index = 1;
+            response.data.data.map((e: any) => {
+                e.statusName = e.status == 1 ? "Active" : "Inactive"
+                e.id = index
+                index++
+            })
+            const summaryAnggaran: DashboardMasterBudget[] = await response.data.data
+            setDashboardMasterBudget(summaryAnggaran);
         } catch (error) {
             message.error(`Get Data Vendor Summary failed! ${error}`);
             console.error("Error Get Data Vendor Summary:", error);
@@ -115,22 +131,76 @@ const DashboardVendor: React.FC = () => {
                     <Meta
                         title={
                             <h1 className='font-normal text-md'>
-                                Pengadaan
+                                Tahun 2024
                             </h1>}
-                        description={<h1 className='font-normal text-5xl text-center text-black'>
-                            {dashboardStatistic.pengadaan.toString()}
-                        </h1>}
+                        description={
+                            <div className='grid gap-4 grid-cols-2'>
+                                <div>
+                                    <h1 className='font-normal text-sm text-center text-black'>
+                                        Pengadaan
+                                    </h1>
+                                    <h1 className='font-normal text-xl text-center text-green-500'>
+                                        {dashboardStatistic.pengadaan.toLocaleString("id-ID", {
+                                            style: "currency",
+                                            currency: "IDR",
+                                            currencyDisplay: "code",
+                                            minimumFractionDigits: 0,
+                                        })}
+                                    </h1>
+                                </div>
+
+                                <div>
+                                    <h1 className='font-normal text-sm text-center text-black'>
+                                        Pengeluaran
+                                    </h1>
+                                    <h1 className='font-normal text-xl text-center text-red-500'>
+                                        {dashboardStatistic.pengadaan.toLocaleString("id-ID", {
+                                            style: "currency",
+                                            currency: "IDR",
+                                            currencyDisplay: "code",
+                                            minimumFractionDigits: 0,
+                                        })}
+                                    </h1>
+                                </div>
+                            </div>
+                        }
                     />
                 </Card>
                 <Card style={{ width: 400, marginTop: 16 }} className='me-5 border-2 border-black text-center' loading={isLoading}>
                     <Meta
                         title={
                             <h1 className='font-normal text-md'>
-                                Anggaran
+                                Tahun 2025
                             </h1>}
-                        description={<h1 className='font-normal text-5xl text-center text-black'>
-                            {dashboardStatistic.anggaran.toString()}
-                        </h1>}
+                        description={<div className='grid gap-4 grid-cols-2'>
+                            <div>
+                                <h1 className='font-normal text-sm text-center text-black'>
+                                    Pengadaan
+                                </h1>
+                                <h1 className='font-normal text-xl text-center text-green-500'>
+                                    {dashboardStatistic.pengadaan.toLocaleString("id-ID", {
+                                        style: "currency",
+                                        currency: "IDR",
+                                        currencyDisplay: "code",
+                                        minimumFractionDigits: 0,
+                                    })}
+                                </h1>
+                            </div>
+
+                            <div>
+                                <h1 className='font-normal text-sm text-center text-black'>
+                                    Pengeluaran
+                                </h1>
+                                <h1 className='font-normal text-xl text-center text-red-500'>
+                                    {dashboardStatistic.pengadaan.toLocaleString("id-ID", {
+                                        style: "currency",
+                                        currency: "IDR",
+                                        currencyDisplay: "code",
+                                        minimumFractionDigits: 0,
+                                    })}
+                                </h1>
+                            </div>
+                        </div>}
                     />
                 </Card>
             </div>
@@ -149,4 +219,4 @@ const DashboardVendor: React.FC = () => {
     );
 };
 
-export default DashboardVendor;
+export default DashboardAnggaran;

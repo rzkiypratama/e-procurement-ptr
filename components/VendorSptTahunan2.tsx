@@ -310,8 +310,8 @@ const SPTTahunan: React.FC = () => {
     formik.setValues({ ...emptyData })
   };
 
-  const handleOk = (response: { data: { data: { id: any; }; }; }) => {
-    addSPTTahunan({ ...formik.values, id: response.data.data.id });
+  const handleOk = () => {
+    addSPTTahunan({ ...formik.values, id: sptTahunan.length + 2 });
     setIsModalVisible(false);
   };
 
@@ -322,6 +322,7 @@ const SPTTahunan: React.FC = () => {
 
   const handleSubmit = () => {
     console.log("Submitting data:", sptTahunan);
+    // Additional submission logic if needed
     form.validateFields().then((values) => {
       formik.handleSubmit()
     });

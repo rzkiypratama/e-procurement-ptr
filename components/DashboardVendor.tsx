@@ -93,15 +93,15 @@ const DashboardVendor: React.FC = () => {
             const vendorId = getCookie("vendor_id");
 
             if (!token || !userId || !vendorId) {
-            message.error("Please login first.");
-            return;
+                message.error("Please login first.");
+                return;
             }
             const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/verifikator/stats`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "User-ID": userId,
                     "Vendor-ID": vendorId,
-                  },
+                },
             });
             console.log("Response from API:", response.data.data);
             const data: DashboardSummary = {

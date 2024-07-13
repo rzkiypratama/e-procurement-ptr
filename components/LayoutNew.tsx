@@ -5,6 +5,7 @@ import Link from 'next/link';
 import ProfileAvatar from '@/lib/ProfileAvatar'
 import axios from "axios";
 import { getCookie } from 'cookies-next';
+import useMenuStore from "@/store/menuStore";
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -113,6 +114,22 @@ const MyLayout: React.FC<Props> = ({ children }) => {
               },
             ],
           },
+          {
+            key: 'sub3',
+            icon: <TeamOutlined />,
+            label: <Link href="/user-requisition">User Requisition</Link>,
+            children: [
+              getItem(<Link href="/user-requisition/pengadaan-barang">Pengadaan Barang</Link>, '9', <div />),
+            ],
+          },
+          {
+            key: 'sub4',
+            icon: <TeamOutlined />,
+            label: <Link href="/master-budget">Master Budget</Link>,
+            children: [
+              getItem(<Link href="/master-budget/add">Input Anggaran</Link>, '11', <div />),
+            ],
+          }
         ]; // Admin can see all menus
       case 'verifikator':
         return [
@@ -146,6 +163,32 @@ const MyLayout: React.FC<Props> = ({ children }) => {
             label: 'Vendor Management',
             children: [
               getItem(<Link href="/vendor/profile">Company Profile</Link>, '9', <div />),
+            ],
+          },
+          {
+            key: 'sub3',
+            icon: <TeamOutlined />,
+            label: "User Requisition",
+            children: [
+              getItem(<Link href="/user-requisition/dashboard">Dashboard</Link>, '12', <div />),
+              getItem(<Link href="/user-requisition/pengadaan">Pengadaan Barang</Link>, '10', <div />),
+              {
+                key: 'sub5',
+                icon: <TeamOutlined />,
+                label: "Master Data",
+                children: [
+                  getItem(<Link href="/user-requisition/master-data/department">Department</Link>, '14', <div />),
+                ],
+              },
+            ],
+          },
+          {
+            key: 'sub4',
+            icon: <TeamOutlined />,
+            label: "Master Budget",
+            children: [
+              getItem(<Link href="/master-budget/dashboard">Dashboard</Link>, '13', <div />),
+              getItem(<Link href="/master-budget/input-anggaran">Input Anggaran</Link>, '11', <div />),
             ],
           }
         ];

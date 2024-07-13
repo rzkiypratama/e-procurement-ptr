@@ -24,28 +24,128 @@ interface VendorVerificationList {
     progress_verification: string;
 }
 
+interface AttachmentDocVerify {
+    id: number;
+    name: string;
+    document: string;
+    category: string;
+    expiration_date: string;
+    is_verified: boolean;
+    document_path: string;
+    verified_by: String;
+    verified_at: String;
+}
+
+interface Links {
+    first: String,
+    last: String,
+    prev: String | null,
+    next: String | null,
+}
+
+interface MetaLink {
+    url: String | null,
+    label: String | null,
+    active: String | null,
+}
+
+interface Meta {
+    current_page: number,
+    from: number,
+    last_page: number,
+    links: MetaLink[]
+    path: String
+    per_page: number
+    to: number
+    total: number
+}
+
+interface PaginateVendorRegistered {
+    data: VendorRegisteredList[]
+    links: Links
+    meta: Meta
+}
+
+interface PaginateVendorVerification {
+    data: VendorVerificationList[]
+    links: Links
+    meta: Meta
+}
+
+// interface Paginate {
+//     data: VendorRegisteredList[]
+//     links: Links
+//     meta: Meta
+// }
+
 interface VendorRegisteredState {
-    vendorRegisteredList: VendorRegisteredList[];
-    initializeVendorRegisteredList: (vendorRegisteredList: VendorRegisteredList[]) => void;
+    paginateVendorRegistered: PaginateVendorRegistered;
+    initializeVendorRegisteredList: (paginateVendorRegistered: PaginateVendorRegistered) => void;
 }
 
 const useVendorRegisteredStore = create<VendorRegisteredState>((set) => ({
-    vendorRegisteredList: [],
-    initializeVendorRegisteredList: (vendorRegisteredList) => set(() => ({
-        vendorRegisteredList,
-    })),
+    paginateVendorRegistered: {
+        data: [],
+        links: {
+            first: "",
+            last: "",
+            prev: null,
+            next: null,
+        },
+        meta: {
+            current_page: 0,
+            from: 0,
+            last_page: 0,
+            links: [],
+            path: "",
+            per_page: 0,
+            to: 0,
+            total: 0,
+        }
+    },
+    initializeVendorRegisteredList: (paginateVendorRegistered) => set({ paginateVendorRegistered: paginateVendorRegistered }),
 }));
 
 interface VendorVerificationState {
-    vendorVerificationList: VendorVerificationList[];
-    initializeVendorVerificationList: (vendorVerificationList: VendorVerificationList[]) => void;
+    paginateVendorVerification: PaginateVendorVerification
+    initializeVendorVerificationList: (paginateVendorVerification: PaginateVendorVerification) => void;
 }
 
 const useVendorVerificationStore = create<VendorVerificationState>((set) => ({
-    vendorVerificationList: [],
-    initializeVendorVerificationList: (vendorVerificationList) => set(() => ({
-        vendorVerificationList,
+    paginateVendorVerification: {
+        data: [],
+        links: {
+            first: "",
+            last: "",
+            prev: null,
+            next: null,
+        },
+        meta: {
+            current_page: 0,
+            from: 0,
+            last_page: 0,
+            links: [],
+            path: "",
+            per_page: 0,
+            to: 0,
+            total: 0,
+        }
+    },
+    initializeVendorVerificationList: (paginateVendorVerification) => set(() => ({
+        paginateVendorVerification,
     })),
 }));
 
-export default { useVendorRegisteredStore, useVendorVerificationStore };
+interface AttachmentDocVerifyState {
+    attachmentDocsVerify: AttachmentDocVerify[];
+    initializeAttachmentDocVerify: (attachmentDocsVerify: AttachmentDocVerify[]) => void;
+}
+
+const useAttachmentDocVerifyStore = create<AttachmentDocVerifyState>((set) => ({
+    attachmentDocsVerify: [],
+    initializeAttachmentDocVerify: (attachmentDocsVerify) => set(() => ({
+        attachmentDocsVerify,
+    })),
+}));
+
+export default { useVendorRegisteredStore, useVendorVerificationStore, useAttachmentDocVerifyStore };

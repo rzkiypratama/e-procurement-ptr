@@ -15,6 +15,7 @@ import Link from 'next/link';
 import ProfileAvatar from '@/lib/ProfileAvatar'
 import axios from "axios";
 import { getCookie } from 'cookies-next'
+import useMenuStore from "@/store/menuStore";
 import MenuItem from 'antd/es/menu/MenuItem';
 
 const { Header, Content, Footer, Sider } = Layout;

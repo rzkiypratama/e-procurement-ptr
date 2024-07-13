@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import LayoutWithContext from '@/components/Layout';
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Delpis",
-  description: "Delpis",
+  title: "Delapan Pilar Intisolusi",
+  description: "Delapan Pilar Intisolusi",
 };
 
 export default function RootLayout({

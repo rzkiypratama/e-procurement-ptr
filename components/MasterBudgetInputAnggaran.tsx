@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   Button,
@@ -14,16 +14,25 @@ import dayjs from "dayjs";
 import useMasterDataInputAnggaranStore from "../store/CenterStore";
 import { useFormik } from "formik";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import axios from "axios";
+import { getCookie } from 'cookies-next'
 
 const { TextArea } = Input;
 
 interface MasterBudgetInputAnggaran {
-    id: number;
-    tahun_anggaran: string;
-    department: string;
-    anggaran_digunakan: string;
-    updated_by: string;
-  }
+  id: number;
+  year: string;
+  department: Department;
+  total: string;
+  updated_by: string;
+  department_id: number;
+}
+
+interface Department {
+  id: number;
+  department_name: string;
+  department_code: string;
+}
 
 const SyaratKualifikasi: React.FC = () => {
   const {
@@ -33,19 +42,27 @@ const SyaratKualifikasi: React.FC = () => {
     removeMasterBudgetInputAnggaran,
     initializeMasterBudgetInputAnggaran,
   } = useMasterDataInputAnggaranStore();
+
+  const token = getCookie("token")
+
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form] = Form.useForm();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setLoading] = useState(false);
 
   const formik = useFormik({
     initialValues: {
+      id: 0,
+      year: "",
+      department_id: 0,
+      department: {
         id: 0,
-        tahun_anggaran: "",
-        department: "",
-        anggaran_digunakan: "",
-        updated_by: "",
+        department_code: "",
+        department_name: "",
+      },
+      total: "",
+      updated_by: "",
     },
     onSubmit: async (values) => {
       if (isEditMode && editingId !== null) {
@@ -96,7 +113,7 @@ const SyaratKualifikasi: React.FC = () => {
   };
 
   const columns = [
-    { title: "No", dataIndex: "id", key: "id" },
+    { title: "No", dataIndex: "no", key: "no" },
     {
       title: "Tahun Anggaran",
       dataIndex: "tahun_anggaran",
@@ -108,15 +125,15 @@ const SyaratKualifikasi: React.FC = () => {
       key: "department",
     },
     {
-        title: "Anggaran Digunakan",
-        dataIndex: "anggaran_digunakan",
-        key: "anggaran_digunakan",
-      },
-      {
-        title: "Updated By",
-        dataIndex: "updated_by",
-        key: "updated_by",
-      },
+      title: "Anggaran Digunakan",
+      dataIndex: "anggaran_digunakan",
+      key: "anggaran_digunakan",
+    },
+    {
+      title: "Updated By",
+      dataIndex: "updated_by",
+      key: "updated_by",
+    },
     {
       title: "Operation",
       dataIndex: "operation",
@@ -135,6 +152,37 @@ const SyaratKualifikasi: React.FC = () => {
       ),
     },
   ];
+
+  useEffect(() => {
+    // Initialize data if needed
+    getListAnggaran()
+  }, []);
+
+  const getListAnggaran = async () => {
+    setLoading(true)
+    try {
+      //${process.env.NEXT_PUBLIC_API_URL}
+      const response = await axios.get(`https://requisition.eproc.latansa.sch.id/api/master/anggaran`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      console.log("Response from API:", response.data.data);
+      let index = 1;
+      response.data.data.map((e: any) => {
+        e.no = index
+        index++
+      })
+      const data: MasterBudgetInputAnggaran[] = await response.data.data
+      initializeMasterBudgetInputAnggaran(data)
+      console.log(masterBudgetInputAnggaran.length)
+    } catch (error) {
+      message.error(`Get Data Anggaran failed! ${error}`);
+      console.error("Error Get Data Anggaran:", error);
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div>
@@ -161,12 +209,13 @@ const SyaratKualifikasi: React.FC = () => {
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            name="tahun_anggaran"
+            name="year"
             label="Tahun Anggaran"
             rules={[{ required: true, message: "tahun_anggaran harus diisi" }]}
           >
             <Input
-              value={formik.values.tahun_anggaran}
+              name="year"
+              value={formik.values.year}
               onChange={(e) =>
                 formik.setFieldValue("tahun_anggaran", e.target.value)
               }
@@ -180,19 +229,20 @@ const SyaratKualifikasi: React.FC = () => {
             ]}
           >
             <Input
-              value={formik.values.department}
+              value={formik.values.department_id}
               onChange={formik.handleChange}
             />
           </Form.Item>
           <Form.Item
-            name="anggaran_digunakan"
+            name="total"
             label="Anggaran Digunakan"
             rules={[
               { required: true, message: "Detail Kualifikasi harus diisi" },
             ]}
           >
             <Input
-              value={formik.values.anggaran_digunakan}
+              name="total"
+              value={formik.values.total}
               onChange={formik.handleChange}
             />
           </Form.Item>
@@ -214,7 +264,6 @@ const SyaratKualifikasi: React.FC = () => {
         dataSource={masterBudgetInputAnggaran}
         columns={columns}
         rowKey="id"
-        pagination={false}
       />
     </div>
   );

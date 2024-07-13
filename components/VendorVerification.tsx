@@ -4,14 +4,15 @@ import {
     Button,
     Table,
     message,
-    Typography
+    Typography,
+    Input,
 } from "antd";
 import axios from "axios";
 import vendorStore from "@/store/vendorStore";
 import { useRouter } from 'next/navigation'
 import { getCookie } from "cookies-next";
 
-
+const { Search } = Input
 interface VendorVerificationList {
     id: number;
     company_name: string;
@@ -24,18 +25,51 @@ interface VendorVerificationList {
     progress_verification: string;
 }
 
+interface Links {
+    first: String,
+    last: String,
+    prev: String | null,
+    next: String | null,
+}
+
+interface MetaLink {
+    url: String | null,
+    label: String | null,
+    active: String | null,
+}
+
+interface Meta {
+    current_page: number,
+    from: number,
+    last_page: number,
+    links: MetaLink[]
+    path: String
+    per_page: number
+    to: number
+    total: number
+}
+
+interface Paginate {
+    data: VendorVerificationList[]
+    links: Links
+    meta: Meta
+}
+
 const VendorVerificationList: React.FC = () => {
     const router = useRouter()
     const {
-        vendorVerificationList,
+        paginateVendorVerification,
         initializeVendorVerificationList,
     } = vendorStore.useVendorVerificationStore();
 
     const [isLoading, setIsLoading] = useState(false)
+    const [searchLoading, setSearchLoading] = useState(false)
+    const [sortBy, setSortBy] = useState("")
+    const [searchQuery, setSearchQuery] = useState("")
 
     useEffect(() => {
         // Initialize data if needed
-        getAllVendorList()
+        getAllVendorList("", 1)
     }, []);
 
     const columns = [
@@ -54,23 +88,13 @@ const VendorVerificationList: React.FC = () => {
             title: "Company Name",
             dataIndex: "company_name",
             key: "company_name",
-            filters: vendorVerificationList.map(vendor => ({
-                text: vendor.company_name,
-                value: vendor.company_name,
-            })),
-            onFilter: (value: any, record: { company_name: string | any[]; }) => record.company_name.includes(value),
-            filterSearch: true,
+            sorter: true,
         },
         {
             title: "PIC",
             dataIndex: "pic_name",
             key: "pic_name",
-            filters: vendorVerificationList.map(vendor => ({
-                text: vendor.pic_name,
-                value: vendor.pic_name,
-            })),
-            onFilter: (value: any, record: { pic_name: string | any[]; }) => record.pic_name.includes(value),
-            filterSearch: true,
+            sorter: true,
         },
         {
             title: "Type",
@@ -83,7 +107,7 @@ const VendorVerificationList: React.FC = () => {
             key: "status",
         },
         {
-            title: "Verification Status",
+            title: "Status Verification",
             dataIndex: "status_vendor",
             key: "status_vendor",
         },
@@ -126,10 +150,9 @@ const VendorVerificationList: React.FC = () => {
         };
     });
 
-    const getAllVendorList = async () => {
+    const getAllVendorList = async (params: String, page: number) => {
         setIsLoading(true)
         try {
-
             const token = getCookie("token");
             const userId = getCookie("user_id");
             const vendorId = getCookie("vendor_id");
@@ -139,7 +162,8 @@ const VendorVerificationList: React.FC = () => {
                 message.error("Please login first.");
                 return;
             }
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/verifikator/vendor`, {
+            //${process.env.NEXT_PUBLIC_API_URL}
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/verifikator/vendor${params}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "User-ID": userId,
@@ -147,14 +171,14 @@ const VendorVerificationList: React.FC = () => {
                 },
             });
 
-            console.log("Response from API:", response.data.data);
-            let index = 0;
+            console.log("Response from API:", response.data);
+            let index = page > 1 ? ((page * 10) + 1) : 1;
             response.data.data.map((e: any) => {
                 index++
                 e.status_vendor = "Active"
                 e.no = index
             })
-            const vendorList: VendorVerificationList[] = await response.data.data
+            const vendorList: Paginate = await response.data
             initializeVendorVerificationList(vendorList);
         } catch (error) {
             message.error(`Get Data Vendor Registered failed! ${error}`);
@@ -165,23 +189,57 @@ const VendorVerificationList: React.FC = () => {
     }
 
     const onChange = (pagination: any, filters: any, sorter: any) => {
-        console.log("params", pagination, filters, sorter);
+        let params = `?page=${pagination.current}`
+        if (searchQuery != "") {
+            params = params + `&filter[company_name]=${searchQuery}`
+        }
+
+        if (sorter.field != "no") {
+            const sort = sorter.order == 'ascend' ? '' : '-'
+            params = params + `&sort=${sort}${sorter.field}`
+            setSortBy(`sort=${sort}${sorter.field}`)
+        }
+        console.log(sorter)
+        getAllVendorList(params, pagination.current)
     };
+
+    const searchVendor = (value: string) => {
+        setSearchLoading(true)
+        setSearchQuery(value)
+        let params = `?page=1&filter[company_name]=${value}`
+        if (sortBy != "") {
+            params = params + `&${sortBy}`
+        }
+        getAllVendorList(params, 1)
+    }
 
     return (
         <div className=''>
             <h1 className="font-bold text-start text-xl mb-5">Verification</h1>
-            <Button type="primary" onClick={() => console.log("Download Report")} className="mb-5 float-end">
+            {/* <Button type="primary" onClick={() => console.log("Download Report")} className="mb-5 float-end">
                 Download Report
-            </Button>
+            </Button> */}
+            <Search placeholder="Search Company Name" onSearch={searchVendor}
+                size="large"
+                allowClear
+                enterButton
+                className="mb-5"
+                style={{ width: 304 }} loading={isLoading} />
             <Table
                 components={{}}
                 bordered
                 loading={isLoading}
                 rowKey={(record) => record.id.toString()}
-                dataSource={vendorVerificationList}
+                dataSource={paginateVendorVerification.data}
                 columns={mergedColumns}
                 onChange={onChange}
+                pagination={{
+                    pageSize: 20,
+                    total: paginateVendorVerification.meta.total,
+                    hideOnSinglePage: true,
+                    onChange: (page, pageSize) => { console.log() },
+                    showSizeChanger: false,
+                }}
                 scroll={{
                     x: 1300,
                 }}

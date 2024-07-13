@@ -7,16 +7,16 @@ import { useFormik } from "formik";
 const { Option } = Select;
 
 interface GeneralInformation {
-    id: number;
-    nama_paket: string;
-    satuan_kerja: string;
-    tahun_anggaran: string;
-    produk_dalam_negeri: string;
-    sumber_dana: string;
-    total_pagu: string;
-    nilai_hps: string;
-    capex_opex: string;
-  }
+  id: number;
+  nama_paket: string;
+  satuan_kerja: string;
+  tahun_anggaran: string;
+  produk_dalam_negeri: string;
+  sumber_dana: string;
+  total_pagu: string;
+  nilai_hps: string;
+  capex_opex: string;
+}
 
 const SPTTahunanPage: React.FC = () => {
   const { generalInformation, addGeneralInformation, editGeneralInformation, removeGeneralInformation, initializeGeneralInformation } = useGeneralInformationStore();
@@ -27,14 +27,14 @@ const SPTTahunanPage: React.FC = () => {
 
   const formik = useFormik({
     initialValues: {
-        nama_paket: "",
-        satuan_kerja: "",
-        tahun_anggaran: "",
-        produk_dalam_negeri: "",
-        sumber_dana: "",
-        total_pagu: "",
-        nilai_hps: "",
-        capex_opex: "",
+      nama_paket: "",
+      satuan_kerja: "",
+      tahun_anggaran: "",
+      produk_dalam_negeri: "",
+      sumber_dana: "",
+      total_pagu: "",
+      nilai_hps: "",
+      capex_opex: "",
     },
     onSubmit: async (values) => {
       if (isEditMode && editingId !== null) {
@@ -116,7 +116,7 @@ const SPTTahunanPage: React.FC = () => {
             onChange={formik.handleChange}
           />
         </Form.Item>
-        <Form.Item
+        {/* <Form.Item
           name="total_pagu"
           label="Total Pagu"
           rules={[{ required: true, message: "Total Pagu harus diisi" }]}
@@ -135,21 +135,21 @@ const SPTTahunanPage: React.FC = () => {
             value={formik.values.nilai_hps}
             onChange={formik.handleChange}
           />
-        </Form.Item>
+        </Form.Item> */}
         <Form.Item
-        name="capex_opex"
-        label="Opex / Capex"
-        rules={[{ required: true, message: "Nilai Opex Capex harus diisi" }]}
+          name="capex_opex"
+          label="Opex / Capex"
+          rules={[{ required: true, message: "Nilai Opex Capex harus diisi" }]}
         >
-        <Select
-              id="capex_opex"
-              onChange={(value) => formik.setFieldValue("capex_opex", value)}
-              onBlur={formik.handleBlur}
-              value={formik.values.capex_opex}
-            >
-              <Option value="Opex">Opex</Option>
-              <Option value="Capex">Capex</Option>
-            </Select>
+          <Select
+            id="capex_opex"
+            onChange={(value) => formik.setFieldValue("capex_opex", value)}
+            onBlur={formik.handleBlur}
+            value={formik.values.capex_opex}
+          >
+            <Option value="Opex">Opex</Option>
+            <Option value="Capex">Capex</Option>
+          </Select>
         </Form.Item>
 
         <Button type="primary" htmlType="submit" loading={isLoading}>
