@@ -8,13 +8,12 @@ const { Option } = Select;
 
 interface GeneralInformation {
   id: number;
-  nama_paket: string;
-  satuan_kerja: string;
-  tahun_anggaran: string;
-  produk_dalam_negeri: string;
-  sumber_dana: string;
-  total_pagu: string;
-  nilai_hps: string;
+  procurement_type: string;
+  package_name: string;
+  work_unit: string;
+  year: string;
+  product_local: string;
+  sources_of_funds: string;
   capex_opex: string;
 }
 
@@ -27,13 +26,12 @@ const SPTTahunanPage: React.FC = () => {
 
   const formik = useFormik({
     initialValues: {
-      nama_paket: "",
-      satuan_kerja: "",
-      tahun_anggaran: "",
-      produk_dalam_negeri: "",
-      sumber_dana: "",
-      total_pagu: "",
-      nilai_hps: "",
+      procurement_type: "",
+      package_name: "",
+      work_unit: "",
+      year: "",
+      product_local: "",
+      sources_of_funds: "",
       capex_opex: "",
     },
     onSubmit: async (values) => {
@@ -67,52 +65,66 @@ const SPTTahunanPage: React.FC = () => {
     <div>
       <Form form={form} onFinish={formik.handleSubmit} layout="vertical">
         <Form.Item
-          name="nama_paket"
-          label="Nama Paket"
-          rules={[{ required: true, message: "Nama Paket harus diisi" }]}
-        >
+          name="procurement_type"
+          label="Jenis Pengadaan"
+          rules={[{ required: true, message: "Jenis Pengadaan harus diisi" }]}>
           <Input
-            value={formik.values.nama_paket}
+            name="procurement_type"
+            value={formik.values.procurement_type}
+            onChange={(e) => formik.setFieldValue("procurement_type", e.target.value)}
+          />
+        </Form.Item>
+        <Form.Item
+          name="package_name"
+          label="Nama Paket"
+          rules={[{ required: true, message: "Nama Paket harus diisi" }]}>
+          <Input
+            name="package_name"
+            value={formik.values.package_name}
             onChange={(e) => formik.setFieldValue("nama_paket", e.target.value)}
           />
         </Form.Item>
         <Form.Item
-          name="satuan_kerja"
+          name="work_unit"
           label="Satuan Kerja"
           rules={[{ required: true, message: "Satuan Kerja harus diisi" }]}
         >
           <Input
-            value={formik.values.satuan_kerja}
+            name="work_unit"
+            value={formik.values.work_unit}
             onChange={formik.handleChange}
           />
         </Form.Item>
         <Form.Item
-          name="tahun_anggaran"
+          name="year"
           label="Tahun Anggaran"
           rules={[{ required: true, message: "Tahun Anggaran harus diisi" }]}
         >
-          <Input
-            value={formik.values.tahun_anggaran}
-            onChange={formik.handleChange}
-          />
+          <DatePicker.YearPicker name="year" value={formik.values.year}
+            onChange={(date, dateString) => {
+              formik.setFieldValue("year", dateString)
+            }
+            } style={{ width: '100%' }} placement="topLeft" />
         </Form.Item>
         <Form.Item
-          name="produk_dalam_negeri"
+          name="product_local"
           label="Produk Dalam Negeri"
           rules={[{ required: true, message: "Produk Dalam Negeri harus diisi" }]}
         >
           <Input
-            value={formik.values.produk_dalam_negeri}
+            name="product_local"
+            value={formik.values.product_local}
             onChange={formik.handleChange}
           />
         </Form.Item>
         <Form.Item
-          name="sumber_dana"
+          name="sources_of_funds"
           label="Sumber Dana"
           rules={[{ required: true, message: "Sumber Dana harus diisi" }]}
         >
           <Input
-            value={formik.values.sumber_dana}
+            name="sources_of_funds"
+            value={formik.values.sources_of_funds}
             onChange={formik.handleChange}
           />
         </Form.Item>

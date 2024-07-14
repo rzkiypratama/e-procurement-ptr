@@ -19,9 +19,10 @@ interface DashboardSummary {
 }
 
 interface MasterBudgetInputAnggaran {
+  no: number;
   id: number;
   year: string;
-  department: Department,
+  department: string,
   total: string;
   department_id: number,
   updated_by: string;
@@ -48,13 +49,12 @@ interface PengadaanBarang {
 
 interface GeneralInformation {
   id: number;
-  nama_paket: string;
-  satuan_kerja: string;
-  tahun_anggaran: string;
-  produk_dalam_negeri: string;
-  sumber_dana: string;
-  total_pagu: string;
-  nilai_hps: string;
+  procurement_type: string;
+  package_name: string;
+  work_unit: string;
+  year: string;
+  product_local: string;
+  sources_of_funds: string;
   capex_opex: string;
 }
 
@@ -69,15 +69,16 @@ interface DetailInformation {
 }
 
 interface SyaratKualifikasi {
+  no: number;
   id: number;
-  kualifikasi: string;
-  detail_kualifikasi: string;
+  qualification: string;
+  qualification_detail: string;
 }
 
 interface DokumenKualifikasi {
   id: number;
-  nama_dokumen_tambahan: string;
-  dokumen: string;
+  document_name: string;
+  document: string;
 }
 interface ProfilePerusahaan {
   id: number;

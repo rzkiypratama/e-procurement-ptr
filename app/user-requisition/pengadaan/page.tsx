@@ -22,16 +22,16 @@ import Link from "next/link";
 const { TextArea } = Input;
 
 interface PengadaanBarang {
-    id: number;
-    kode_rencana_umum_pengadaan: string;
-    kode_paket_pengadaan: string;
-    nama_paket: string;
-    metode_pengadaan: string;
-    jenis_pengadaan: string;
-    hps: string;
-    status_report: string;
-    jenis_kontrak: string;
-  }
+  id: number;
+  kode_rencana_umum_pengadaan: string;
+  kode_paket_pengadaan: string;
+  nama_paket: string;
+  metode_pengadaan: string;
+  jenis_pengadaan: string;
+  hps: string;
+  status_report: string;
+  jenis_kontrak: string;
+}
 
 const PengadaanBarang: React.FC = () => {
   const { pengadaanBarang, addPengadaanBarang, editPengadaanBarang, removePengadaanBarang, initializePengadaanBarang } =
@@ -44,14 +44,14 @@ const PengadaanBarang: React.FC = () => {
 
   const formik = useFormik({
     initialValues: {
-        kode_rencana_umum_pengadaan: "",
-        kode_paket_pengadaan: "",
-        nama_paket: "",
-        metode_pengadaan: "",
-        jenis_pengadaan: "",
-        hps: "",
-        status_report: "",
-        jenis_kontrak: "",
+      kode_rencana_umum_pengadaan: "",
+      kode_paket_pengadaan: "",
+      nama_paket: "",
+      metode_pengadaan: "",
+      jenis_pengadaan: "",
+      hps: "",
+      status_report: "",
+      jenis_kontrak: "",
     },
     onSubmit: async (values) => {
       if (isEditMode && editingId !== null) {
@@ -75,7 +75,7 @@ const PengadaanBarang: React.FC = () => {
   const handleEdit = (record: PengadaanBarang) => {
     form.setFieldsValue({
       ...record,
-    //   date: record.date ? dayjs(record.date, "YYYY-MM-DD") : null,
+      //   date: record.date ? dayjs(record.date, "YYYY-MM-DD") : null,
     });
     formik.setValues(record);
     setIsModalVisible(true);
@@ -114,30 +114,30 @@ const PengadaanBarang: React.FC = () => {
       key: "kode_paket_pengadaan",
     },
     {
-        title: "Nama Paket",
-        dataIndex: "nama_paket",
-        key: "nama_paket",
-      },
-      {
-        title: "Metode Pengadaan",
-        dataIndex: "metode_pengadaan",
-        key: "metode_pengadaan",
-      },
-      {
-        title: "Jenis Pengadaan",
-        dataIndex: "jenis_pengadaan",
-        key: "jenis_pengadaan",
-      },
-      {
-        title: "HPS",
-        dataIndex: "hps",
-        key: "hps",
-      },
-      {
-        title: "Status Report",
-        dataIndex: "status_report",
-        key: "status_report",
-      },
+      title: "Nama Paket",
+      dataIndex: "nama_paket",
+      key: "nama_paket",
+    },
+    {
+      title: "Metode Pengadaan",
+      dataIndex: "metode_pengadaan",
+      key: "metode_pengadaan",
+    },
+    {
+      title: "Jenis Pengadaan",
+      dataIndex: "jenis_pengadaan",
+      key: "jenis_pengadaan",
+    },
+    {
+      title: "HPS",
+      dataIndex: "hps",
+      key: "hps",
+    },
+    {
+      title: "Status Report",
+      dataIndex: "status_report",
+      key: "status_report",
+    },
     {
       title: "Operation",
       dataIndex: "operation",
@@ -159,13 +159,13 @@ const PengadaanBarang: React.FC = () => {
 
   return (
     <LayoutNew>
-        <Link href="/user-requisition/pengadaan/edit">
-      <Button type="primary" className="mb-4">
-        Add
-      </Button>
-        </Link>
+      <Link href="/user-requisition/pengadaan/edit">
+        <Button type="primary" className="mb-4">
+          Add
+        </Button>
+      </Link>
       <Modal
-        title={isEditMode ? "Edit Pengadaan" : "Tambah Pengadaan"}
+        title={isEditMode ? "Edit SPT" : "Tambah SPT"}
         open={isModalVisible}
         onCancel={handleCancel}
         footer={[

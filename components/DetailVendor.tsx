@@ -67,7 +67,7 @@ const DetailVendorComponents = () => {
     const GetDetailVendor = async () => {
         setIsLoading(true)
         try {
-            const response = await axios.get(`https://vendor.eproc.latansa.sch.id/api/verifikator/vendor/${params.slug}`, {
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/verifikator/vendor/${params.slug}`, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }

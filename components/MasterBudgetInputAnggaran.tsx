@@ -9,6 +9,7 @@ import {
   Popconfirm,
   Modal,
   message,
+  Select,
 } from "antd";
 import dayjs from "dayjs";
 import useMasterDataInputAnggaranStore from "../store/CenterStore";
@@ -17,12 +18,13 @@ import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { getCookie } from 'cookies-next'
 
-const { TextArea } = Input;
+// const { TextArea } = Input;
 
 interface MasterBudgetInputAnggaran {
+  no: number;
   id: number;
   year: string;
-  department: Department;
+  department: string;
   total: string;
   updated_by: string;
   department_id: number;
@@ -50,29 +52,54 @@ const SyaratKualifikasi: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form] = Form.useForm();
   const [isLoading, setLoading] = useState(false);
+  const [isLoadingData, setLoadingData] = useState(false);
+  const [listDepartment, setListDepartment] = useState<Department[]>([]);
 
   const formik = useFormik({
     initialValues: {
+      no: 0,
       id: 0,
       year: "",
       department_id: 0,
-      department: {
-        id: 0,
-        department_code: "",
-        department_name: "",
-      },
+      department: "",
       total: "",
       updated_by: "",
     },
     onSubmit: async (values) => {
+      console.log(values);
       if (isEditMode && editingId !== null) {
-        const updatedData = { ...values, id: editingId };
-        editMasterBudgetInputAnggaran(updatedData);
-        message.success("Detail Information updated successfully");
+        await updateAnggaran()
       } else {
-        const newData = { ...values, id: masterBudgetInputAnggaran.length + 1 };
-        addMasterBudgetInputAnggaran(newData);
-        message.success("Detail Information added successfully");
+        setLoading(true);
+        try {
+          const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL_REQ}/master/anggaran`, values, {
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          });
+          console.log("Response from API:", response.data);
+          if (response.status == 201 || response.status == 200) {
+            addMasterBudgetInputAnggaran({
+              ...values,
+              updated_by: response.data.data.updated_by,
+              id: response.data.data.id,
+              department: response.data.data.department.department_name,
+              no: masterBudgetInputAnggaran.length + 1,
+            })
+            message.success(`Add Anggaran successfully`)
+
+            form.resetFields()
+            formik.resetForm()
+            setIsModalVisible(false)
+          } else {
+            message.error(`${response.data.message}`);
+          }
+        } catch (error) {
+          message.error(`Add Anggaran failed! ${error}`);
+          console.error("Error submitting form:", error);
+        } finally {
+          setLoading(false);
+        }
       }
       setIsModalVisible(false);
       formik.resetForm();
@@ -81,28 +108,90 @@ const SyaratKualifikasi: React.FC = () => {
     },
   });
 
-  const isEditing = (record: MasterBudgetInputAnggaran) => record.id === editingId;
+  // const isEditing = (record: MasterBudgetInputAnggaran) => record.id === editingId;
 
   const handleEdit = (record: MasterBudgetInputAnggaran) => {
     form.setFieldsValue({
-      ...record,
-      //   date: record.date ? dayjs(record.date, "YYYY-MM-DD") : null,
+      ...record, year: dayjs(record.year, "YYYY")
     });
-    formik.setValues(record);
+    formik.setValues({ ...record });
     setIsModalVisible(true);
     setIsEditMode(true);
     setEditingId(record.id);
   };
 
-  const handleDelete = (id: number) => {
-    removeMasterBudgetInputAnggaran(id);
-    message.success("Detail Information deleted successfully");
+  const updateAnggaran = async () => {
+    setLoading(true);
+    try {
+      const body = {
+        ...formik.values
+      }
+
+      const row = formik.values
+      const updatedRow = {
+        ...row,
+        year: dayjs(row.year).format("YYYY"),
+        department: listDepartment.find((item) => item.id === row.department_id)?.department_name ?? ""
+      };
+
+      const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL_REQ}/master/anggaran/${editingId}`, body, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      console.log("Response from API:", response.data);
+      if (response.status == 200) {
+        message.success(`Update Anggaran successfully`)
+
+        editMasterBudgetInputAnggaran(updatedRow)
+      } else {
+        message.error(`${response.data.message}`);
+      }
+    } catch (error) {
+      message.error(`Edit Anggaran failed! ${error}`);
+      console.error("Error submitting form:", error);
+    } finally {
+      setLoading(false);
+      form.resetFields()
+      formik.resetForm()
+      setIsModalVisible(false)
+      setEditingId(null);
+      setIsEditMode(false)
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    try {
+      const userId = getCookie("user_id");
+      if (!token || !userId) {
+        message.error("Token, or User ID is missing.");
+        return;
+      }
+
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL_REQ}/master/anggaran/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "User-ID": userId,
+          },
+        }
+      );
+
+      message.success("Anggaran deleted successfully");
+      removeMasterBudgetInputAnggaran(id);
+    } catch (error) {
+      console.error("Error deleting Data Anggaran:", error);
+      message.error("Failed to delete Data Anggaran. Please try again.");
+    }
   };
 
   const showModal = () => {
     setIsModalVisible(true);
     form.resetFields();
     formik.resetForm();
+
+    formik.setFieldValue("department_id", listDepartment.at(0)?.id.toString())
     setIsEditMode(false);
     setEditingId(null);
   };
@@ -112,12 +201,19 @@ const SyaratKualifikasi: React.FC = () => {
     formik.resetForm();
   };
 
+  const handleSubmit = () => {
+    form.validateFields().then((values) => {
+      console.log(formik.values.year.toString())
+      formik.handleSubmit()
+    });
+  };
+
   const columns = [
     { title: "No", dataIndex: "no", key: "no" },
     {
       title: "Tahun Anggaran",
-      dataIndex: "tahun_anggaran",
-      key: "tahun_anggaran",
+      dataIndex: "year",
+      key: "year",
     },
     {
       title: "Department",
@@ -126,8 +222,8 @@ const SyaratKualifikasi: React.FC = () => {
     },
     {
       title: "Anggaran Digunakan",
-      dataIndex: "anggaran_digunakan",
-      key: "anggaran_digunakan",
+      dataIndex: "total",
+      key: "total",
     },
     {
       title: "Updated By",
@@ -144,8 +240,7 @@ const SyaratKualifikasi: React.FC = () => {
           </Typography.Link>
           <Popconfirm
             title="Sure to delete?"
-            onConfirm={() => handleDelete(record.id)}
-          >
+            onConfirm={() => handleDelete(record.id)}>
             <DeleteOutlined className="text-red-500" />
           </Popconfirm>
         </span>
@@ -156,37 +251,74 @@ const SyaratKualifikasi: React.FC = () => {
   useEffect(() => {
     // Initialize data if needed
     getListAnggaran()
+    getDepartments()
   }, []);
 
   const getListAnggaran = async () => {
-    setLoading(true)
+    setLoadingData(true)
     try {
-      //${process.env.NEXT_PUBLIC_API_URL}
-      const response = await axios.get(`https://requisition.eproc.latansa.sch.id/api/master/anggaran`, {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL_REQ}/master/anggaran`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }
       });
       console.log("Response from API:", response.data.data);
       let index = 1;
+      const data: MasterBudgetInputAnggaran[] = []
       response.data.data.map((e: any) => {
         e.no = index
         index++
+        console.log(e.department.name)
+        const row: MasterBudgetInputAnggaran = {
+          ...e,
+          department: e.department.department_name,
+        }
+
+        data.push(row)
       })
-      const data: MasterBudgetInputAnggaran[] = await response.data.data
+      console.log(data)
+      // const data: MasterBudgetInputAnggaran[] = await response.data.data
       initializeMasterBudgetInputAnggaran(data)
-      console.log(masterBudgetInputAnggaran.length)
     } catch (error) {
       message.error(`Get Data Anggaran failed! ${error}`);
       console.error("Error Get Data Anggaran:", error);
     } finally {
-      setLoading(false)
+      setLoadingData(false)
+    }
+  }
+
+  const getDepartments = async () => {
+    const userId = getCookie("user_id");
+
+    if (!token || !userId) {
+      message.error("Token, User ID, or Vendor ID is missing.");
+      return;
+    }
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL_REQ}/master/department`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "User-ID": userId,
+        },
+      },
+    );
+
+    console.log(response.data);
+    if (response.data.message == "Success") {
+      const data: Department[] = await response.data.data
+      setListDepartment(data)
+    } else {
+      console.error(
+        "City data fetched is not in expected format:",
+      );
+      message.error("City data fetched is not in expected format.");
     }
   }
 
   return (
     <div>
-      <Button type="primary" onClick={showModal} className="mb-4">
+      <Button key="add" type="primary" onClick={showModal} className="mb-4">
         Add
       </Button>
       <Modal
@@ -194,67 +326,58 @@ const SyaratKualifikasi: React.FC = () => {
         open={isModalVisible}
         onCancel={handleCancel}
         footer={[
-          <>
-            <Button onClick={handleCancel}>Batalkan</Button>
-            <Button
-              key="submit"
-              type="primary"
-              onClick={() => formik.handleSubmit()}
-              loading={isLoading}
-            >
-              {isEditMode ? "Simpan Perubahan" : "Simpan Data"}
-            </Button>
-          </>,
-        ]}
-      >
+          <Button key={"cancel"} onClick={handleCancel}>Batalkan</Button>,
+          <Button
+            key={"submit"}
+            type="primary"
+            onClick={handleSubmit}
+            loading={isLoading}>
+            {isEditMode ? "Simpan Perubahan" : "Simpan Data"}
+          </Button>
+        ]}>
         <Form form={form} layout="vertical">
           <Form.Item
             name="year"
             label="Tahun Anggaran"
-            rules={[{ required: true, message: "tahun_anggaran harus diisi" }]}
-          >
-            <Input
-              name="year"
-              value={formik.values.year}
-              onChange={(e) =>
-                formik.setFieldValue("tahun_anggaran", e.target.value)
+            key={0}
+            rules={[{ required: true, message: "Tahun Anggaran harus diisi" }]}>
+            <DatePicker.YearPicker name="year" value={formik.values.year}
+              onChange={(date, dateString) => {
+                formik.setFieldValue("year", dateString)
               }
-            />
+              } style={{ width: '100%' }} placement="topLeft" />
           </Form.Item>
           <Form.Item
-            name="department"
+            name="department_id"
             label="Department"
+            key={1}
             rules={[
-              { required: true, message: "Detail Kualifikasi harus diisi" },
+              { required: true, message: "Department harus dipilih" },
             ]}
-          >
-            <Input
-              value={formik.values.department_id}
-              onChange={formik.handleChange}
-            />
+            initialValue={listDepartment.at(0)?.department_name.toString()}>
+            <Select
+              id="department_id"
+              onChange={(value) => formik.setFieldValue("department_id", value)}
+              onBlur={formik.handleBlur}
+              value={formik.values.department_id.toString()}
+              defaultValue={listDepartment.at(0)?.id.toString()}>
+              {listDepartment.map((option) => (
+                <Select.Option key={option.id} value={option.id}>
+                  {option.department_name}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
           <Form.Item
             name="total"
             label="Anggaran Digunakan"
+            key={2}
             rules={[
-              { required: true, message: "Detail Kualifikasi harus diisi" },
-            ]}
-          >
+              { required: true, message: "Total Anggaran harus diisi" },
+            ]}>
             <Input
               name="total"
               value={formik.values.total}
-              onChange={formik.handleChange}
-            />
-          </Form.Item>
-          <Form.Item
-            name="updated_by"
-            label="Updated By"
-            rules={[
-              { required: true, message: "Detail Kualifikasi harus diisi" },
-            ]}
-          >
-            <Input
-              value={formik.values.updated_by}
               onChange={formik.handleChange}
             />
           </Form.Item>
@@ -263,7 +386,8 @@ const SyaratKualifikasi: React.FC = () => {
       <Table
         dataSource={masterBudgetInputAnggaran}
         columns={columns}
-        rowKey="id"
+        rowKey={(record) => record.id.toString()}
+        loading={isLoadingData}
       />
     </div>
   );

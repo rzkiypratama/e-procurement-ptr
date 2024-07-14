@@ -101,7 +101,7 @@ const DashboardAnggaran: React.FC = () => {
                 return;
             }
             //${process.env.NEXT_PUBLIC_API_URL}
-            const response = await axios.get(`https://requisition.eproc.latansa.sch.id/api/master/budget`, {
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/master/budget`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "User-ID": userId,

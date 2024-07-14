@@ -209,13 +209,7 @@ const VendorRegisteredList: React.FC = () => {
                     "Authorization": `Bearer ${token}`,
                 },
                 responseType: "blob",
-                onDownloadProgress: event => {
-                    setProgressDownload(event.progress?.toString() ?? "")
-                    console.log(progressDownload)
-                },
             })
-
-            const contentDisposition = response.headers["content-disposition"];
 
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement("a");
@@ -225,15 +219,6 @@ const VendorRegisteredList: React.FC = () => {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-
-            // const url = window.URL.createObjectURL(new Blob([response.data]));
-            // const link = document.createElement("a");
-            // link.href = url;
-            // // Setting filename received in response
-            // link.setAttribute("download", "Data Vendor Registered.xlsx");
-            // document.body.appendChild(link);
-            // link.click();
-            // document.body.removeChild(link);
         } catch (error) {
             message.error(`Export Data Vendor Registered failed! ${error}`);
             console.error("Error Export Data Vendor Registered:", error);

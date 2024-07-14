@@ -14,16 +14,21 @@ import dayjs from "dayjs";
 import useSyaratKualifikasiStore from "../store/CenterStore";
 import { useFormik } from "formik";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import axios from "axios";
+import { getCookie } from 'cookies-next'
 
 const { TextArea } = Input;
 
 interface SyaratKualifikasi {
+  no: number;
   id: number;
-  kualifikasi: string;
-  detail_kualifikasi: string;
+  qualification: string;
+  qualification_detail: string;
 }
 
 const SyaratKualifikasi: React.FC = () => {
+  const token = getCookie("token")
+
   const {
     syaratKualifikasi,
     addSyaratKualifikasi,
@@ -39,8 +44,10 @@ const SyaratKualifikasi: React.FC = () => {
 
   const formik = useFormik({
     initialValues: {
-      kualifikasi: "",
-      detail_kualifikasi: "",
+      no: 0,
+      id: 0,
+      qualification: "",
+      qualification_detail: "",
     },
     onSubmit: async (values) => {
       if (isEditMode && editingId !== null) {
@@ -48,9 +55,38 @@ const SyaratKualifikasi: React.FC = () => {
         editSyaratKualifikasi(updatedData);
         message.success("Detail Information updated successfully");
       } else {
-        const newData = { ...values, id: syaratKualifikasi.length + 1 };
+        const newData = { ...values, no: syaratKualifikasi.length + 1, id: syaratKualifikasi.length + 1 };
         addSyaratKualifikasi(newData);
         message.success("Detail Information added successfully");
+
+        // setIsLoading(true);
+        // try {
+        //   const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL_REQ}/master/anggaran`, values, {
+        //     headers: {
+        //       "Authorization": `Bearer ${token}`
+        //     }
+        //   });
+        //   console.log("Response from API:", response.data);
+        //   if (response.status == 201 || response.status == 200) {
+        // addSyaratKualifikasi({
+        //   ...values,
+        //   id: response.data.data.id,
+        //   no: syaratKualifikasi.length + 1,
+        // })
+        //     message.success(`Add Anggaran successfully`)
+
+        //     form.resetFields()
+        //     formik.resetForm()
+        //     setIsModalVisible(false)
+        //   } else {
+        //     message.error(`${response.data.message}`);
+        //   }
+        // } catch (error) {
+        //   message.error(`Add Anggaran failed! ${error}`);
+        //   console.error("Error submitting form:", error);
+        // } finally {
+        //   setLoading(false);
+        // }
       }
       setIsModalVisible(false);
       formik.resetForm();
@@ -89,6 +125,50 @@ const SyaratKualifikasi: React.FC = () => {
     setIsModalVisible(false);
     formik.resetForm();
   };
+
+  const handleSubmit = () => {
+    form.validateFields().then((values) => {
+      formik.handleSubmit()
+    });
+  }
+
+  const handleUpdate = async () => {
+    setIsLoading(true);
+    try {
+      const body = {
+        ...formik.values
+      }
+
+      const row = formik.values
+      const updatedRow = {
+        ...row,
+      };
+
+      const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL_REQ}/-/${editingId}`, body, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      console.log("Response from API:", response.data);
+      if (response.status == 200) {
+        message.success(`Update Qualification successfully`)
+
+        editSyaratKualifikasi(updatedRow)
+      } else {
+        message.error(`${response.data.message}`);
+      }
+    } catch (error) {
+      message.error(`Edit Qualification failed! ${error}`);
+      console.error("Error submitting form:", error);
+    } finally {
+      setIsLoading(false);
+      form.resetFields()
+      formik.resetForm()
+      setIsModalVisible(false)
+      setEditingId(null);
+      setIsEditMode(false)
+    }
+  }
 
   const columns = [
     { title: "No", dataIndex: "id", key: "id" },
@@ -136,7 +216,7 @@ const SyaratKualifikasi: React.FC = () => {
             <Button
               key="submit"
               type="primary"
-              onClick={() => formik.handleSubmit()}
+              onClick={handleSubmit}
               loading={isLoading}
             >
               {isEditMode ? "Simpan Perubahan" : "Simpan Data"}
@@ -146,26 +226,26 @@ const SyaratKualifikasi: React.FC = () => {
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            name="kualifikasi"
+            name="qualification"
             label="Kualifikasi"
-            rules={[{ required: true, message: "Kualifikasi harus diisi" }]}
-          >
+            rules={[{ required: true, message: "Kualifikasi harus diisi" }]}>
             <Input
-              value={formik.values.kualifikasi}
+              name="qualification"
+              value={formik.values.qualification}
               onChange={(e) =>
                 formik.setFieldValue("spesifikasi", e.target.value)
               }
             />
           </Form.Item>
           <Form.Item
-            name="detail_kualifikasi"
+            name="qualification_detail"
             label="Detail Spesifikasi"
             rules={[
               { required: true, message: "Detail Kualifikasi harus diisi" },
-            ]}
-          >
+            ]}>
             <Input
-              value={formik.values.detail_kualifikasi}
+              name="qualification_detail"
+              value={formik.values.qualification_detail}
               onChange={formik.handleChange}
             />
           </Form.Item>

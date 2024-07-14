@@ -171,7 +171,7 @@ const MyLayout: React.FC<Props> = ({ children }) => {
             label: "User Requisition",
             children: [
               getItem(<Link href="/user-requisition/dashboard">Dashboard</Link>, '12', <div />),
-              getItem(<Link href="/user-requisition/pengadaan">Pengadaan Barang</Link>, '10', <div />),
+              getItem(<Link href="/user-requisition/pengadaan">Pengadaan</Link>, '10', <div />),
               {
                 key: 'sub5',
                 icon: <TeamOutlined />,

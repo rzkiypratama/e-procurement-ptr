@@ -94,17 +94,15 @@ const ViewDepartment: React.FC = () => {
             try {
                 const token = getCookie("token");
                 const userId = getCookie("user_id");
-                const vendorId = getCookie("vendor_id");
 
                 if (!token || !userId) {
                     message.error("Please login first.");
                     return;
                 }
-                const response = await axios.post(`https://requisition.eproc.latansa.sch.id/api/master/department`, values, {
+                const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL_REQ}/master/department`, values, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "User-ID": userId,
-                        "Vendor-ID": vendorId,
                     },
                 });
                 console.log("Response from API:", response.data);
@@ -173,18 +171,16 @@ const ViewDepartment: React.FC = () => {
         try {
             const token = getCookie("token");
             const userId = getCookie("user_id");
-            const vendorId = getCookie("vendor_id");
 
-            if (!token || !userId || !vendorId) {
+            if (!token || !userId) {
                 message.error("Please login first.");
                 return;
             }
 
-            const response = await axios.get(`https://requisition.eproc.latansa.sch.id/api/master/department`, {
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL_REQ}/master/department`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "User-ID": userId,
-                    "Vendor-ID": vendorId,
                 },
             });
             console.log("Response from API:", response.data.data);
@@ -232,17 +228,15 @@ const ViewDepartment: React.FC = () => {
         try {
             const token = getCookie("token");
             const userId = getCookie("user_id");
-            const vendorId = getCookie("vendor_id");
 
             if (!token || !userId) {
                 message.error("Please login first.");
                 return;
             }
-            const response = await axios.post(`https://requisition.eproc.latansa.sch.id/api/master/department/${selectedId}`, body, {
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL_REQ}/master/department/${selectedId}`, body, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "User-ID": userId,
-                    "Vendor-ID": vendorId,
                 },
             })
             console.log("Response from API:", response.data)
@@ -265,17 +259,15 @@ const ViewDepartment: React.FC = () => {
         try {
             const token = getCookie("token");
             const userId = getCookie("user_id");
-            const vendorId = getCookie("vendor_id");
 
-            if (!token || !userId || !vendorId) {
+            if (!token || !userId) {
                 message.error("Please login first.");
                 return;
             }
-            const response = await axios.delete(`https://requisition.eproc.latansa.sch.id/api/master/department/${selectedId}`, {
+            const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL_REQ}/master/department/${selectedId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "User-ID": userId,
-                    "Vendor-ID": vendorId,
                 },
             });
             console.log("Response from API:", response.data);
