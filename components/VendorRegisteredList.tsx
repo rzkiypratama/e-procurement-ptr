@@ -189,7 +189,8 @@ const VendorRegisteredList: React.FC = () => {
         if (searchQuery != "") {
             params = params + `&filter[company_name]=${searchQuery}`
         }
-        if (sorter.field != "no") {
+
+        if (sorter.field != undefined && sorter.field != "no") {
             const sort = sorter.order == 'ascend' ? '' : '-'
             params = params + `&sort=${sort}${sorter.field}`
             setSortBy(`sort=${sort}${sorter.field}`)
@@ -251,7 +252,6 @@ const VendorRegisteredList: React.FC = () => {
                     pageSize: 20,
                     total: paginateVendorRegistered?.meta.total,
                     hideOnSinglePage: true,
-                    onChange: (page, pageSize) => { console.log() },
                     showSizeChanger: false,
                 }}
                 scroll={{

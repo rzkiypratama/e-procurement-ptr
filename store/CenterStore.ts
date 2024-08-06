@@ -1,5 +1,17 @@
 import { create } from 'zustand';
 
+interface StatusReport {
+  id: number;
+  remark: string;
+  approved_at: string;
+  approved_by: string;
+  status_code: string;
+  procurement_status: {
+    id: number;
+    status_name: string;
+    code: string;
+  }
+}
 interface DashboardMasterBudget {
   id: number;
   tahun_anggaran: string;
@@ -23,7 +35,10 @@ interface MasterBudgetInputAnggaran {
   id: number;
   year: string;
   department: string,
-  total: string;
+  label: string,
+  capex_opex: string,
+  total: number;
+  rekening: string;
   department_id: number,
   updated_by: string;
 }
@@ -37,35 +52,46 @@ interface Department {
 
 interface PengadaanBarang {
   id: number;
-  kode_rencana_umum_pengadaan: string;
-  kode_paket_pengadaan: string;
+  kode_rencana: string;
+  kode_paket: string;
   nama_paket: string;
   metode_pengadaan: string;
-  jenis_pengadaan: string;
+  jenis_pengadaan: ProcurementType;
   jenis_kontrak: string;
-  hps: string;
+  // hps: string;
   status_report: string;
+}
+
+interface ProcurementType {
+  id: number
+  type_name: string
+  code: string
 }
 
 interface GeneralInformation {
   id: number;
   procurement_type: string;
+  master_budget_id: string;
   package_name: string;
   work_unit: string;
   year: string;
   product_local: string;
   sources_of_funds: string;
   capex_opex: string;
+  location: string;
+  total_anggaran: string;
 }
 
 interface DetailInformation {
   id: number;
-  spesifikasi: string;
-  detail_spesifikasi: string;
+  specification_name: string;
+  specification_detail: string;
   unit: string;
   quantity: string;
+  price: string;
+  ppn: string;
+  total_after_ppn: string
   total: string;
-  lokasi_pekerjaan: string;
 }
 
 interface SyaratKualifikasi {
@@ -79,6 +105,19 @@ interface DokumenKualifikasi {
   id: number;
   document_name: string;
   document: string;
+  document_path: string;
+}
+
+interface UserReqTimeline {
+  id: number;
+  choose_method: string,
+  start_utilization_date: string,
+  end_utilization_date: string,
+  start_contract_date: string,
+  end_contract_date: string,
+  start_selection_date: string,
+  end_selection_date: string,
+  announcement_date: string
 }
 interface ProfilePerusahaan {
   id: number;
@@ -182,6 +221,8 @@ interface AttachmentDocVerify {
 
 // State Interfaces
 interface CenterStoreState {
+  statusReport: StatusReport[];
+  userReqTimeline: UserReqTimeline[];
   masterBudgetInputAnggaran: MasterBudgetInputAnggaran[];
   dashboardStatistic: DashboardStatistic;
   dashboardMasterBudget: DashboardMasterBudget[];
@@ -207,6 +248,14 @@ interface CenterStoreState {
   setDashboardStatistic: (dashboardStatistic: DashboardStatistic) => void;
   setDashboardMasterBudget: (dashboardMasterBudget: DashboardMasterBudget[]) => void;
   setDashboardSummary: (data: DashboardSummary) => void;
+  addStatusReport: (statusReport: StatusReport) => void;
+  editStatusReport: (statusReport: StatusReport) => void;
+  removeStatusReport: (id: number) => void;
+  initializeStatusReport: (statusReport: StatusReport[]) => void;
+  addUserReqTimeline: (userReqTimeline: UserReqTimeline) => void;
+  editUserReqTimeline: (userReqTimeline: UserReqTimeline) => void;
+  removeUserReqTimeline: (id: number) => void;
+  initializeUserReqTimeline: (userReqTimeline: UserReqTimeline[]) => void;
   addMasterBudgetInputAnggaran: (masterBudgetInputAnggaran: MasterBudgetInputAnggaran) => void;
   editMasterBudgetInputAnggaran: (masterBudgetInputAnggaran: MasterBudgetInputAnggaran) => void;
   removeMasterBudgetInputAnggaran: (id: number) => void;
@@ -275,6 +324,8 @@ interface CenterStoreState {
 
 // Create Zustand Store
 const useCenterStore = create<CenterStoreState>((set) => ({
+  statusReport: [],
+  userReqTimeline: [],
   masterBudgetInputAnggaran: [],
   dashboardStatistic: {
     anggaran: 0,
@@ -310,6 +361,32 @@ const useCenterStore = create<CenterStoreState>((set) => ({
   setDashboardMasterBudget: (dashboardMasterBudget) => set({ dashboardMasterBudget: dashboardMasterBudget }),
 
   setDashboardSummary: (data) => set({ data: data }),
+
+  addStatusReport: (statusReport) => set((state) => ({
+    statusReport: [...state.statusReport, statusReport],
+  })),
+  editStatusReport: (statusReport) => set((state) => ({
+    statusReport: state.statusReport.map((item) => item.id === statusReport.id ? statusReport : item),
+  })),
+  removeStatusReport: (id) => set((state) => ({
+    statusReport: state.statusReport.filter((item) => item.id !== id),
+  })),
+  initializeStatusReport: (statusReport) => set(() => ({
+    statusReport: statusReport
+  })),
+
+  addUserReqTimeline: (userReqTimeline) => set((state) => ({
+    userReqTimeline: [...state.userReqTimeline, userReqTimeline],
+  })),
+  editUserReqTimeline: (userReqTimeline) => set((state) => ({
+    userReqTimeline: state.userReqTimeline.map((item) => item.id === userReqTimeline.id ? userReqTimeline : item),
+  })),
+  removeUserReqTimeline: (id) => set((state) => ({
+    userReqTimeline: state.userReqTimeline.filter((item) => item.id !== id),
+  })),
+  initializeUserReqTimeline: (userReqTimeline) => set(() => ({
+    userReqTimeline: userReqTimeline
+  })),
 
   addMasterBudgetInputAnggaran: (masterBudgetInputAnggaran) => set((state) => ({
     masterBudgetInputAnggaran: [...state.masterBudgetInputAnggaran, masterBudgetInputAnggaran],

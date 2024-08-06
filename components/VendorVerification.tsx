@@ -194,7 +194,7 @@ const VendorVerificationList: React.FC = () => {
             params = params + `&filter[company_name]=${searchQuery}`
         }
 
-        if (sorter.field != "no") {
+        if (sorter.field != undefined && sorter.field != "no") {
             const sort = sorter.order == 'ascend' ? '' : '-'
             params = params + `&sort=${sort}${sorter.field}`
             setSortBy(`sort=${sort}${sorter.field}`)
@@ -237,7 +237,6 @@ const VendorVerificationList: React.FC = () => {
                     pageSize: 20,
                     total: paginateVendorVerification.meta.total,
                     hideOnSinglePage: true,
-                    onChange: (page, pageSize) => { console.log() },
                     showSizeChanger: false,
                 }}
                 scroll={{

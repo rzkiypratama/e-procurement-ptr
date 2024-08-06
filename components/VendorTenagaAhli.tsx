@@ -242,12 +242,12 @@ const TenagaAhli: React.FC = () => {
       key: "identity_no",
       editable: true,
     },
-    {
-      title: "Nomor NPWP",
-      dataIndex: "npwp_no",
-      key: "npwp_no",
-      editable: true,
-    },
+    // {
+    //   title: "Nomor NPWP",
+    //   dataIndex: "npwp_no",
+    //   key: "npwp_no",
+    //   editable: true,
+    // },
     {
       title: "Pendidikan Terakhir",
       dataIndex: "last_education",
@@ -308,8 +308,7 @@ const TenagaAhli: React.FC = () => {
         inputType:
           col.dataIndex === "birth_date"
             ? "date"
-            : col.dataIndex === "identity_no" ||
-              col.dataIndex === "npwp_no"
+            : col.dataIndex === "identity_no" //col.dataIndex === "npwp_no"
               ? "text"
               : "text",
         dataIndex: col.dataIndex,
@@ -446,7 +445,7 @@ const TenagaAhli: React.FC = () => {
               onChange={formik.handleChange}
             />
           </Form.Item>
-          <Form.Item
+          {/* <Form.Item
             name="npwp_no"
             label="Nomor NPWP"
             rules={[
@@ -481,7 +480,7 @@ const TenagaAhli: React.FC = () => {
               value={formik.values.npwp_no}
               onChange={formik.handleChange}
             />
-          </Form.Item>
+          </Form.Item> */}
           <Form.Item
             name="last_education"
             label="Pendidikan Terakhir"

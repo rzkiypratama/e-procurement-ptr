@@ -7,6 +7,7 @@ import UserReqSyaratQualifikasi from "@/components/UserReqSyaratQualifikasi";
 import Layout from '@/components/LayoutNew';
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import Link from "next/link";
+import UserReqStatus from "@/components/UserReqStatus";
 
 const { TabPane } = Tabs;
 
@@ -38,16 +39,16 @@ const RegisteredVendorListPage = () => {
             key: '4',
             label: 'Timeline',
             children: (
-                <UserReqTimeline />
+                <UserReqTimeline/>
             ),
         },
-        // {
-        //     key: '5',
-        //     label: 'Landasan Hukum',
-        //     children: (
-        //         <VendorLandasanHukum />
-        //     ),
-        // },
+        {
+            key: '5',
+            label: 'Status Report',
+            children: (
+                <UserReqStatus/>
+            ),
+        },
         // {
         //     key: '6',
         //     label: 'Pengurus Perusahaan',

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   Button,
@@ -9,6 +9,7 @@ import {
   Popconfirm,
   Modal,
   message,
+  Spin
 } from "antd";
 import dayjs from "dayjs";
 import useSyaratKualifikasiStore from "../store/CenterStore";
@@ -41,6 +42,14 @@ const SyaratKualifikasi: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(false);
+
+  useEffect(() => {
+    const requisitionId = getCookie('requisition_id')
+    if (requisitionId != "" && requisitionId != undefined) {
+      getSyaratKualifikasi(requisitionId)
+    }
+  }, [])
 
   const formik = useFormik({
     initialValues: {
@@ -51,47 +60,43 @@ const SyaratKualifikasi: React.FC = () => {
     },
     onSubmit: async (values) => {
       if (isEditMode && editingId !== null) {
-        const updatedData = { ...values, id: editingId };
-        editSyaratKualifikasi(updatedData);
-        message.success("Detail Information updated successfully");
+        // const updatedData = { ...values, id: editingId };
+        // editSyaratKualifikasi(updatedData);
+        // message.success("Detail Information updated successfully");
+        message.warning("Dalam tahap pengembangan");
       } else {
-        const newData = { ...values, no: syaratKualifikasi.length + 1, id: syaratKualifikasi.length + 1 };
-        addSyaratKualifikasi(newData);
-        message.success("Detail Information added successfully");
+        setIsLoading(true);
+        try {
+          const requisitionId = getCookie("requisition_id")
+          const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL_REQ}/master/pengadaan-barang/qualification/${requisitionId}`, values, {
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          });
+          console.log("Response from API:", response.data);
+          if (response.status == 201 || response.status == 200) {
+            addSyaratKualifikasi({
+              ...values,
+              id: response.data.data.id,
+              no: syaratKualifikasi.length + 1,
+            })
+            message.success(`Add Syarat Kualifikasi successfully`)
 
-        // setIsLoading(true);
-        // try {
-        //   const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL_REQ}/master/anggaran`, values, {
-        //     headers: {
-        //       "Authorization": `Bearer ${token}`
-        //     }
-        //   });
-        //   console.log("Response from API:", response.data);
-        //   if (response.status == 201 || response.status == 200) {
-        // addSyaratKualifikasi({
-        //   ...values,
-        //   id: response.data.data.id,
-        //   no: syaratKualifikasi.length + 1,
-        // })
-        //     message.success(`Add Anggaran successfully`)
-
-        //     form.resetFields()
-        //     formik.resetForm()
-        //     setIsModalVisible(false)
-        //   } else {
-        //     message.error(`${response.data.message}`);
-        //   }
-        // } catch (error) {
-        //   message.error(`Add Anggaran failed! ${error}`);
-        //   console.error("Error submitting form:", error);
-        // } finally {
-        //   setLoading(false);
-        // }
+            form.resetFields()
+            formik.resetForm()
+            setIsModalVisible(false)
+            setIsEditMode(false);
+            setEditingId(null);
+          } else {
+            message.error(`${response.data.message}`);
+          }
+        } catch (error) {
+          message.error(`Add Syarat Kualifikasi failed! ${error}`);
+          console.error("Error submitting form:", error);
+        } finally {
+          setIsLoading(false);
+        }
       }
-      setIsModalVisible(false);
-      formik.resetForm();
-      setIsEditMode(false);
-      setEditingId(null);
     },
   });
 
@@ -109,8 +114,9 @@ const SyaratKualifikasi: React.FC = () => {
   };
 
   const handleDelete = (id: number) => {
-    removeSyaratKualifikasi(id);
-    message.success("Detail Information deleted successfully");
+    // removeSyaratKualifikasi(id);
+    // message.success("Detail Information deleted successfully");
+    message.warning("Dalam tahap pengembangan")
   };
 
   const showModal = () => {
@@ -132,41 +138,23 @@ const SyaratKualifikasi: React.FC = () => {
     });
   }
 
-  const handleUpdate = async () => {
-    setIsLoading(true);
+  const getSyaratKualifikasi = async (requisitionId: string | undefined) => {
     try {
-      const body = {
-        ...formik.values
-      }
-
-      const row = formik.values
-      const updatedRow = {
-        ...row,
-      };
-
-      const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL_REQ}/-/${editingId}`, body, {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
-      console.log("Response from API:", response.data);
-      if (response.status == 200) {
-        message.success(`Update Qualification successfully`)
-
-        editSyaratKualifikasi(updatedRow)
-      } else {
-        message.error(`${response.data.message}`);
-      }
+      setIsLoadingData(true)
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL_REQ}/master/pengadaan-barang/qualification/${requisitionId}`,
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        },
+      )
+      const data = await response.data.data
+      initializeSyaratKualifikasi(data)
     } catch (error) {
-      message.error(`Edit Qualification failed! ${error}`);
-      console.error("Error submitting form:", error);
+      message.error("Gagal memuat data Syarat Kualifikasi")
+      console.error("[Error] ", error)
     } finally {
-      setIsLoading(false);
-      form.resetFields()
-      formik.resetForm()
-      setIsModalVisible(false)
-      setEditingId(null);
-      setIsEditMode(false)
+      setIsLoadingData(false)
     }
   }
 
@@ -174,13 +162,13 @@ const SyaratKualifikasi: React.FC = () => {
     { title: "No", dataIndex: "id", key: "id" },
     {
       title: "Kualifikasi",
-      dataIndex: "kualifikasi",
-      key: "kualifikasi",
+      dataIndex: "qualification",
+      key: "qualification",
     },
     {
       title: "Detail Kualifikasi",
-      dataIndex: "detail_kualifikasi",
-      key: "detail_kualifikasi",
+      dataIndex: "qualification_detail",
+      key: "qualification_detail",
     },
     {
       title: "Operation",
@@ -203,60 +191,67 @@ const SyaratKualifikasi: React.FC = () => {
 
   return (
     <div>
-      <Button type="primary" onClick={showModal} className="mb-4">
-        Tambah Syarat Kualifikasi
-      </Button>
-      <Modal
-        title={isEditMode ? "Edit Syarat Kualifikasi" : "Tambah Syarat Kualifikasi"}
-        open={isModalVisible}
-        onCancel={handleCancel}
-        footer={[
-          <>
-            <Button onClick={handleCancel}>Batalkan</Button>
-            <Button
-              key="submit"
-              type="primary"
-              onClick={handleSubmit}
-              loading={isLoading}
-            >
-              {isEditMode ? "Simpan Perubahan" : "Simpan Data"}
-            </Button>
-          </>,
-        ]}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="qualification"
-            label="Kualifikasi"
-            rules={[{ required: true, message: "Kualifikasi harus diisi" }]}>
-            <Input
-              name="qualification"
-              value={formik.values.qualification}
-              onChange={(e) =>
-                formik.setFieldValue("spesifikasi", e.target.value)
-              }
-            />
-          </Form.Item>
-          <Form.Item
-            name="qualification_detail"
-            label="Detail Spesifikasi"
-            rules={[
-              { required: true, message: "Detail Kualifikasi harus diisi" },
-            ]}>
-            <Input
-              name="qualification_detail"
-              value={formik.values.qualification_detail}
-              onChange={formik.handleChange}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
-      <Table
-        dataSource={syaratKualifikasi}
-        columns={columns}
-        rowKey="id"
-        pagination={false}
-      />
+      {isLoadingData ? (
+        <div className="text-center h-72 mt-5">
+          <Spin size="large" />
+          <p>Memuat Syarat Kualifikasi...</p>
+        </div>
+      ) : (
+        <div>
+          <Button type="primary" onClick={showModal} className="mb-4">
+            Tambah Syarat Kualifikasi
+          </Button>
+          <Modal
+            title={isEditMode ? "Edit Syarat Kualifikasi" : "Tambah Syarat Kualifikasi"}
+            open={isModalVisible}
+            onCancel={handleCancel}
+            footer={[
+              <>
+                <Button onClick={handleCancel}>Batalkan</Button>
+                <Button
+                  key="submit"
+                  type="primary"
+                  onClick={handleSubmit}
+                  loading={isLoading}
+                >
+                  {isEditMode ? "Simpan Perubahan" : "Simpan Data"}
+                </Button>
+              </>,
+            ]}
+          >
+            <Form form={form} layout="vertical">
+              <Form.Item
+                name="qualification"
+                label="Kualifikasi"
+                rules={[{ required: true, message: "Kualifikasi harus diisi" }]}>
+                <Input
+                  name="qualification"
+                  value={formik.values.qualification}
+                  onChange={formik.handleChange}
+                />
+              </Form.Item>
+              <Form.Item
+                name="qualification_detail"
+                label="Detail Spesifikasi"
+                rules={[
+                  { required: true, message: "Detail Kualifikasi harus diisi" },
+                ]}>
+                <Input
+                  name="qualification_detail"
+                  value={formik.values.qualification_detail}
+                  onChange={formik.handleChange}
+                />
+              </Form.Item>
+            </Form>
+          </Modal>
+          <Table
+            dataSource={syaratKualifikasi}
+            columns={columns}
+            rowKey={(record) => record.id.toString()}
+          // pagination={false}
+          />
+        </div>
+      )}
     </div>
   );
 };

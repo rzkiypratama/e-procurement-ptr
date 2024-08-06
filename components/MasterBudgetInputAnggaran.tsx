@@ -10,6 +10,7 @@ import {
   Modal,
   message,
   Select,
+  InputNumber,
 } from "antd";
 import dayjs from "dayjs";
 import useMasterDataInputAnggaranStore from "../store/CenterStore";
@@ -17,6 +18,8 @@ import { useFormik } from "formik";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { getCookie } from 'cookies-next'
+import { AlignType } from 'rc-table/lib/interface';
+import formatCurrency from '@/hook/formatCurrency';
 
 // const { TextArea } = Input;
 
@@ -25,7 +28,10 @@ interface MasterBudgetInputAnggaran {
   id: number;
   year: string;
   department: string;
-  total: string;
+  total: number;
+  rekening: string;
+  label: string;
+  capex_opex: string;
   updated_by: string;
   department_id: number;
 }
@@ -36,7 +42,9 @@ interface Department {
   department_code: string;
 }
 
-const SyaratKualifikasi: React.FC = () => {
+const { Option } = Select;
+
+const MasterBudgetInputAnggaran: React.FC = () => {
   const {
     masterBudgetInputAnggaran,
     addMasterBudgetInputAnggaran,
@@ -62,7 +70,10 @@ const SyaratKualifikasi: React.FC = () => {
       year: "",
       department_id: 0,
       department: "",
-      total: "",
+      label: "",
+      rekening: "",
+      capex_opex: "capex",
+      total: 0,
       updated_by: "",
     },
     onSubmit: async (values) => {
@@ -85,6 +96,7 @@ const SyaratKualifikasi: React.FC = () => {
               id: response.data.data.id,
               department: response.data.data.department.department_name,
               no: masterBudgetInputAnggaran.length + 1,
+              rekening: response.data.data.rekening
             })
             message.success(`Add Anggaran successfully`)
 
@@ -208,6 +220,13 @@ const SyaratKualifikasi: React.FC = () => {
     });
   };
 
+  // const formatCurrency = (value: string | number) => {
+  //   if (!value) return "";
+  //   const parts = value.toString().split(".");
+  //   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  //   return parts.join(".");
+  // };
+
   const columns = [
     { title: "No", dataIndex: "no", key: "no" },
     {
@@ -221,9 +240,23 @@ const SyaratKualifikasi: React.FC = () => {
       key: "department",
     },
     {
-      title: "Anggaran Digunakan",
+      title: "Capex / Opex",
+      dataIndex: "capex_opex",
+      key: "capex_opex",
+    },
+    {
+      title: "Nilai Anggaran",
       dataIndex: "total",
       key: "total",
+      align: 'right' as AlignType,
+      render: (text: string) => <span>{formatCurrency(text)}</span>,
+    },
+    {
+      title: "Rekening",
+      dataIndex: "rekening",
+      key: "rekening",
+      align: 'right' as AlignType,
+
     },
     {
       title: "Updated By",
@@ -359,8 +392,7 @@ const SyaratKualifikasi: React.FC = () => {
               id="department_id"
               onChange={(value) => formik.setFieldValue("department_id", value)}
               onBlur={formik.handleBlur}
-              value={formik.values.department_id.toString()}
-              defaultValue={listDepartment.at(0)?.id.toString()}>
+              value={formik.values.department_id.toString()}>
               {listDepartment.map((option) => (
                 <Select.Option key={option.id} value={option.id}>
                   {option.department_name}
@@ -369,15 +401,57 @@ const SyaratKualifikasi: React.FC = () => {
             </Select>
           </Form.Item>
           <Form.Item
+            name="capex_opex"
+            label="Opex / Capex"
+            initialValue={formik.values.capex_opex}
+            rules={[{ required: true, message: "Nilai Opex Capex harus diisi" }]}>
+            <Select
+              id="capex_opex"
+              onChange={(value) => formik.setFieldValue("capex_opex", value)}
+              onBlur={formik.handleBlur}
+              value={formik.values.capex_opex}>
+              <Option value="capex" selected={formik.values.capex_opex == 'capex'}>Capex</Option>
+              <Option value="opex" selected={formik.values.capex_opex == 'opex'}>Opex</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item
             name="total"
-            label="Anggaran Digunakan"
+            label="Nilai Anggaran"
             key={2}
             rules={[
-              { required: true, message: "Total Anggaran harus diisi" },
-            ]}>
+              () => ({
+                validator(_, value) {
+                  if (!value) {
+                    return Promise.reject();
+                  }
+                  if (isNaN(value)) {
+                    return Promise.reject(
+                      "Input has to be a number.",
+                    );
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
+            required>
             <Input
               name="total"
+              id="total"
               value={formik.values.total}
+              style={{ width: '100%' }}
+              onChange={formik.handleChange}
+            />
+          </Form.Item>
+          <Form.Item
+            name="rekening"
+            label="Rekening"
+            key={2}
+            required>
+            <Input
+              name="rekening"
+              id="rekening"
+              value={formik.values.rekening}
+              style={{ width: '100%' }}
               onChange={formik.handleChange}
             />
           </Form.Item>
@@ -393,4 +467,4 @@ const SyaratKualifikasi: React.FC = () => {
   );
 };
 
-export default SyaratKualifikasi;
+export default MasterBudgetInputAnggaran;

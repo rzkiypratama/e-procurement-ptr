@@ -61,12 +61,12 @@ const AttachmentDocument: React.FC = () => {
       const token = getCookie("token");
       const userId = getCookie("user_id");
       const vendorId = getCookie("vendor_id");
-    
+
       if (!token || !userId || !vendorId) {
         message.error("Token, User ID, or Vendor ID is missing.");
         return;
       }
-    
+
       try {
         setIsLoading(true);
         const formData = new FormData();
@@ -74,7 +74,7 @@ const AttachmentDocument: React.FC = () => {
         formData.append("name", values.name);
         formData.append("category", values.category);
         formData.append("expiration_date", values.expiration_date);
-    
+
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}/vendor/attachment`,
           formData,
@@ -87,18 +87,18 @@ const AttachmentDocument: React.FC = () => {
             },
           }
         );
-    
+
         console.log("Response from API:", response.data);
         setIsModalVisible(false);
         message.success("Dokumen berhasil ditambahkan");
-    
+
         // Memperbarui objek data attachment dengan tambahan document_path
         const attachmentData = {
           ...values,
           id: response.data.data.id,
           document_path: response.data.data.document_path,
         };
-    
+
         addAttachment(attachmentData);
         formik.resetForm();
       } catch (error) {
@@ -157,15 +157,15 @@ const AttachmentDocument: React.FC = () => {
   const isEditing = (record: AttachmentDoc) =>
     record.id.toString() === editingKey;
 
-    const edit = (record: Partial<AttachmentDoc> & { id: React.Key }) => {
-      form.setFieldsValue({
-        ...record,
-        expiration_date: record.expiration_date
-          ? dayjs(record.expiration_date, "YYYY-MM-DD")
-          : null,
-      });
-      setEditingKey(record.id.toString());
-    };
+  const edit = (record: Partial<AttachmentDoc> & { id: React.Key }) => {
+    form.setFieldsValue({
+      ...record,
+      expiration_date: record.expiration_date
+        ? dayjs(record.expiration_date, "YYYY-MM-DD")
+        : null,
+    });
+    setEditingKey(record.id.toString());
+  };
 
   const cancel = () => {
     setEditingKey("");
@@ -193,12 +193,12 @@ const AttachmentDocument: React.FC = () => {
       const token = getCookie("token");
       const userId = getCookie("user_id");
       const vendorId = getCookie("vendor_id");
-  
+
       if (!token || !userId || !vendorId) {
         message.error("Token, User ID, or Vendor ID is missing.");
         return;
       }
-  
+
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_URL}/vendor/attachment/${id}`,
         {
@@ -209,7 +209,7 @@ const AttachmentDocument: React.FC = () => {
           },
         }
       );
-  
+
       removeAttachment(Number(id));
       message.success("Attachment deleted successfully.");
     } catch (error) {
@@ -425,12 +425,12 @@ const AttachmentDocument: React.FC = () => {
         onCancel={handleCancel}
         footer={[
           <>
-           <Button onClick={handleCancel}>
-            Batalkan
-          </Button>
-          <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
-            Simpan Data
-          </Button>
+            <Button onClick={handleCancel}>
+              Batalkan
+            </Button>
+            <Button key="submit" type="primary" onClick={handleSubmit} loading={isLoading}>
+              Simpan Data
+            </Button>
           </>
         ]}
       >
@@ -461,8 +461,8 @@ const AttachmentDocument: React.FC = () => {
             rules={[{ required: true, message: "File attachment is required" }]}
           >
             <input type="file"
-             {...uploadProps}
-            
+              {...uploadProps}
+
             ></input>
           </Form.Item>
           <Form.Item

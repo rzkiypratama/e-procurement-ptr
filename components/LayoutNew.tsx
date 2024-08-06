@@ -1,3 +1,4 @@
+'use client'
 import React, { useState, useEffect } from 'react';
 import { Layout, Menu, message, Spin, Flex } from 'antd';
 import { UserOutlined, TeamOutlined, DatabaseOutlined } from '@ant-design/icons';
@@ -54,9 +55,15 @@ function getItem(
 const MyLayout: React.FC<Props> = ({ children }) => {
   const token = getCookie("token");
   const userRole = getCookie("group_user_code"); // Assume the role is stored in a cookie called "role"
-  const [menuList, setMenuList] = useState<ParentMenu[]>([]);
+  const [menuList, setMenuList] = useState<MenuItem[]>([]);
   const [isLoading, setLoading] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    // if (menuList.length <= 0) {
+    //   getAllListMenu();
+    // }
+  }, [])
 
   const onCollapse = (collapsed: boolean) => {
     setCollapsed(collapsed);
@@ -190,7 +197,8 @@ const MyLayout: React.FC<Props> = ({ children }) => {
               getItem(<Link href="/master-budget/dashboard">Dashboard</Link>, '13', <div />),
               getItem(<Link href="/master-budget/input-anggaran">Input Anggaran</Link>, '11', <div />),
             ],
-          }
+          },
+          getItem(<Link href="/procurement">Pengadaan</Link>, '20', <div />),
         ];
       default:
         return [];
@@ -198,6 +206,51 @@ const MyLayout: React.FC<Props> = ({ children }) => {
   };
 
   const filteredMenuItems = getFilteredMenuItems(userRole as string);
+
+  // const getAllListMenu = async () => {
+  //   let listMenu: MenuItem[] = []
+  //   setLoading(true)
+  //   try {
+  //     const response = await axios.get(`https://vendor.eproc.latansa.sch.id/api/auth/menu`, {
+  //       headers: {
+  //         "Authorization": `Bearer ${token}`
+  //       }
+  //     });
+  //     console.log("Response from API:", response.data);
+  //     if (response.status == 200) {
+  //       const data: ParentMenu[] = await response.data.data
+  //       data.map((item, index) => {
+  //         if (item.children !== undefined && item.children!.length > 0) {
+  //           let childMenu: MenuItem[] = []
+  //           item.children!.map((child, childIndex) => {
+  //             childMenu.push(
+  //               getItem(<Link href={child.urlto}>{child.menu_name}</Link>, `child-${childIndex}`, <UserOutlined />),
+  //             )
+  //           })
+  //           listMenu.push({
+  //             key: `parent-${index}`,
+  //             icon: <TeamOutlined />,
+  //             label: item.menu_name,
+  //             children: childMenu
+  //           })
+  //         } else {
+  //           listMenu.push(
+  //             getItem(<Link href={item.urlto}>{item.menu_name}</Link>, `parent-${index}`, <UserOutlined />),
+  //           )
+  //         }
+  //       })
+  //       setMenuList(listMenu)
+  //     } else {
+  //       message.error(`${response.data.message}`);
+  //     }
+  //   } catch (error) {
+  //     message.error(`Get Menu failed! ${error}`);
+  //     console.error("Error Getting Menu:", error);
+  //   }
+  //   finally {
+  //     setLoading(false)
+  //   }
+  // }
 
   return (
     <Layout className="">

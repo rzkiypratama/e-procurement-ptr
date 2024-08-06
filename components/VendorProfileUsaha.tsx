@@ -58,6 +58,21 @@ const PengurusPerusahaan: React.FC = () => {
     initializeProfilePerusahaan,
   } = useProfilePerusahaanStore();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [profileData, setDataProfile] = useState<ProfilePerusahaan>({
+    id: 0,
+    company_name: "",
+    company_npwp: "",
+    vendor_type: "",
+    company_address: "",
+    city_id: "",
+    postal_code: "",
+    company_phone_number: "",
+    company_email: "",
+    company_fax: "",
+    province_id: "",
+    province: "",
+    city: "",
+  })
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -118,6 +133,7 @@ const PengurusPerusahaan: React.FC = () => {
           };
           editProfilePerusahaan(profileData);
           setIsModalVisible(false);
+          setDataProfile(profileData)
           formik.resetForm();
           message.success("Data submitted successfully");
         }
@@ -184,6 +200,7 @@ const PengurusPerusahaan: React.FC = () => {
             city: response.data.data.city.name,
           };
 
+          setDataProfile(profileData)
           initializeProfilePerusahaan([profileData]);
         } else {
           console.error("Failed to fetch company profile information.");
@@ -290,31 +307,6 @@ const PengurusPerusahaan: React.FC = () => {
   };
 
   const columns = [
-    { title: "No", dataIndex: "id", key: "id" },
-    {
-      title: "Nama Perusahaan",
-      dataIndex: "company_name",
-      key: "company_name",
-      editable: true,
-    },
-    {
-      title: "Email Perusahaan",
-      dataIndex: "company_email",
-      key: "company_email",
-      editable: true,
-    },
-    {
-      title: "NPWP Perusahaan",
-      dataIndex: "company_npwp",
-      key: "company_npwp",
-      editable: true,
-    },
-    {
-      title: "No Telepon Perusahaan",
-      dataIndex: "company_phone_number",
-      key: "company_phone_number",
-      editable: true,
-    },
     {
       title: "Type",
       dataIndex: "vendor_type",
@@ -325,99 +317,7 @@ const PengurusPerusahaan: React.FC = () => {
         { value: "cabang", label: "Cabang" },
       ],
     },
-    {
-      title: "Alamat Perusahaan",
-      dataIndex: "company_address",
-      key: "company_address",
-      editable: true,
-    },
-    {
-      title: "Kota",
-      dataIndex: "city",
-      key: "city",
-      editable: true,
-      options: getCity.map((city) => ({
-        key: city.id,
-        value: city.id,
-        label: city.name,
-      })),
-      // render: (text: string) => getCityName(text),
-    },
-    {
-      title: "Provinsi",
-      dataIndex: "province",
-      key: "province",
-      editable: true,
-      options: getProvince.map((province) => ({
-        key: province.id,
-        value: province.id,
-        label: province.name,
-      })),
-      // render: (text: string) => getProvinceName(text),
-    },
-    {
-      title: "Kode Pos",
-      dataIndex: "postal_code",
-      key: "postal_code",
-      editable: true,
-    },
-    {
-      title: "Nomor Fax Perusahaan",
-      dataIndex: "company_fax",
-      key: "company_fax",
-      editable: true,
-    },
-    {
-      title: "Operation",
-      dataIndex: "operation",
-      render: (_: any, record: ProfilePerusahaan) => {
-        const editable = isEditing(record);
-        return editable ? (
-          <span>
-            <Typography.Link
-              onClick={() => save(record.id)}
-              style={{ marginRight: 8 }}
-            >
-              Save
-            </Typography.Link>
-            <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-              <a>Cancel</a>
-            </Popconfirm>
-          </span>
-        ) : (
-          <span className="flex items-center justify-center gap-5">
-            <Typography.Link disabled={editingKey !== ""} onClick={(() => showModal(record))}>
-              <EditOutlined />
-            </Typography.Link>
-          </span>
-        );
-      },
-    },
   ];
-
-  const mergedColumns = columns.map((col) => {
-    if (!col.editable) {
-      return col;
-    }
-    return {
-      ...col,
-      onCell: (record: ProfilePerusahaan) => ({
-        record,
-        inputType:
-          col.dataIndex === "noKTPPengurus" || col.dataIndex === "npwpPengurus"
-            ? "number"
-            : col.dataIndex === "city_id" ||
-              col.dataIndex === "province_id" ||
-              col.dataIndex === "vendor_type"
-              ? "select"
-              : "text",
-        dataIndex: col.dataIndex,
-        title: col.title,
-        options: col.options,
-        editing: isEditing(record),
-      }),
-    };
-  });
 
   const showModal = (record: ProfilePerusahaan) => {
     console.log(record.province_id)
@@ -621,26 +521,94 @@ const PengurusPerusahaan: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
-      <Form form={form} component={false}>
-        <Table
-          rowKey={(record) => record.id.toString()}
-          components={{
-            body: {
-              cell: EditableCell,
-            },
-          }}
-          bordered
-          dataSource={profilePerusahaan}
-          columns={mergedColumns}
-          rowClassName="editable-row"
-          pagination={{
-            onChange: cancel,
-          }}
-          loading={isLoading}
-          scroll={{
-            x: 1300,
-          }}
-        />
+      <Form layout="vertical">
+        <Form.Item>
+          <Button type="primary" style={{ background: "#f59e0b", borderColor: "#f59e0b" }} onClick={() => showModal(profileData)} className="float-end">
+            Ubah Profile
+          </Button>
+        </Form.Item>
+        <div className="grid grid-cols-2 gap-4">
+          <Form.Item
+            label="Nama Perusahaan">
+            <Input
+              readOnly={true}
+              disabled={true}
+              style={{ color: "black" }}
+              value={profileData.company_name} />
+          </Form.Item>
+          <Form.Item
+            label="Email Perusahaan">
+            <Input
+              readOnly={true}
+              disabled={true}
+              style={{ color: "black" }}
+              value={profileData.company_email} />
+          </Form.Item>
+          <Form.Item
+            label="NPWP Perusahaan">
+            <Input
+              readOnly={true}
+              disabled={true}
+              style={{ color: "black" }}
+              value={profileData.company_npwp} />
+          </Form.Item>
+          <Form.Item
+            label="Nomor Telepon Perusahaan">
+            <Input
+              readOnly={true}
+              disabled={true}
+              style={{ color: "black" }}
+              value={profileData.company_phone_number} />
+          </Form.Item>
+          <Form.Item
+            label="Tipe">
+            <Input
+              readOnly={true}
+              disabled={true}
+              style={{ color: "black" }}
+              value={profileData.vendor_type} />
+          </Form.Item>
+          <Form.Item
+            label="Alamat Perusahaan">
+            <Input
+              readOnly={true}
+              disabled={true}
+              style={{ color: "black" }}
+              value={profileData.company_address} />
+          </Form.Item>
+          <Form.Item
+            label="Kota">
+            <Input
+              readOnly={true}
+              disabled={true}
+              style={{ color: "black" }}
+              value={profileData.city} />
+          </Form.Item>
+          <Form.Item
+            label="Provinsi">
+            <Input
+              readOnly={true}
+              disabled={true}
+              style={{ color: "black" }}
+              value={profileData.province} />
+          </Form.Item>
+          <Form.Item
+            label="Kode Pos">
+            <Input
+              readOnly={true}
+              disabled={true}
+              style={{ color: "black" }}
+              value={profileData.postal_code} />
+          </Form.Item>
+          <Form.Item
+            label="Fax Perusahaan">
+            <Input
+              readOnly={true}
+              disabled={true}
+              style={{ color: "black" }}
+              value={profileData.company_fax} />
+          </Form.Item>
+        </div>
       </Form>
     </div>
   );

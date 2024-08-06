@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Table,
   Button,
@@ -9,23 +9,26 @@ import {
   Popconfirm,
   Modal,
   message,
+  Spin
 } from "antd";
-import dayjs from "dayjs";
 import useDetailInformationStore from "../store/CenterStore";
 import { useFormik } from "formik";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-
-const { TextArea } = Input;
+import axios from "axios";
+import { getCookie } from 'cookies-next';
+import { AlignType } from 'rc-table/lib/interface';
 
 interface DetailInformation {
-    id: number;
-    spesifikasi: string;
-    detail_spesifikasi: string;
-    unit: string;
-    quantity: string;
-    total: string;
-    lokasi_pekerjaan: string;
-  }
+  id: number;
+  specification_name: string;
+  specification_detail: string;
+  unit: string;
+  quantity: string;
+  price: string;
+  ppn: string;
+  total_after_ppn: string
+  total: string;
+}
 
 const SPTTahunanPage: React.FC = () => {
   const {
@@ -40,25 +43,59 @@ const SPTTahunanPage: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(false);
+
+  const token = getCookie("token")
+
+  useEffect(() => {
+    const requisitionId = getCookie('requisition_id')
+    if (requisitionId != "" && requisitionId != undefined) {
+      getDetailInfo(requisitionId)
+    }
+  }, [])
 
   const formik = useFormik({
     initialValues: {
-      spesifikasi: "",
-      detail_spesifikasi: "",
+      specification_name: "",
+      specification_detail: "",
       unit: "",
       quantity: "",
+      price: "",
+      ppn: "",
+      total_after_ppn: "",
       total: "",
-      lokasi_pekerjaan: "",
     },
     onSubmit: async (values) => {
       if (isEditMode && editingId !== null) {
-        const updatedData = { ...values, id: editingId };
-        editDetailInformation(updatedData);
-        message.success("Detail Information updated successfully");
+        message.error("Sedang dalam tahap pengembangan")
+        // const updatedData = { ...values, id: editingId };
+        // editDetailInformation(updatedData);
+        // message.success("Detail Information updated successfully");
       } else {
-        const newData = { ...values, id: detailInformation.length + 1 };
-        addDetailInformation(newData);
-        message.success("Detail Information added successfully");
+        setIsLoading(true);
+        try {
+          const requisitionId = getCookie("requisition_id")
+          const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL_REQ}/master/pengadaan-barang/detail/${requisitionId}`, values, {
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          });
+          console.log("Response from API:", response.data);
+          if (response.status == 201 || response.status == 200) {
+            setIsEditMode(false);
+            setEditingId(null);
+            const newData = { ...values, no: detailInformation.length + 1, id: response.data.data.id };
+            addDetailInformation(newData);
+            message.success("Detail Information added successfully");
+          } else {
+            message.error(`${response.data.message}`);
+          }
+        } catch (error) {
+          message.error(`Add Detail Information failed! ${error}`);
+          console.error("Error submitting form:", error);
+        } finally {
+          setIsLoading(false);
+        }
       }
       setIsModalVisible(false);
       formik.resetForm();
@@ -72,7 +109,7 @@ const SPTTahunanPage: React.FC = () => {
   const handleEdit = (record: DetailInformation) => {
     form.setFieldsValue({
       ...record,
-    //   date: record.date ? dayjs(record.date, "YYYY-MM-DD") : null,
+      //   date: record.date ? dayjs(record.date, "YYYY-MM-DD") : null,
     });
     formik.setValues(record);
     setIsModalVisible(true);
@@ -98,39 +135,87 @@ const SPTTahunanPage: React.FC = () => {
     formik.resetForm();
   };
 
+  const handleSubmit = () => {
+    form.validateFields().then((values) => {
+      formik.handleSubmit()
+    });
+  };
+
+  const getDetailInfo = async (requisitionId: string | undefined) => {
+    try {
+      setIsLoadingData(true)
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL_REQ}/master/pengadaan-barang/detail/${requisitionId}`,
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        },
+      )
+
+      let index = 0;
+      response.data.data.map((e: any) => {
+        index++
+        e.no = index
+      })
+      const data = await response.data.data
+
+      initializeDetailInformation(data)
+    } catch (error) {
+      message.error("Gagal memuat data general info")
+      console.error("[Error] ", error)
+    } finally {
+      setIsLoadingData(false)
+    }
+  }
+
   const columns = [
-    { title: "No", dataIndex: "id", key: "id" },
+    { title: "No", dataIndex: "no", key: "no" },
     {
       title: "Spesifikasi",
-      dataIndex: "spesifikasi",
-      key: "spesifikasi",
+      dataIndex: "specification_name",
+      key: "specification_name",
     },
     {
       title: "Detail Spesifikasi",
-      dataIndex: "detail_spesifikasi",
-      key: "detail_spesifikasi",
+      dataIndex: "specification_detail",
+      key: "specification_detail",
     },
     {
-        title: "Unit",
-        dataIndex: "unit",
-        key: "unit",
-      },
-      {
-        title: "Quantity",
-        dataIndex: "quantity",
-        key: "quantity",
-      },
-      {
-        title: "Total",
-        dataIndex: "total",
-        key: "total",
-      },
-      {
-        title: "Lokasi Pekerjaan",
-        dataIndex: "lokasi_pekerjaan",
-        key: "lokasi_pekerjaan",
-      },
-
+      title: "Harga Satuan",
+      dataIndex: "price",
+      align: 'right' as AlignType,
+      key: "price",
+    },
+    {
+      title: "Quantity",
+      dataIndex: "quantity",
+      align: 'right' as AlignType,
+      key: "quantity",
+    },
+    {
+      title: "Unit",
+      dataIndex: "unit",
+      align: 'right' as AlignType,
+      key: "unit",
+    },
+    {
+      title: "Subtotal (Sebelum PPN)",
+      dataIndex: "total",
+      key: "total",
+      align: 'right' as AlignType,
+    },
+    {
+      title: "Pajak (PPN 10%)",
+      dataIndex: "ppn",
+      align: 'right' as AlignType,
+      key: "ppn",
+    },
+    {
+      title: "Subtotal (Setelah PPN)",
+      dataIndex: "total_after_ppn",
+      key: "total_after_ppn",
+      align: 'right' as AlignType,
+    },
     {
       title: "Operation",
       dataIndex: "operation",
@@ -152,96 +237,139 @@ const SPTTahunanPage: React.FC = () => {
 
   return (
     <div>
-      <Button type="primary" onClick={showModal} className="mb-4">
-        Tambah Data
-      </Button>
-      <Modal
-        title={isEditMode ? "Edit SPT" : "Tambah SPT"}
-        open={isModalVisible}
-        onCancel={handleCancel}
-        footer={[
-          <>
-            <Button onClick={handleCancel}>Batalkan</Button>
-            <Button
-              key="submit"
-              type="primary"
-              onClick={() => formik.handleSubmit()}
-              loading={isLoading}
-            >
-              {isEditMode ? "Simpan Perubahan" : "Simpan Data"}
-            </Button>
-          </>,
-        ]}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="spesifikasi"
-            label="Spesifikasi"
-            rules={[{ required: true, message: "Spesifikasi harus diisi" }]}
+      {isLoadingData ?
+        <div className="text-center mt-5">
+          <Spin size="large" />
+          <p>Memuat Detail Information...</p>
+        </div>
+        :
+        <div>
+          <Button type="primary" onClick={showModal} className="mb-4">
+            Tambah Data
+          </Button>
+          <Modal
+            title={isEditMode ? "Edit Detail Information" : "Tambah Detail Information"}
+            open={isModalVisible}
+            onCancel={handleCancel}
+            footer={[
+              <>
+                <Button onClick={handleCancel}>Batalkan</Button>
+                <Button
+                  key="submit"
+                  type="primary"
+                  onClick={handleSubmit}
+                  loading={isLoading}
+                >
+                  {isEditMode ? "Simpan Perubahan" : "Simpan Data"}
+                </Button>
+              </>,
+            ]}
           >
-            <Input
-              value={formik.values.spesifikasi}
-              onChange={(e) => formik.setFieldValue("spesifikasi", e.target.value)}
-            />
-          </Form.Item>
-          <Form.Item
-            name="detail_spesifikasi"
-            label="Detail Spesifikasi"
-            rules={[{ required: true, message: "Detail Spesifikasi harus diisi" }]}
-          >
-            <Input
-              value={formik.values.detail_spesifikasi}
-              onChange={formik.handleChange}
-            />
-          </Form.Item>
-          <Form.Item
-            name="unit"
-            label="Unit"
-            rules={[{ required: true, message: "Unit harus diisi" }]}
-          >
-            <Input
-              value={formik.values.unit}
-              onChange={formik.handleChange}
-            />
-          </Form.Item>
-          <Form.Item
-            name="quantity"
-            label="Quantity"
-            rules={[{ required: true, message: "Quantity harus diisi" }]}
-          >
-            <Input
-              value={formik.values.quantity}
-              onChange={formik.handleChange}
-            />
-          </Form.Item>
-          <Form.Item
-            name="total"
-            label="Total"
-            rules={[{ required: true, message: "Total harus diisi" }]}
-          >
-            <Input
-              value={formik.values.total}
-              onChange={formik.handleChange}
-            />
-          </Form.Item>
-          <Form.Item
-            name="lokasi_pekerjaan"
-            label="lokasi_pekerjaan"
-            rules={[{ required: true, message: "lokasi_pekerjaan harus diisi" }]}
-          >
-            <Input
-              value={formik.values.lokasi_pekerjaan}
-              onChange={formik.handleChange}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
-      <Table
-        dataSource={detailInformation}
-        columns={columns}
-        rowKey="id"
-        pagination={false}
-      />
+            <Form form={form} layout="vertical">
+              <Form.Item
+                name="specification_name"
+                label="Spesifikasi"
+                rules={[{ required: true, message: "Spesifikasi harus diisi" }]}>
+                <Input
+                  name="specification_name"
+                  value={formik.values.specification_name}
+                  onChange={(e) => formik.setFieldValue("specification_name", e.target.value)}
+                />
+              </Form.Item>
+              <Form.Item
+                name="specification_detail"
+                label="Detail Spesifikasi"
+                rules={[{ required: true, message: "Detail Specification harus diisi" }]}
+              >
+                <Input
+                  name="specification_detail"
+                  value={formik.values.specification_detail}
+                  onChange={formik.handleChange}
+                />
+              </Form.Item>
+              <Form.Item
+                name="quantity"
+                label="Quantity"
+                rules={[
+                  () => ({
+                    validator(_, value) {
+                      if (!value) {
+                        return Promise.reject();
+                      }
+                      if (isNaN(value)) {
+                        return Promise.reject(
+                          "Quantity input has to be a number.",
+                        );
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
+                required>
+                <Input
+                  name="quantity"
+                  value={formik.values.quantity}
+                  onChange={formik.handleChange}
+                />
+              </Form.Item>
+              <Form.Item
+                name="unit"
+                label="Unit"
+                // rules={[
+                //   () => ({
+                //     validator(_, value) {
+                //       if (!value) {
+                //         return Promise.reject();
+                //       }
+                //       if (isNaN(value)) {
+                //         return Promise.reject(
+                //           "Unit input has to be a number.",
+                //         );
+                //       }
+                //       return Promise.resolve();
+                //     },
+                //   }),
+                // ]}
+                required
+              >
+                <Input
+                  name="unit"
+                  value={formik.values.unit}
+                  onChange={formik.handleChange}
+                />
+              </Form.Item>
+              <Form.Item
+                name="total"
+                label="Harga Satuan"
+                rules={[
+                  () => ({
+                    validator(_, value) {
+                      if (!value) {
+                        return Promise.reject();
+                      }
+                      if (isNaN(value)) {
+                        return Promise.reject(
+                          "Total input has to be a number.",
+                        );
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
+                required>
+                <Input
+                  value={formik.values.total}
+                  onChange={formik.handleChange}
+                />
+              </Form.Item>
+            </Form>
+          </Modal>
+          <Table
+            dataSource={detailInformation}
+            columns={columns}
+            rowKey={(record) => record.id.toString()}
+          />
+        </div>}
     </div>
   );
 };

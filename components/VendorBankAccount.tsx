@@ -24,14 +24,6 @@ interface BankAccount {
   bank_id: string;
   currency_id: string;
   account_number: string;
-  // bank: {
-  //   id: number;
-  //   bank_name: string;
-  // };
-  // currency: {
-  //   id: number;
-  //   name: string;
-  // };
 }
 
 interface Bank {

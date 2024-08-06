@@ -338,18 +338,18 @@ const ContactInfo: React.FC = () => {
       key: "contact_email",
       editable: true,
     },
-    {
-      title: "No KTP",
-      dataIndex: "contact_identity_no",
-      key: "contact_identity_no",
-      editable: true,
-    },
-    {
-      title: "No NPWP",
-      dataIndex: "contact_npwp",
-      key: "contact_npwp",
-      editable: true,
-    },
+    // {
+    //   title: "No KTP",
+    //   dataIndex: "contact_identity_no",
+    //   key: "contact_identity_no",
+    //   editable: true,
+    // },
+    // {
+    //   title: "No NPWP",
+    //   dataIndex: "contact_npwp",
+    //   key: "contact_npwp",
+    //   editable: true,
+    // },
     {
       title: "Nomor Telepon",
       dataIndex: "contact_phone",
@@ -505,7 +505,7 @@ const ContactInfo: React.FC = () => {
               onChange={formik.handleChange}
             />
           </Form.Item>
-          <Form.Item
+          {/* <Form.Item
             name="contact_identity_no"
             label="No KTP"
             rules={[
@@ -540,7 +540,7 @@ const ContactInfo: React.FC = () => {
               //   onChange={(value) => formik.setFieldValue("noKTPPengurus", value)}
               onChange={formik.handleChange}
             />
-          </Form.Item>
+          </Form.Item> */}
           <Form.Item
             name="contact_phone"
             label="No Telepon"
@@ -555,7 +555,7 @@ const ContactInfo: React.FC = () => {
               }
             />
           </Form.Item>
-          <Form.Item
+          {/* <Form.Item
             name="contact_npwp"
             label="NPWP"
             rules={[
@@ -589,7 +589,7 @@ const ContactInfo: React.FC = () => {
               value={formik.values.contact_npwp}
               onChange={formik.handleChange}
             />
-          </Form.Item>
+          </Form.Item> */}
           <Form.Item label="Jabatan" rules={[
             {
               required: true,

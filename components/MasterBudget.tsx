@@ -5,6 +5,7 @@ import useDashboardSummaryStore from '@/store/CenterStore';
 import { symbol } from 'zod';
 import axios from "axios";
 import { getCookie } from 'cookies-next';
+import { AlignType } from 'rc-table/lib/interface';
 
 const { Meta } = Card;
 
@@ -51,14 +52,18 @@ const DashboardAnggaran: React.FC = () => {
             key: "department",
         },
         {
-            title: "Total Pengadaan",
+            title: "Total Anggaran",
             dataIndex: "total_pengadaan",
             key: "total_pengadaan",
+            align: 'right' as AlignType,
+            render: (text: string) => <span>{text != '' ? formatCurrency(text) : 0}</span>,
         },
         {
-            title: "Total Anggaran Digunakan",
+            title: "Realisasi Anggaran",
             dataIndex: "total_anggaran_digunakan",
             key: "total_anggaran_digunakan",
+            align: 'right' as AlignType,
+            render: (text: string) => <span>{text != '' ? formatCurrency(text) : 0}</span>,
         },
     ];
 
@@ -73,6 +78,13 @@ const DashboardAnggaran: React.FC = () => {
             }),
         };
     });
+
+    const formatCurrency = (value: string | number) => {
+        if (!value) return "";
+        const parts = value.toString().split(".");
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        return parts.join(".");
+    };
 
     const getDashboardAnggaranSummary = () => {
         setIsLoading(true);
@@ -101,7 +113,7 @@ const DashboardAnggaran: React.FC = () => {
                 return;
             }
             //${process.env.NEXT_PUBLIC_API_URL}
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/master/budget`, {
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL_REQ}/master/budget`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "User-ID": userId,
@@ -137,7 +149,7 @@ const DashboardAnggaran: React.FC = () => {
                             <div className='grid gap-4 grid-cols-2'>
                                 <div>
                                     <h1 className='font-normal text-sm text-center text-black'>
-                                        Pengadaan
+                                        Total Anggaran
                                     </h1>
                                     <h1 className='font-normal text-xl text-center text-green-500'>
                                         {dashboardStatistic.pengadaan.toLocaleString("id-ID", {
@@ -151,7 +163,7 @@ const DashboardAnggaran: React.FC = () => {
 
                                 <div>
                                     <h1 className='font-normal text-sm text-center text-black'>
-                                        Pengeluaran
+                                        Total Pengeluaran
                                     </h1>
                                     <h1 className='font-normal text-xl text-center text-red-500'>
                                         {dashboardStatistic.pengadaan.toLocaleString("id-ID", {
@@ -164,43 +176,6 @@ const DashboardAnggaran: React.FC = () => {
                                 </div>
                             </div>
                         }
-                    />
-                </Card>
-                <Card style={{ width: 400, marginTop: 16 }} className='me-5 border-2 border-black text-center' loading={isLoading}>
-                    <Meta
-                        title={
-                            <h1 className='font-normal text-md'>
-                                Tahun 2025
-                            </h1>}
-                        description={<div className='grid gap-4 grid-cols-2'>
-                            <div>
-                                <h1 className='font-normal text-sm text-center text-black'>
-                                    Pengadaan
-                                </h1>
-                                <h1 className='font-normal text-xl text-center text-green-500'>
-                                    {dashboardStatistic.pengadaan.toLocaleString("id-ID", {
-                                        style: "currency",
-                                        currency: "IDR",
-                                        currencyDisplay: "code",
-                                        minimumFractionDigits: 0,
-                                    })}
-                                </h1>
-                            </div>
-
-                            <div>
-                                <h1 className='font-normal text-sm text-center text-black'>
-                                    Pengeluaran
-                                </h1>
-                                <h1 className='font-normal text-xl text-center text-red-500'>
-                                    {dashboardStatistic.pengadaan.toLocaleString("id-ID", {
-                                        style: "currency",
-                                        currency: "IDR",
-                                        currencyDisplay: "code",
-                                        minimumFractionDigits: 0,
-                                    })}
-                                </h1>
-                            </div>
-                        </div>}
                     />
                 </Card>
             </div>
